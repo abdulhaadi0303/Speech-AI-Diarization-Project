@@ -1,0 +1,2131 @@
+{
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 1.82,
+      "duration": 1.82,
+      "text": "Okay, my color paddy must touch talk.",
+      "speaker": "SPEAKER_00",
+      "words": [
+        {
+          "word": " Okay,",
+          "start": 0.0,
+          "end": 0.38,
+          "probability": 0.22296294569969177
+        },
+        {
+          "word": " my",
+          "start": 0.5,
+          "end": 0.58,
+          "probability": 0.09405671805143356
+        },
+        {
+          "word": " color",
+          "start": 0.58,
+          "end": 0.76,
+          "probability": 0.06044294685125351
+        },
+        {
+          "word": " paddy",
+          "start": 0.76,
+          "end": 1.04,
+          "probability": 0.21845009922981262
+        },
+        {
+          "word": " must",
+          "start": 1.04,
+          "end": 1.24,
+          "probability": 0.10916190594434738
+        },
+        {
+          "word": " touch",
+          "start": 1.24,
+          "end": 1.52,
+          "probability": 0.07493811845779419
+        },
+        {
+          "word": " talk.",
+          "start": 1.52,
+          "end": 1.82,
+          "probability": 0.3265303373336792
+        }
+      ]
+    },
+    {
+      "start": 2.04,
+      "end": 3.16,
+      "duration": 1.12,
+      "text": "Color paddy must touch, good man.",
+      "speaker": "SPEAKER_00",
+      "words": [
+        {
+          "word": " Color",
+          "start": 2.04,
+          "end": 2.04,
+          "probability": 0.5513309836387634
+        },
+        {
+          "word": " paddy",
+          "start": 2.04,
+          "end": 2.3,
+          "probability": 0.9509809911251068
+        },
+        {
+          "word": " must",
+          "start": 2.3,
+          "end": 2.48,
+          "probability": 0.6534664034843445
+        },
+        {
+          "word": " touch,",
+          "start": 2.48,
+          "end": 2.76,
+          "probability": 0.9167237281799316
+        },
+        {
+          "word": " good",
+          "start": 2.82,
+          "end": 2.9,
+          "probability": 0.22741574048995972
+        },
+        {
+          "word": " man.",
+          "start": 2.9,
+          "end": 3.16,
+          "probability": 0.9275036454200745
+        }
+      ]
+    },
+    {
+      "start": 4.58,
+      "end": 5.62,
+      "duration": 1.04,
+      "text": "This is very, eh?",
+      "speaker": "SPEAKER_04",
+      "words": [
+        {
+          "word": " This",
+          "start": 4.58,
+          "end": 4.94,
+          "probability": 0.24687479436397552
+        },
+        {
+          "word": " is",
+          "start": 4.94,
+          "end": 5.1,
+          "probability": 0.15759910643100739
+        },
+        {
+          "word": " very,",
+          "start": 5.1,
+          "end": 5.4,
+          "probability": 0.4810084104537964
+        },
+        {
+          "word": " eh?",
+          "start": 5.54,
+          "end": 5.62,
+          "probability": 0.7198629379272461
+        }
+      ]
+    },
+    {
+      "start": 5.74,
+      "end": 5.9,
+      "duration": 0.16000000000000014,
+      "text": "What?",
+      "speaker": "SPEAKER_04",
+      "words": [
+        {
+          "word": " What?",
+          "start": 5.74,
+          "end": 5.9,
+          "probability": 0.7954209446907043
+        }
+      ]
+    },
+    {
+      "start": 6.28,
+      "end": 7.6,
+      "duration": 1.3199999999999994,
+      "text": "Oh yeah, I live in Sweden.",
+      "speaker": "SPEAKER_01",
+      "words": [
+        {
+          "word": " Oh",
+          "start": 6.28,
+          "end": 6.4,
+          "probability": 0.6629063487052917
+        },
+        {
+          "word": " yeah,",
+          "start": 6.4,
+          "end": 6.58,
+          "probability": 0.7061576247215271
+        },
+        {
+          "word": " I",
+          "start": 6.74,
+          "end": 6.96,
+          "probability": 0.6177167296409607
+        },
+        {
+          "word": " live",
+          "start": 6.96,
+          "end": 7.24,
+          "probability": 0.8589196801185608
+        },
+        {
+          "word": " in",
+          "start": 7.24,
+          "end": 7.36,
+          "probability": 0.9948920011520386
+        },
+        {
+          "word": " Sweden.",
+          "start": 7.36,
+          "end": 7.6,
+          "probability": 0.9959308505058289
+        }
+      ]
+    },
+    {
+      "start": 7.98,
+      "end": 9.16,
+      "duration": 1.1799999999999997,
+      "text": "It was a rather English girl.",
+      "speaker": "SPEAKER_07",
+      "words": [
+        {
+          "word": " It",
+          "start": 7.98,
+          "end": 8.1,
+          "probability": 0.07467881590127945
+        },
+        {
+          "word": " was",
+          "start": 8.1,
+          "end": 8.14,
+          "probability": 0.5675830841064453
+        },
+        {
+          "word": " a",
+          "start": 8.14,
+          "end": 8.28,
+          "probability": 0.4757062494754791
+        },
+        {
+          "word": " rather",
+          "start": 8.28,
+          "end": 8.42,
+          "probability": 0.11331725120544434
+        },
+        {
+          "word": " English",
+          "start": 8.42,
+          "end": 8.84,
+          "probability": 0.3679593503475189
+        },
+        {
+          "word": " girl.",
+          "start": 8.84,
+          "end": 9.16,
+          "probability": 0.6956378817558289
+        }
+      ]
+    },
+    {
+      "start": 9.52,
+      "end": 11.26,
+      "duration": 1.7400000000000002,
+      "text": "No, like, I don't live here.",
+      "speaker": "SPEAKER_01",
+      "words": [
+        {
+          "word": " No,",
+          "start": 9.52,
+          "end": 9.72,
+          "probability": 0.8997474312782288
+        },
+        {
+          "word": " like,",
+          "start": 9.8,
+          "end": 9.9,
+          "probability": 0.6513375639915466
+        },
+        {
+          "word": " I",
+          "start": 10.06,
+          "end": 10.1,
+          "probability": 0.9916449189186096
+        },
+        {
+          "word": " don't",
+          "start": 10.1,
+          "end": 10.4,
+          "probability": 0.9919754862785339
+        },
+        {
+          "word": " live",
+          "start": 10.4,
+          "end": 11.06,
+          "probability": 0.37079986929893494
+        },
+        {
+          "word": " here.",
+          "start": 11.06,
+          "end": 11.26,
+          "probability": 0.9952977299690247
+        }
+      ]
+    },
+    {
+      "start": 11.42,
+      "end": 12.0,
+      "duration": 0.5800000000000001,
+      "text": "I just moved here.",
+      "speaker": "SPEAKER_08",
+      "words": [
+        {
+          "word": " I",
+          "start": 11.42,
+          "end": 11.44,
+          "probability": 0.9951834082603455
+        },
+        {
+          "word": " just",
+          "start": 11.44,
+          "end": 11.54,
+          "probability": 0.9939824938774109
+        },
+        {
+          "word": " moved",
+          "start": 11.54,
+          "end": 11.76,
+          "probability": 0.953220784664154
+        },
+        {
+          "word": " here.",
+          "start": 11.76,
+          "end": 12.0,
+          "probability": 0.9900851249694824
+        }
+      ]
+    },
+    {
+      "start": 12.38,
+      "end": 12.66,
+      "duration": 0.27999999999999936,
+      "text": "Oh.",
+      "speaker": "SPEAKER_08",
+      "words": [
+        {
+          "word": " Oh.",
+          "start": 12.38,
+          "end": 12.66,
+          "probability": 0.3714194595813751
+        }
+      ]
+    },
+    {
+      "start": 13.32,
+      "end": 14.48,
+      "duration": 1.1600000000000001,
+      "text": "H, the fuck up, sis?",
+      "speaker": "SPEAKER_00",
+      "words": [
+        {
+          "word": " H,",
+          "start": 13.32,
+          "end": 13.56,
+          "probability": 0.12572872638702393
+        },
+        {
+          "word": " the",
+          "start": 13.7,
+          "end": 13.8,
+          "probability": 0.5938319563865662
+        },
+        {
+          "word": " fuck",
+          "start": 13.8,
+          "end": 13.98,
+          "probability": 0.9424038529396057
+        },
+        {
+          "word": " up,",
+          "start": 13.98,
+          "end": 14.22,
+          "probability": 0.8640006184577942
+        },
+        {
+          "word": " sis?",
+          "start": 14.38,
+          "end": 14.48,
+          "probability": 0.9498317241668701
+        }
+      ]
+    },
+    {
+      "start": 15.12,
+      "end": 16.68,
+      "duration": 1.5600000000000005,
+      "text": "Oh, be his ass in English, please.",
+      "speaker": "SPEAKER_02",
+      "words": [
+        {
+          "word": " Oh,",
+          "start": 15.12,
+          "end": 15.2,
+          "probability": 0.38804444670677185
+        },
+        {
+          "word": " be",
+          "start": 15.36,
+          "end": 15.44,
+          "probability": 0.2895301580429077
+        },
+        {
+          "word": " his",
+          "start": 15.44,
+          "end": 15.62,
+          "probability": 0.5034430027008057
+        },
+        {
+          "word": " ass",
+          "start": 15.62,
+          "end": 15.82,
+          "probability": 0.7720124125480652
+        },
+        {
+          "word": " in",
+          "start": 15.82,
+          "end": 16.02,
+          "probability": 0.2301371544599533
+        },
+        {
+          "word": " English,",
+          "start": 16.02,
+          "end": 16.38,
+          "probability": 0.3498356342315674
+        },
+        {
+          "word": " please.",
+          "start": 16.58,
+          "end": 16.68,
+          "probability": 0.7590180039405823
+        }
+      ]
+    },
+    {
+      "start": 17.08,
+      "end": 17.98,
+      "duration": 0.9000000000000021,
+      "text": "You ain't gonna be shit.",
+      "speaker": "SPEAKER_00",
+      "words": [
+        {
+          "word": " You",
+          "start": 17.08,
+          "end": 17.26,
+          "probability": 0.7935859560966492
+        },
+        {
+          "word": " ain't",
+          "start": 17.26,
+          "end": 17.38,
+          "probability": 0.9905566275119781
+        },
+        {
+          "word": " gonna",
+          "start": 17.38,
+          "end": 17.5,
+          "probability": 0.557232141494751
+        },
+        {
+          "word": " be",
+          "start": 17.5,
+          "end": 17.68,
+          "probability": 0.9520857930183411
+        },
+        {
+          "word": " shit.",
+          "start": 17.68,
+          "end": 17.98,
+          "probability": 0.7413614392280579
+        }
+      ]
+    },
+    {
+      "start": 18.72,
+      "end": 19.28,
+      "duration": 0.5600000000000023,
+      "text": "Honey, feel,",
+      "speaker": "SPEAKER_02",
+      "words": [
+        {
+          "word": " Honey,",
+          "start": 18.72,
+          "end": 18.9,
+          "probability": 0.00029223490855656564
+        },
+        {
+          "word": " feel,",
+          "start": 19.14,
+          "end": 19.28,
+          "probability": 0.8315048217773438
+        }
+      ]
+    },
+    {
+      "start": 19.56,
+      "end": 20.64,
+      "duration": 1.0800000000000018,
+      "text": "I've seen you two campers.",
+      "speaker": "SPEAKER_02",
+      "words": [
+        {
+          "word": " I've",
+          "start": 19.56,
+          "end": 19.78,
+          "probability": 0.08429541625082493
+        },
+        {
+          "word": " seen",
+          "start": 19.78,
+          "end": 19.88,
+          "probability": 0.14759954810142517
+        },
+        {
+          "word": " you",
+          "start": 19.88,
+          "end": 20.24,
+          "probability": 0.26865020394325256
+        },
+        {
+          "word": " two",
+          "start": 20.24,
+          "end": 20.32,
+          "probability": 0.09970133751630783
+        },
+        {
+          "word": " campers.",
+          "start": 20.32,
+          "end": 20.64,
+          "probability": 0.2050289437174797
+        }
+      ]
+    },
+    {
+      "start": 20.88,
+      "end": 22.78,
+      "duration": 1.9000000000000021,
+      "text": "Color paddlers are gonna be sitting at the same bus.",
+      "speaker": "SPEAKER_03",
+      "words": [
+        {
+          "word": " Color",
+          "start": 20.88,
+          "end": 21.0,
+          "probability": 0.12737099826335907
+        },
+        {
+          "word": " paddlers",
+          "start": 21.0,
+          "end": 21.34,
+          "probability": 0.36438897376259166
+        },
+        {
+          "word": " are",
+          "start": 21.34,
+          "end": 21.54,
+          "probability": 0.6379850506782532
+        },
+        {
+          "word": " gonna",
+          "start": 21.54,
+          "end": 21.66,
+          "probability": 0.3498225808143616
+        },
+        {
+          "word": " be",
+          "start": 21.66,
+          "end": 21.8,
+          "probability": 0.4925422966480255
+        },
+        {
+          "word": " sitting",
+          "start": 21.8,
+          "end": 22.02,
+          "probability": 0.24705533683300018
+        },
+        {
+          "word": " at",
+          "start": 22.02,
+          "end": 22.3,
+          "probability": 0.2887866497039795
+        },
+        {
+          "word": " the",
+          "start": 22.3,
+          "end": 22.46,
+          "probability": 0.7899622917175293
+        },
+        {
+          "word": " same",
+          "start": 22.46,
+          "end": 22.62,
+          "probability": 0.3172543942928314
+        },
+        {
+          "word": " bus.",
+          "start": 22.62,
+          "end": 22.78,
+          "probability": 0.236477792263031
+        }
+      ]
+    },
+    {
+      "start": 23.06,
+      "end": 24.78,
+      "duration": 1.7200000000000024,
+      "text": "I have mustache every day that was my head.",
+      "speaker": "SPEAKER_03",
+      "words": [
+        {
+          "word": " I",
+          "start": 23.06,
+          "end": 23.18,
+          "probability": 0.10904771089553833
+        },
+        {
+          "word": " have",
+          "start": 23.18,
+          "end": 23.3,
+          "probability": 0.2163299173116684
+        },
+        {
+          "word": " mustache",
+          "start": 23.3,
+          "end": 23.64,
+          "probability": 0.3185275197029114
+        },
+        {
+          "word": " every",
+          "start": 23.64,
+          "end": 23.96,
+          "probability": 0.4599948525428772
+        },
+        {
+          "word": " day",
+          "start": 23.96,
+          "end": 24.14,
+          "probability": 0.19301903247833252
+        },
+        {
+          "word": " that",
+          "start": 24.14,
+          "end": 24.28,
+          "probability": 0.1844397932291031
+        },
+        {
+          "word": " was",
+          "start": 24.28,
+          "end": 24.44,
+          "probability": 0.1986664980649948
+        },
+        {
+          "word": " my",
+          "start": 24.44,
+          "end": 24.6,
+          "probability": 0.6897974610328674
+        },
+        {
+          "word": " head.",
+          "start": 24.6,
+          "end": 24.78,
+          "probability": 0.19909639656543732
+        }
+      ]
+    },
+    {
+      "start": 24.9,
+      "end": 26.74,
+      "duration": 1.8399999999999999,
+      "text": "Okay, my color paddy must touch talk.",
+      "speaker": "SPEAKER_00",
+      "words": [
+        {
+          "word": " Okay,",
+          "start": 24.9,
+          "end": 25.26,
+          "probability": 0.6625053286552429
+        },
+        {
+          "word": " my",
+          "start": 25.46,
+          "end": 25.5,
+          "probability": 0.9812209606170654
+        },
+        {
+          "word": " color",
+          "start": 25.5,
+          "end": 25.7,
+          "probability": 0.9689038991928101
+        },
+        {
+          "word": " paddy",
+          "start": 25.7,
+          "end": 26.0,
+          "probability": 0.9926418960094452
+        },
+        {
+          "word": " must",
+          "start": 26.0,
+          "end": 26.14,
+          "probability": 0.9716721773147583
+        },
+        {
+          "word": " touch",
+          "start": 26.14,
+          "end": 26.5,
+          "probability": 0.9701012372970581
+        },
+        {
+          "word": " talk.",
+          "start": 26.5,
+          "end": 26.74,
+          "probability": 0.8278682827949524
+        }
+      ]
+    },
+    {
+      "start": 26.9,
+      "end": 28.04,
+      "duration": 1.1400000000000006,
+      "text": "Color paddy must touch, good man.",
+      "speaker": "SPEAKER_00",
+      "words": [
+        {
+          "word": " Color",
+          "start": 26.9,
+          "end": 27.0,
+          "probability": 0.9708341360092163
+        },
+        {
+          "word": " paddy",
+          "start": 27.0,
+          "end": 27.26,
+          "probability": 0.993807464838028
+        },
+        {
+          "word": " must",
+          "start": 27.26,
+          "end": 27.4,
+          "probability": 0.9829577803611755
+        },
+        {
+          "word": " touch,",
+          "start": 27.4,
+          "end": 27.68,
+          "probability": 0.9962576627731323
+        },
+        {
+          "word": " good",
+          "start": 27.8,
+          "end": 27.86,
+          "probability": 0.9813429713249207
+        },
+        {
+          "word": " man.",
+          "start": 27.86,
+          "end": 28.04,
+          "probability": 0.983249306678772
+        }
+      ]
+    },
+    {
+      "start": 28.04,
+      "end": 29.84,
+      "duration": 1.8000000000000007,
+      "text": "Ah, exact.",
+      "speaker": "SPEAKER_05",
+      "words": [
+        {
+          "word": " Ah,",
+          "start": 28.04,
+          "end": 28.88,
+          "probability": 0.03397141396999359
+        },
+        {
+          "word": " exact.",
+          "start": 29.16,
+          "end": 29.84,
+          "probability": 0.015362474136054516
+        }
+      ]
+    }
+  ],
+  "speakers": [
+    "SPEAKER_00",
+    "SPEAKER_04",
+    "SPEAKER_01",
+    "SPEAKER_07",
+    "SPEAKER_08",
+    "SPEAKER_02",
+    "SPEAKER_03",
+    "SPEAKER_05"
+  ],
+  "speaker_stats": {
+    "SPEAKER_00": {
+      "segments": 6,
+      "total_duration": 7.980000000000003,
+      "total_words": 36,
+      "total_characters": 184,
+      "duration_percentage": 34.8471615720524,
+      "words_percentage": 36.36363636363637
+    },
+    "SPEAKER_04": {
+      "segments": 2,
+      "total_duration": 1.2000000000000002,
+      "total_words": 5,
+      "total_characters": 22,
+      "duration_percentage": 5.240174672489081,
+      "words_percentage": 5.05050505050505
+    },
+    "SPEAKER_01": {
+      "segments": 2,
+      "total_duration": 3.0599999999999996,
+      "total_words": 12,
+      "total_characters": 54,
+      "duration_percentage": 13.362445414847155,
+      "words_percentage": 12.121212121212121
+    },
+    "SPEAKER_07": {
+      "segments": 1,
+      "total_duration": 1.1799999999999997,
+      "total_words": 6,
+      "total_characters": 29,
+      "duration_percentage": 5.152838427947596,
+      "words_percentage": 6.0606060606060606
+    },
+    "SPEAKER_08": {
+      "segments": 2,
+      "total_duration": 0.8599999999999994,
+      "total_words": 5,
+      "total_characters": 21,
+      "duration_percentage": 3.755458515283839,
+      "words_percentage": 5.05050505050505
+    },
+    "SPEAKER_02": {
+      "segments": 3,
+      "total_duration": 3.2000000000000046,
+      "total_words": 14,
+      "total_characters": 72,
+      "duration_percentage": 13.973799126637568,
+      "words_percentage": 14.14141414141414
+    },
+    "SPEAKER_03": {
+      "segments": 2,
+      "total_duration": 3.6200000000000045,
+      "total_words": 19,
+      "total_characters": 95,
+      "duration_percentage": 15.807860262008747,
+      "words_percentage": 19.19191919191919
+    },
+    "SPEAKER_05": {
+      "segments": 1,
+      "total_duration": 1.8000000000000007,
+      "total_words": 2,
+      "total_characters": 10,
+      "duration_percentage": 7.860262008733625,
+      "words_percentage": 2.0202020202020203
+    }
+  },
+  "transcription": {
+    "text": "Okay, my color paddy must touch talk. Color paddy must touch, good man. This is very, eh? What? Oh yeah, I live in Sweden. It was a rather English girl. No, like, I don't live here. I just moved here. Oh. H, the fuck up, sis? Oh, be his ass in English, please. You ain't gonna be shit. Honey, feel, I've seen you two campers. Color paddlers are gonna be sitting at the same bus. I have mustache every day that was my head. Okay, my color paddy must touch talk. Color paddy must touch, good man. Ah, exact.",
+    "language": "en",
+    "segments": [
+      {
+        "id": 0,
+        "seek": 0,
+        "start": 0.0,
+        "end": 1.82,
+        "text": " Okay, my color paddy must touch talk.",
+        "tokens": [
+          50364,
+          1033,
+          11,
+          452,
+          2017,
+          6887,
+          3173,
+          1633,
+          2557,
+          751,
+          13,
+          50460
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.8299720937555487,
+        "compression_ratio": 1.8364312267657992,
+        "no_speech_prob": 0.35413703322410583,
+        "words": [
+          {
+            "word": " Okay,",
+            "start": 0.0,
+            "end": 0.38,
+            "probability": 0.22296294569969177
+          },
+          {
+            "word": " my",
+            "start": 0.5,
+            "end": 0.58,
+            "probability": 0.09405671805143356
+          },
+          {
+            "word": " color",
+            "start": 0.58,
+            "end": 0.76,
+            "probability": 0.06044294685125351
+          },
+          {
+            "word": " paddy",
+            "start": 0.76,
+            "end": 1.04,
+            "probability": 0.21845009922981262
+          },
+          {
+            "word": " must",
+            "start": 1.04,
+            "end": 1.24,
+            "probability": 0.10916190594434738
+          },
+          {
+            "word": " touch",
+            "start": 1.24,
+            "end": 1.52,
+            "probability": 0.07493811845779419
+          },
+          {
+            "word": " talk.",
+            "start": 1.52,
+            "end": 1.82,
+            "probability": 0.3265303373336792
+          }
+        ]
+      },
+      {
+        "id": 1,
+        "seek": 0,
+        "start": 2.04,
+        "end": 3.16,
+        "text": " Color paddy must touch, good man.",
+        "tokens": [
+          50460,
+          10458,
+          6887,
+          3173,
+          1633,
+          2557,
+          11,
+          665,
+          587,
+          13,
+          50526
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.8299720937555487,
+        "compression_ratio": 1.8364312267657992,
+        "no_speech_prob": 0.35413703322410583,
+        "words": [
+          {
+            "word": " Color",
+            "start": 2.04,
+            "end": 2.04,
+            "probability": 0.5513309836387634
+          },
+          {
+            "word": " paddy",
+            "start": 2.04,
+            "end": 2.3,
+            "probability": 0.9509809911251068
+          },
+          {
+            "word": " must",
+            "start": 2.3,
+            "end": 2.48,
+            "probability": 0.6534664034843445
+          },
+          {
+            "word": " touch,",
+            "start": 2.48,
+            "end": 2.76,
+            "probability": 0.9167237281799316
+          },
+          {
+            "word": " good",
+            "start": 2.82,
+            "end": 2.9,
+            "probability": 0.22741574048995972
+          },
+          {
+            "word": " man.",
+            "start": 2.9,
+            "end": 3.16,
+            "probability": 0.9275036454200745
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "seek": 0,
+        "start": 4.58,
+        "end": 5.62,
+        "text": " This is very, eh?",
+        "tokens": [
+          50601,
+          639,
+          307,
+          588,
+          11,
+          7670,
+          30,
+          50650
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.8299720937555487,
+        "compression_ratio": 1.8364312267657992,
+        "no_speech_prob": 0.35413703322410583,
+        "words": [
+          {
+            "word": " This",
+            "start": 4.58,
+            "end": 4.94,
+            "probability": 0.24687479436397552
+          },
+          {
+            "word": " is",
+            "start": 4.94,
+            "end": 5.1,
+            "probability": 0.15759910643100739
+          },
+          {
+            "word": " very,",
+            "start": 5.1,
+            "end": 5.4,
+            "probability": 0.4810084104537964
+          },
+          {
+            "word": " eh?",
+            "start": 5.54,
+            "end": 5.62,
+            "probability": 0.7198629379272461
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "seek": 0,
+        "start": 5.74,
+        "end": 5.9,
+        "text": " What?",
+        "tokens": [
+          50650,
+          708,
+          30,
+          50675
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.8299720937555487,
+        "compression_ratio": 1.8364312267657992,
+        "no_speech_prob": 0.35413703322410583,
+        "words": [
+          {
+            "word": " What?",
+            "start": 5.74,
+            "end": 5.9,
+            "probability": 0.7954209446907043
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "seek": 0,
+        "start": 6.28,
+        "end": 7.6,
+        "text": " Oh yeah, I live in Sweden.",
+        "tokens": [
+          50675,
+          876,
+          1338,
+          11,
+          286,
+          1621,
+          294,
+          17727,
+          13,
+          50751
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.8299720937555487,
+        "compression_ratio": 1.8364312267657992,
+        "no_speech_prob": 0.35413703322410583,
+        "words": [
+          {
+            "word": " Oh",
+            "start": 6.28,
+            "end": 6.4,
+            "probability": 0.6629063487052917
+          },
+          {
+            "word": " yeah,",
+            "start": 6.4,
+            "end": 6.58,
+            "probability": 0.7061576247215271
+          },
+          {
+            "word": " I",
+            "start": 6.74,
+            "end": 6.96,
+            "probability": 0.6177167296409607
+          },
+          {
+            "word": " live",
+            "start": 6.96,
+            "end": 7.24,
+            "probability": 0.8589196801185608
+          },
+          {
+            "word": " in",
+            "start": 7.24,
+            "end": 7.36,
+            "probability": 0.9948920011520386
+          },
+          {
+            "word": " Sweden.",
+            "start": 7.36,
+            "end": 7.6,
+            "probability": 0.9959308505058289
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "seek": 0,
+        "start": 7.98,
+        "end": 9.16,
+        "text": " It was a rather English girl.",
+        "tokens": [
+          50751,
+          467,
+          390,
+          257,
+          2831,
+          3669,
+          2013,
+          13,
+          50831
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.8299720937555487,
+        "compression_ratio": 1.8364312267657992,
+        "no_speech_prob": 0.35413703322410583,
+        "words": [
+          {
+            "word": " It",
+            "start": 7.98,
+            "end": 8.1,
+            "probability": 0.07467881590127945
+          },
+          {
+            "word": " was",
+            "start": 8.1,
+            "end": 8.14,
+            "probability": 0.5675830841064453
+          },
+          {
+            "word": " a",
+            "start": 8.14,
+            "end": 8.28,
+            "probability": 0.4757062494754791
+          },
+          {
+            "word": " rather",
+            "start": 8.28,
+            "end": 8.42,
+            "probability": 0.11331725120544434
+          },
+          {
+            "word": " English",
+            "start": 8.42,
+            "end": 8.84,
+            "probability": 0.3679593503475189
+          },
+          {
+            "word": " girl.",
+            "start": 8.84,
+            "end": 9.16,
+            "probability": 0.6956378817558289
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "seek": 0,
+        "start": 9.52,
+        "end": 11.26,
+        "text": " No, like, I don't live here.",
+        "tokens": [
+          50831,
+          883,
+          11,
+          411,
+          11,
+          286,
+          500,
+          380,
+          1621,
+          510,
+          13,
+          50931
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.8299720937555487,
+        "compression_ratio": 1.8364312267657992,
+        "no_speech_prob": 0.35413703322410583,
+        "words": [
+          {
+            "word": " No,",
+            "start": 9.52,
+            "end": 9.72,
+            "probability": 0.8997474312782288
+          },
+          {
+            "word": " like,",
+            "start": 9.8,
+            "end": 9.9,
+            "probability": 0.6513375639915466
+          },
+          {
+            "word": " I",
+            "start": 10.06,
+            "end": 10.1,
+            "probability": 0.9916449189186096
+          },
+          {
+            "word": " don't",
+            "start": 10.1,
+            "end": 10.4,
+            "probability": 0.9919754862785339
+          },
+          {
+            "word": " live",
+            "start": 10.4,
+            "end": 11.06,
+            "probability": 0.37079986929893494
+          },
+          {
+            "word": " here.",
+            "start": 11.06,
+            "end": 11.26,
+            "probability": 0.9952977299690247
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "seek": 0,
+        "start": 11.42,
+        "end": 12.0,
+        "text": " I just moved here.",
+        "tokens": [
+          50931,
+          286,
+          445,
+          4259,
+          510,
+          13,
+          50975
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.8299720937555487,
+        "compression_ratio": 1.8364312267657992,
+        "no_speech_prob": 0.35413703322410583,
+        "words": [
+          {
+            "word": " I",
+            "start": 11.42,
+            "end": 11.44,
+            "probability": 0.9951834082603455
+          },
+          {
+            "word": " just",
+            "start": 11.44,
+            "end": 11.54,
+            "probability": 0.9939824938774109
+          },
+          {
+            "word": " moved",
+            "start": 11.54,
+            "end": 11.76,
+            "probability": 0.953220784664154
+          },
+          {
+            "word": " here.",
+            "start": 11.76,
+            "end": 12.0,
+            "probability": 0.9900851249694824
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "seek": 0,
+        "start": 12.38,
+        "end": 12.66,
+        "text": " Oh.",
+        "tokens": [
+          50975,
+          876,
+          13,
+          51025
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.8299720937555487,
+        "compression_ratio": 1.8364312267657992,
+        "no_speech_prob": 0.35413703322410583,
+        "words": [
+          {
+            "word": " Oh.",
+            "start": 12.38,
+            "end": 12.66,
+            "probability": 0.3714194595813751
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "seek": 0,
+        "start": 13.32,
+        "end": 14.48,
+        "text": " H, the fuck up, sis?",
+        "tokens": [
+          51025,
+          389,
+          11,
+          264,
+          3275,
+          493,
+          11,
+          26288,
+          30,
+          51105
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.8299720937555487,
+        "compression_ratio": 1.8364312267657992,
+        "no_speech_prob": 0.35413703322410583,
+        "words": [
+          {
+            "word": " H,",
+            "start": 13.32,
+            "end": 13.56,
+            "probability": 0.12572872638702393
+          },
+          {
+            "word": " the",
+            "start": 13.7,
+            "end": 13.8,
+            "probability": 0.5938319563865662
+          },
+          {
+            "word": " fuck",
+            "start": 13.8,
+            "end": 13.98,
+            "probability": 0.9424038529396057
+          },
+          {
+            "word": " up,",
+            "start": 13.98,
+            "end": 14.22,
+            "probability": 0.8640006184577942
+          },
+          {
+            "word": " sis?",
+            "start": 14.38,
+            "end": 14.48,
+            "probability": 0.9498317241668701
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "seek": 0,
+        "start": 15.12,
+        "end": 16.68,
+        "text": " Oh, be his ass in English, please.",
+        "tokens": [
+          51105,
+          876,
+          11,
+          312,
+          702,
+          1256,
+          294,
+          3669,
+          11,
+          1767,
+          13,
+          51210
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.8299720937555487,
+        "compression_ratio": 1.8364312267657992,
+        "no_speech_prob": 0.35413703322410583,
+        "words": [
+          {
+            "word": " Oh,",
+            "start": 15.12,
+            "end": 15.2,
+            "probability": 0.38804444670677185
+          },
+          {
+            "word": " be",
+            "start": 15.36,
+            "end": 15.44,
+            "probability": 0.2895301580429077
+          },
+          {
+            "word": " his",
+            "start": 15.44,
+            "end": 15.62,
+            "probability": 0.5034430027008057
+          },
+          {
+            "word": " ass",
+            "start": 15.62,
+            "end": 15.82,
+            "probability": 0.7720124125480652
+          },
+          {
+            "word": " in",
+            "start": 15.82,
+            "end": 16.02,
+            "probability": 0.2301371544599533
+          },
+          {
+            "word": " English,",
+            "start": 16.02,
+            "end": 16.38,
+            "probability": 0.3498356342315674
+          },
+          {
+            "word": " please.",
+            "start": 16.58,
+            "end": 16.68,
+            "probability": 0.7590180039405823
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "seek": 0,
+        "start": 17.08,
+        "end": 17.98,
+        "text": " You ain't gonna be shit.",
+        "tokens": [
+          51210,
+          509,
+          7862,
+          380,
+          799,
+          312,
+          4611,
+          13,
+          51280
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.8299720937555487,
+        "compression_ratio": 1.8364312267657992,
+        "no_speech_prob": 0.35413703322410583,
+        "words": [
+          {
+            "word": " You",
+            "start": 17.08,
+            "end": 17.26,
+            "probability": 0.7935859560966492
+          },
+          {
+            "word": " ain't",
+            "start": 17.26,
+            "end": 17.38,
+            "probability": 0.9905566275119781
+          },
+          {
+            "word": " gonna",
+            "start": 17.38,
+            "end": 17.5,
+            "probability": 0.557232141494751
+          },
+          {
+            "word": " be",
+            "start": 17.5,
+            "end": 17.68,
+            "probability": 0.9520857930183411
+          },
+          {
+            "word": " shit.",
+            "start": 17.68,
+            "end": 17.98,
+            "probability": 0.7413614392280579
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "seek": 0,
+        "start": 18.72,
+        "end": 19.28,
+        "text": " Honey, feel,",
+        "tokens": [
+          51280,
+          16187,
+          11,
+          841,
+          11,
+          51335
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.8299720937555487,
+        "compression_ratio": 1.8364312267657992,
+        "no_speech_prob": 0.35413703322410583,
+        "words": [
+          {
+            "word": " Honey,",
+            "start": 18.72,
+            "end": 18.9,
+            "probability": 0.00029223490855656564
+          },
+          {
+            "word": " feel,",
+            "start": 19.14,
+            "end": 19.28,
+            "probability": 0.8315048217773438
+          }
+        ]
+      },
+      {
+        "id": 13,
+        "seek": 0,
+        "start": 19.56,
+        "end": 20.64,
+        "text": " I've seen you two campers.",
+        "tokens": [
+          51335,
+          286,
+          600,
+          1612,
+          291,
+          732,
+          2255,
+          433,
+          13,
+          51405
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.8299720937555487,
+        "compression_ratio": 1.8364312267657992,
+        "no_speech_prob": 0.35413703322410583,
+        "words": [
+          {
+            "word": " I've",
+            "start": 19.56,
+            "end": 19.78,
+            "probability": 0.08429541625082493
+          },
+          {
+            "word": " seen",
+            "start": 19.78,
+            "end": 19.88,
+            "probability": 0.14759954810142517
+          },
+          {
+            "word": " you",
+            "start": 19.88,
+            "end": 20.24,
+            "probability": 0.26865020394325256
+          },
+          {
+            "word": " two",
+            "start": 20.24,
+            "end": 20.32,
+            "probability": 0.09970133751630783
+          },
+          {
+            "word": " campers.",
+            "start": 20.32,
+            "end": 20.64,
+            "probability": 0.2050289437174797
+          }
+        ]
+      },
+      {
+        "id": 14,
+        "seek": 0,
+        "start": 20.88,
+        "end": 22.78,
+        "text": " Color paddlers are gonna be sitting at the same bus.",
+        "tokens": [
+          51405,
+          10458,
+          6887,
+          67,
+          11977,
+          366,
+          799,
+          312,
+          3798,
+          412,
+          264,
+          912,
+          1255,
+          13,
+          51515
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.8299720937555487,
+        "compression_ratio": 1.8364312267657992,
+        "no_speech_prob": 0.35413703322410583,
+        "words": [
+          {
+            "word": " Color",
+            "start": 20.88,
+            "end": 21.0,
+            "probability": 0.12737099826335907
+          },
+          {
+            "word": " paddlers",
+            "start": 21.0,
+            "end": 21.34,
+            "probability": 0.36438897376259166
+          },
+          {
+            "word": " are",
+            "start": 21.34,
+            "end": 21.54,
+            "probability": 0.6379850506782532
+          },
+          {
+            "word": " gonna",
+            "start": 21.54,
+            "end": 21.66,
+            "probability": 0.3498225808143616
+          },
+          {
+            "word": " be",
+            "start": 21.66,
+            "end": 21.8,
+            "probability": 0.4925422966480255
+          },
+          {
+            "word": " sitting",
+            "start": 21.8,
+            "end": 22.02,
+            "probability": 0.24705533683300018
+          },
+          {
+            "word": " at",
+            "start": 22.02,
+            "end": 22.3,
+            "probability": 0.2887866497039795
+          },
+          {
+            "word": " the",
+            "start": 22.3,
+            "end": 22.46,
+            "probability": 0.7899622917175293
+          },
+          {
+            "word": " same",
+            "start": 22.46,
+            "end": 22.62,
+            "probability": 0.3172543942928314
+          },
+          {
+            "word": " bus.",
+            "start": 22.62,
+            "end": 22.78,
+            "probability": 0.236477792263031
+          }
+        ]
+      },
+      {
+        "id": 15,
+        "seek": 0,
+        "start": 23.06,
+        "end": 24.78,
+        "text": " I have mustache every day that was my head.",
+        "tokens": [
+          51515,
+          286,
+          362,
+          37798,
+          633,
+          786,
+          300,
+          390,
+          452,
+          1378,
+          13,
+          51605
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.8299720937555487,
+        "compression_ratio": 1.8364312267657992,
+        "no_speech_prob": 0.35413703322410583,
+        "words": [
+          {
+            "word": " I",
+            "start": 23.06,
+            "end": 23.18,
+            "probability": 0.10904771089553833
+          },
+          {
+            "word": " have",
+            "start": 23.18,
+            "end": 23.3,
+            "probability": 0.2163299173116684
+          },
+          {
+            "word": " mustache",
+            "start": 23.3,
+            "end": 23.64,
+            "probability": 0.3185275197029114
+          },
+          {
+            "word": " every",
+            "start": 23.64,
+            "end": 23.96,
+            "probability": 0.4599948525428772
+          },
+          {
+            "word": " day",
+            "start": 23.96,
+            "end": 24.14,
+            "probability": 0.19301903247833252
+          },
+          {
+            "word": " that",
+            "start": 24.14,
+            "end": 24.28,
+            "probability": 0.1844397932291031
+          },
+          {
+            "word": " was",
+            "start": 24.28,
+            "end": 24.44,
+            "probability": 0.1986664980649948
+          },
+          {
+            "word": " my",
+            "start": 24.44,
+            "end": 24.6,
+            "probability": 0.6897974610328674
+          },
+          {
+            "word": " head.",
+            "start": 24.6,
+            "end": 24.78,
+            "probability": 0.19909639656543732
+          }
+        ]
+      },
+      {
+        "id": 16,
+        "seek": 0,
+        "start": 24.9,
+        "end": 26.74,
+        "text": " Okay, my color paddy must touch talk.",
+        "tokens": [
+          51605,
+          1033,
+          11,
+          452,
+          2017,
+          6887,
+          3173,
+          1633,
+          2557,
+          751,
+          13,
+          51705
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.8299720937555487,
+        "compression_ratio": 1.8364312267657992,
+        "no_speech_prob": 0.35413703322410583,
+        "words": [
+          {
+            "word": " Okay,",
+            "start": 24.9,
+            "end": 25.26,
+            "probability": 0.6625053286552429
+          },
+          {
+            "word": " my",
+            "start": 25.46,
+            "end": 25.5,
+            "probability": 0.9812209606170654
+          },
+          {
+            "word": " color",
+            "start": 25.5,
+            "end": 25.7,
+            "probability": 0.9689038991928101
+          },
+          {
+            "word": " paddy",
+            "start": 25.7,
+            "end": 26.0,
+            "probability": 0.9926418960094452
+          },
+          {
+            "word": " must",
+            "start": 26.0,
+            "end": 26.14,
+            "probability": 0.9716721773147583
+          },
+          {
+            "word": " touch",
+            "start": 26.14,
+            "end": 26.5,
+            "probability": 0.9701012372970581
+          },
+          {
+            "word": " talk.",
+            "start": 26.5,
+            "end": 26.74,
+            "probability": 0.8278682827949524
+          }
+        ]
+      },
+      {
+        "id": 17,
+        "seek": 0,
+        "start": 26.9,
+        "end": 28.04,
+        "text": " Color paddy must touch, good man.",
+        "tokens": [
+          51705,
+          10458,
+          6887,
+          3173,
+          1633,
+          2557,
+          11,
+          665,
+          587,
+          13,
+          51780
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.8299720937555487,
+        "compression_ratio": 1.8364312267657992,
+        "no_speech_prob": 0.35413703322410583,
+        "words": [
+          {
+            "word": " Color",
+            "start": 26.9,
+            "end": 27.0,
+            "probability": 0.9708341360092163
+          },
+          {
+            "word": " paddy",
+            "start": 27.0,
+            "end": 27.26,
+            "probability": 0.993807464838028
+          },
+          {
+            "word": " must",
+            "start": 27.26,
+            "end": 27.4,
+            "probability": 0.9829577803611755
+          },
+          {
+            "word": " touch,",
+            "start": 27.4,
+            "end": 27.68,
+            "probability": 0.9962576627731323
+          },
+          {
+            "word": " good",
+            "start": 27.8,
+            "end": 27.86,
+            "probability": 0.9813429713249207
+          },
+          {
+            "word": " man.",
+            "start": 27.86,
+            "end": 28.04,
+            "probability": 0.983249306678772
+          }
+        ]
+      },
+      {
+        "id": 18,
+        "seek": 2804,
+        "start": 28.04,
+        "end": 29.84,
+        "text": " Ah, exact.",
+        "tokens": [
+          50413,
+          2438,
+          11,
+          1900,
+          13,
+          50475
+        ],
+        "temperature": 1.0,
+        "avg_logprob": -1.9810073035103934,
+        "compression_ratio": 0.5555555555555556,
+        "no_speech_prob": 0.43079620599746704,
+        "words": [
+          {
+            "word": " Ah,",
+            "start": 28.04,
+            "end": 28.88,
+            "probability": 0.03397141396999359
+          },
+          {
+            "word": " exact.",
+            "start": 29.16,
+            "end": 29.84,
+            "probability": 0.015362474136054516
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "file_name": "temp_fa1653ca-c5d7-4028-9f9d-5814c0e479ce_Surprising STRANGERS By Speaking Their Language!_processed.wav",
+      "file_size_mb": 0.977884,
+      "audio_duration_seconds": 30.5575,
+      "processing_time_seconds": 18.49007821083069,
+      "speed_ratio": 1.6526430906117389,
+      "model_size": "base",
+      "device": "cuda",
+      "word_timestamps": true,
+      "task": "transcribe",
+      "processing_time": 18.49146842956543
+    }
+  },
+  "diarization": {
+    "segments": [
+      {
+        "start": 0.0,
+        "end": 4.0,
+        "speaker": "SPEAKER_00",
+        "duration": 4.0
+      },
+      {
+        "start": 3.0,
+        "end": 4.5,
+        "speaker": "SPEAKER_05",
+        "duration": 1.5
+      },
+      {
+        "start": 3.5,
+        "end": 6.0,
+        "speaker": "SPEAKER_04",
+        "duration": 2.5
+      },
+      {
+        "start": 5.0,
+        "end": 8.5,
+        "speaker": "SPEAKER_01",
+        "duration": 3.5
+      },
+      {
+        "start": 7.5,
+        "end": 9.5,
+        "speaker": "SPEAKER_07",
+        "duration": 2.0
+      },
+      {
+        "start": 8.5,
+        "end": 11.5,
+        "speaker": "SPEAKER_01",
+        "duration": 3.0
+      },
+      {
+        "start": 10.5,
+        "end": 13.0,
+        "speaker": "SPEAKER_08",
+        "duration": 2.5
+      },
+      {
+        "start": 12.0,
+        "end": 15.5,
+        "speaker": "SPEAKER_00",
+        "duration": 3.5
+      },
+      {
+        "start": 14.5,
+        "end": 17.0,
+        "speaker": "SPEAKER_02",
+        "duration": 2.5
+      },
+      {
+        "start": 16.0,
+        "end": 18.5,
+        "speaker": "SPEAKER_00",
+        "duration": 2.5
+      },
+      {
+        "start": 17.5,
+        "end": 21.0,
+        "speaker": "SPEAKER_02",
+        "duration": 3.5
+      },
+      {
+        "start": 20.0,
+        "end": 25.5,
+        "speaker": "SPEAKER_03",
+        "duration": 5.5
+      },
+      {
+        "start": 24.5,
+        "end": 29.0,
+        "speaker": "SPEAKER_00",
+        "duration": 4.5
+      },
+      {
+        "start": 28.0,
+        "end": 29.5,
+        "speaker": "SPEAKER_05",
+        "duration": 1.5
+      },
+      {
+        "start": 28.5,
+        "end": 30.5,
+        "speaker": "SPEAKER_06",
+        "duration": 2.0
+      }
+    ],
+    "speakers": [
+      "SPEAKER_00",
+      "SPEAKER_01",
+      "SPEAKER_02",
+      "SPEAKER_03",
+      "SPEAKER_04",
+      "SPEAKER_05",
+      "SPEAKER_06",
+      "SPEAKER_07",
+      "SPEAKER_08"
+    ],
+    "num_speakers": 9,
+    "total_duration": 30.5,
+    "speaker_stats": {
+      "SPEAKER_00": {
+        "segments": 4,
+        "total_duration": 14.5,
+        "percentage": 32.58426966292135
+      },
+      "SPEAKER_05": {
+        "segments": 2,
+        "total_duration": 3.0,
+        "percentage": 6.741573033707865
+      },
+      "SPEAKER_04": {
+        "segments": 1,
+        "total_duration": 2.5,
+        "percentage": 5.617977528089887
+      },
+      "SPEAKER_01": {
+        "segments": 2,
+        "total_duration": 6.5,
+        "percentage": 14.606741573033707
+      },
+      "SPEAKER_07": {
+        "segments": 1,
+        "total_duration": 2.0,
+        "percentage": 4.49438202247191
+      },
+      "SPEAKER_08": {
+        "segments": 1,
+        "total_duration": 2.5,
+        "percentage": 5.617977528089887
+      },
+      "SPEAKER_02": {
+        "segments": 2,
+        "total_duration": 6.0,
+        "percentage": 13.48314606741573
+      },
+      "SPEAKER_03": {
+        "segments": 1,
+        "total_duration": 5.5,
+        "percentage": 12.359550561797752
+      },
+      "SPEAKER_06": {
+        "segments": 1,
+        "total_duration": 2.0,
+        "percentage": 4.49438202247191
+      }
+    },
+    "metadata": {
+      "file_name": "temp_fa1653ca-c5d7-4028-9f9d-5814c0e479ce_Surprising STRANGERS By Speaking Their Language!_processed.wav",
+      "processing_time": 3.3359534740448,
+      "num_speakers_detected": 9,
+      "engine": "speechbrain",
+      "embedding_model": "spkrec-ecapa-voxceleb",
+      "vad_available": true
+    }
+  },
+  "preprocessing": {
+    "applied": true,
+    "metrics": {
+      "original": {
+        "duration": 30.55746031746032,
+        "sample_rate": 44100,
+        "rms": 0.07740141451358795,
+        "peak": 1.0927447080612183,
+        "dc_offset": -1.2570304534165189e-05,
+        "clipping_percentage": 0.0001484137537993921,
+        "silence_percentage": 6.474550009498481,
+        "samples": 1347584
+      },
+      "processed": {
+        "duration": 30.5575,
+        "sample_rate": 16000,
+        "rms": 0.06877179443836212,
+        "peak": 0.6816372871398926,
+        "dc_offset": -3.214840398868546e-05,
+        "clipping_percentage": 0.0,
+        "silence_percentage": 7.0305980528511824,
+        "samples": 488920
+      },
+      "processing_time": 7.8556602001190186,
+      "sample_rate_changed": true,
+      "peak_change": -0.4111074209213257,
+      "dc_offset_change": 1.957809945452027e-05,
+      "summary": "Sample rate: 44100→16000Hz, Audio normalized",
+      "processing_effective": true,
+      "speech_ready": true
+    }
+  },
+  "metadata": {
+    "file_name": "temp_fa1653ca-c5d7-4028-9f9d-5814c0e479ce_Surprising STRANGERS By Speaking Their Language!.mp3",
+    "file_size_mb": 1.249245,
+    "total_duration": 29.84,
+    "num_speakers": 8,
+    "num_segments": 19,
+    "language": "en",
+    "whisper_model": "base",
+    "device": "auto",
+    "total_processing_time": 29.686086654663086,
+    "engines": [
+      "whisper",
+      "speechbrain"
+    ]
+  }
+}

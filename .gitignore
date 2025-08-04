@@ -1,0 +1,48 @@
+# === FRONTEND ===
+# React (Node.js)
+frontend/node_modules/
+frontend/build/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+frontend/.parcel-cache/
+frontend/.next/
+frontend/.turbo/
+
+# logs
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# === BACKEND ===
+# Python
+__pycache__/
+*.py[cod]
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+
+# Environment
+.env
+.venv/
+venv/
+env/
+ENV/
+
+# IDE & OS Files (common)
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.bak
+*.tmp
+Thumbs.db

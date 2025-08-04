@@ -1,0 +1,1565 @@
+{
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 1.4,
+      "duration": 1.4,
+      "text": "world of the world,",
+      "speaker": "SPEAKER_00",
+      "words": [
+        {
+          "word": "world",
+          "start": 0.0,
+          "end": 0.8,
+          "probability": 0.09214764088392258
+        },
+        {
+          "word": " of",
+          "start": 0.8,
+          "end": 1.16,
+          "probability": 0.19742006063461304
+        },
+        {
+          "word": " the",
+          "start": 1.16,
+          "end": 1.16,
+          "probability": 0.1001315489411354
+        },
+        {
+          "word": " world,",
+          "start": 1.16,
+          "end": 1.4,
+          "probability": 0.7746310234069824
+        }
+      ]
+    },
+    {
+      "start": 2.5999999999999988,
+      "end": 3.94,
+      "duration": 1.3400000000000012,
+      "text": "Rannumao has taken care of him",
+      "speaker": "SPEAKER_00",
+      "words": [
+        {
+          "word": " Rannumao",
+          "start": 2.5999999999999988,
+          "end": 3.2,
+          "probability": 0.2756218332797289
+        },
+        {
+          "word": " has",
+          "start": 3.2,
+          "end": 3.3,
+          "probability": 0.08808500319719315
+        },
+        {
+          "word": " taken",
+          "start": 3.3,
+          "end": 3.48,
+          "probability": 0.05495521053671837
+        },
+        {
+          "word": " care",
+          "start": 3.48,
+          "end": 3.56,
+          "probability": 0.2779673635959625
+        },
+        {
+          "word": " of",
+          "start": 3.56,
+          "end": 3.56,
+          "probability": 0.8526198863983154
+        },
+        {
+          "word": " him",
+          "start": 3.56,
+          "end": 3.94,
+          "probability": 0.31923142075538635
+        }
+      ]
+    },
+    {
+      "start": 5.059999999999999,
+      "end": 8.02,
+      "duration": 2.960000000000001,
+      "text": "Kabitajra has taken care of him",
+      "speaker": "SPEAKER_02",
+      "words": [
+        {
+          "word": " Kabitajra",
+          "start": 5.059999999999999,
+          "end": 5.66,
+          "probability": 0.22989425424020737
+        },
+        {
+          "word": " has",
+          "start": 5.66,
+          "end": 5.8,
+          "probability": 0.11355012655258179
+        },
+        {
+          "word": " taken",
+          "start": 5.8,
+          "end": 7.6,
+          "probability": 0.7866849303245544
+        },
+        {
+          "word": " care",
+          "start": 7.6,
+          "end": 7.76,
+          "probability": 0.9706964492797852
+        },
+        {
+          "word": " of",
+          "start": 7.76,
+          "end": 8.02,
+          "probability": 0.9793997406959534
+        },
+        {
+          "word": " him",
+          "start": 8.02,
+          "end": 8.02,
+          "probability": 0.5336704254150391
+        }
+      ]
+    },
+    {
+      "start": 8.02,
+      "end": 9.42,
+      "duration": 1.4000000000000004,
+      "text": "and Kabhi has taken care of him",
+      "speaker": "SPEAKER_00",
+      "words": [
+        {
+          "word": " and",
+          "start": 8.02,
+          "end": 8.14,
+          "probability": 0.3537139296531677
+        },
+        {
+          "word": " Kabhi",
+          "start": 8.14,
+          "end": 8.42,
+          "probability": 0.18121753633022308
+        },
+        {
+          "word": " has",
+          "start": 8.42,
+          "end": 8.58,
+          "probability": 0.8007065057754517
+        },
+        {
+          "word": " taken",
+          "start": 8.58,
+          "end": 8.72,
+          "probability": 0.9853179454803467
+        },
+        {
+          "word": " care",
+          "start": 8.72,
+          "end": 8.72,
+          "probability": 0.9763184189796448
+        },
+        {
+          "word": " of",
+          "start": 8.72,
+          "end": 8.72,
+          "probability": 0.9944233298301697
+        },
+        {
+          "word": " him",
+          "start": 8.72,
+          "end": 9.42,
+          "probability": 0.2962574362754822
+        }
+      ]
+    },
+    {
+      "start": 10.819999999999999,
+      "end": 12.68,
+      "duration": 1.8600000000000012,
+      "text": "Salevi has taken care of his father",
+      "speaker": "SPEAKER_00",
+      "words": [
+        {
+          "word": " Salevi",
+          "start": 10.819999999999999,
+          "end": 11.42,
+          "probability": 0.17007538179556528
+        },
+        {
+          "word": " has",
+          "start": 11.42,
+          "end": 11.7,
+          "probability": 0.10579655319452286
+        },
+        {
+          "word": " taken",
+          "start": 11.7,
+          "end": 11.8,
+          "probability": 0.24782122671604156
+        },
+        {
+          "word": " care",
+          "start": 11.8,
+          "end": 11.8,
+          "probability": 0.812296450138092
+        },
+        {
+          "word": " of",
+          "start": 11.8,
+          "end": 11.8,
+          "probability": 0.9936203360557556
+        },
+        {
+          "word": " his",
+          "start": 11.8,
+          "end": 12.68,
+          "probability": 0.23047174513339996
+        },
+        {
+          "word": " father",
+          "start": 12.68,
+          "end": 12.68,
+          "probability": 0.7824352979660034
+        }
+      ]
+    },
+    {
+      "start": 13.319999999999999,
+      "end": 14.42,
+      "duration": 1.1000000000000014,
+      "text": "and his son",
+      "speaker": "SPEAKER_00",
+      "words": [
+        {
+          "word": " and",
+          "start": 13.319999999999999,
+          "end": 13.92,
+          "probability": 0.1450052261352539
+        },
+        {
+          "word": " his",
+          "start": 13.92,
+          "end": 14.02,
+          "probability": 0.30345040559768677
+        },
+        {
+          "word": " son",
+          "start": 14.02,
+          "end": 14.42,
+          "probability": 0.13509780168533325
+        }
+      ]
+    },
+    {
+      "start": 15.099999999999998,
+      "end": 18.9,
+      "duration": 3.8000000000000007,
+      "text": "My grandfather Fatih Sultan Mehmet has taken care of him",
+      "speaker": "SPEAKER_00",
+      "words": [
+        {
+          "word": " My",
+          "start": 15.099999999999998,
+          "end": 15.7,
+          "probability": 0.1444074958562851
+        },
+        {
+          "word": " grandfather",
+          "start": 15.7,
+          "end": 16.04,
+          "probability": 0.32643309235572815
+        },
+        {
+          "word": " Fatih",
+          "start": 16.04,
+          "end": 16.38,
+          "probability": 0.5049465447664261
+        },
+        {
+          "word": " Sultan",
+          "start": 16.38,
+          "end": 16.64,
+          "probability": 0.8878109455108643
+        },
+        {
+          "word": " Mehmet",
+          "start": 16.64,
+          "end": 17.06,
+          "probability": 0.674481987953186
+        },
+        {
+          "word": " has",
+          "start": 17.06,
+          "end": 17.36,
+          "probability": 0.6696191430091858
+        },
+        {
+          "word": " taken",
+          "start": 17.36,
+          "end": 17.5,
+          "probability": 0.4362715184688568
+        },
+        {
+          "word": " care",
+          "start": 17.5,
+          "end": 17.62,
+          "probability": 0.8900914192199707
+        },
+        {
+          "word": " of",
+          "start": 17.62,
+          "end": 18.9,
+          "probability": 0.9970083832740784
+        },
+        {
+          "word": " him",
+          "start": 18.9,
+          "end": 18.9,
+          "probability": 0.42956244945526123
+        }
+      ]
+    },
+    {
+      "start": 18.9,
+      "end": 18.94,
+      "duration": 0.0400000000000027,
+      "text": "with him",
+      "speaker": "SPEAKER_00",
+      "words": [
+        {
+          "word": " with",
+          "start": 18.9,
+          "end": 18.94,
+          "probability": 0.3032437264919281
+        },
+        {
+          "word": " him",
+          "start": 18.94,
+          "end": 18.94,
+          "probability": 0.425926148891449
+        }
+      ]
+    },
+    {
+      "start": 18.94,
+      "end": 21.5,
+      "duration": 2.5599999999999987,
+      "text": "He is a man of 2-4 days",
+      "speaker": "SPEAKER_00",
+      "words": [
+        {
+          "word": " He",
+          "start": 18.94,
+          "end": 19.06,
+          "probability": 0.17114216089248657
+        },
+        {
+          "word": " is",
+          "start": 19.06,
+          "end": 20.52,
+          "probability": 0.4525817930698395
+        },
+        {
+          "word": " a",
+          "start": 20.52,
+          "end": 20.52,
+          "probability": 0.046420007944107056
+        },
+        {
+          "word": " man",
+          "start": 20.52,
+          "end": 20.52,
+          "probability": 0.10514404624700546
+        },
+        {
+          "word": " of",
+          "start": 20.52,
+          "end": 20.82,
+          "probability": 0.375166118144989
+        },
+        {
+          "word": " 2",
+          "start": 20.82,
+          "end": 20.9,
+          "probability": 0.20893898606300354
+        },
+        {
+          "word": "-4",
+          "start": 20.9,
+          "end": 21.18,
+          "probability": 0.7377358675003052
+        },
+        {
+          "word": " days",
+          "start": 21.18,
+          "end": 21.5,
+          "probability": 0.10736475884914398
+        }
+      ]
+    },
+    {
+      "start": 22.72,
+      "end": 24.06,
+      "duration": 1.3399999999999999,
+      "text": "but he is sure",
+      "speaker": "SPEAKER_00",
+      "words": [
+        {
+          "word": " but",
+          "start": 22.72,
+          "end": 23.32,
+          "probability": 0.15304803848266602
+        },
+        {
+          "word": " he",
+          "start": 23.32,
+          "end": 23.92,
+          "probability": 0.3652075529098511
+        },
+        {
+          "word": " is",
+          "start": 23.92,
+          "end": 24.06,
+          "probability": 0.43667322397232056
+        },
+        {
+          "word": " sure",
+          "start": 24.06,
+          "end": 24.06,
+          "probability": 0.024800654500722885
+        }
+      ]
+    },
+    {
+      "start": 24.06,
+      "end": 26.78,
+      "duration": 2.7200000000000024,
+      "text": "he has taken care of him",
+      "speaker": "SPEAKER_00",
+      "words": [
+        {
+          "word": " he",
+          "start": 24.06,
+          "end": 25.0,
+          "probability": 0.2116924226284027
+        },
+        {
+          "word": " has",
+          "start": 25.0,
+          "end": 25.98,
+          "probability": 0.4753026068210602
+        },
+        {
+          "word": " taken",
+          "start": 25.98,
+          "end": 26.36,
+          "probability": 0.17150987684726715
+        },
+        {
+          "word": " care",
+          "start": 26.36,
+          "end": 26.36,
+          "probability": 0.9140453338623047
+        },
+        {
+          "word": " of",
+          "start": 26.36,
+          "end": 26.78,
+          "probability": 0.9836629629135132
+        },
+        {
+          "word": " him",
+          "start": 26.78,
+          "end": 26.78,
+          "probability": 0.8065101504325867
+        }
+      ]
+    },
+    {
+      "start": 26.78,
+      "end": 28.48,
+      "duration": 1.6999999999999993,
+      "text": "and now he is on this world",
+      "speaker": "SPEAKER_00",
+      "words": [
+        {
+          "word": " and",
+          "start": 26.78,
+          "end": 27.16,
+          "probability": 0.10431820154190063
+        },
+        {
+          "word": " now",
+          "start": 27.16,
+          "end": 27.16,
+          "probability": 0.36497974395751953
+        },
+        {
+          "word": " he",
+          "start": 27.16,
+          "end": 28.16,
+          "probability": 0.5268905758857727
+        },
+        {
+          "word": " is",
+          "start": 28.16,
+          "end": 28.16,
+          "probability": 0.5636150240898132
+        },
+        {
+          "word": " on",
+          "start": 28.16,
+          "end": 28.16,
+          "probability": 0.17442640662193298
+        },
+        {
+          "word": " this",
+          "start": 28.16,
+          "end": 28.18,
+          "probability": 0.5525588989257812
+        },
+        {
+          "word": " world",
+          "start": 28.18,
+          "end": 28.48,
+          "probability": 0.894938051700592
+        }
+      ]
+    },
+    {
+      "start": 30.0,
+      "end": 32.0,
+      "duration": 2.0,
+      "text": "He is a man of 2-4 days",
+      "speaker": "SPEAKER_00",
+      "words": [
+        {
+          "word": " He",
+          "start": 30.0,
+          "end": 30.0,
+          "probability": 8.861157402861863e-05
+        },
+        {
+          "word": " is",
+          "start": 30.0,
+          "end": 30.8,
+          "probability": 0.22171953320503235
+        },
+        {
+          "word": " a",
+          "start": 30.8,
+          "end": 30.84,
+          "probability": 0.15122120082378387
+        },
+        {
+          "word": " man",
+          "start": 30.84,
+          "end": 30.98,
+          "probability": 0.04256724566221237
+        },
+        {
+          "word": " of",
+          "start": 30.98,
+          "end": 31.54,
+          "probability": 0.14430341124534607
+        },
+        {
+          "word": " 2",
+          "start": 31.54,
+          "end": 31.62,
+          "probability": 7.62462877901271e-05
+        },
+        {
+          "word": "-4",
+          "start": 31.62,
+          "end": 31.9,
+          "probability": 0.01950000412762165
+        },
+        {
+          "word": " days",
+          "start": 31.9,
+          "end": 32.18,
+          "probability": 0.0013772884849458933
+        }
+      ]
+    }
+  ],
+  "speakers": [
+    "SPEAKER_00",
+    "SPEAKER_02"
+  ],
+  "speaker_stats": {
+    "SPEAKER_00": {
+      "segments": 12,
+      "total_duration": 21.26000000000001,
+      "total_words": 70,
+      "total_characters": 301,
+      "duration_percentage": 87.77869529314616,
+      "words_percentage": 92.10526315789474
+    },
+    "SPEAKER_02": {
+      "segments": 1,
+      "total_duration": 2.960000000000001,
+      "total_words": 6,
+      "total_characters": 31,
+      "duration_percentage": 12.22130470685384,
+      "words_percentage": 7.894736842105263
+    }
+  },
+  "transcription": {
+    "text": "world of the world, Rannumao has taken care of him Kabitajra has taken care of him and Kabhi has taken care of him Salevi has taken care of his father and his son My grandfather Fatih Sultan Mehmet has taken care of him with him He is a man of 2-4 days but he is sure he has taken care of him and now he is on this world He is a man of 2-4 days",
+    "language": "hi",
+    "segments": [
+      {
+        "id": 0,
+        "seek": 0,
+        "start": 0.0,
+        "end": 1.4,
+        "text": "world of the world,",
+        "tokens": [
+          50364,
+          13217,
+          295,
+          264,
+          1002,
+          11,
+          50464
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.9397082152190032,
+        "compression_ratio": 2.0253164556962027,
+        "no_speech_prob": 0.16023258864879608,
+        "words": [
+          {
+            "word": "world",
+            "start": 0.0,
+            "end": 0.8,
+            "probability": 0.09214764088392258
+          },
+          {
+            "word": " of",
+            "start": 0.8,
+            "end": 1.16,
+            "probability": 0.19742006063461304
+          },
+          {
+            "word": " the",
+            "start": 1.16,
+            "end": 1.16,
+            "probability": 0.1001315489411354
+          },
+          {
+            "word": " world,",
+            "start": 1.16,
+            "end": 1.4,
+            "probability": 0.7746310234069824
+          }
+        ]
+      },
+      {
+        "id": 1,
+        "seek": 0,
+        "start": 2.5999999999999988,
+        "end": 3.94,
+        "text": " Rannumao has taken care of him",
+        "tokens": [
+          50464,
+          497,
+          969,
+          5544,
+          78,
+          575,
+          2726,
+          1127,
+          295,
+          796,
+          50564
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.9397082152190032,
+        "compression_ratio": 2.0253164556962027,
+        "no_speech_prob": 0.16023258864879608,
+        "words": [
+          {
+            "word": " Rannumao",
+            "start": 2.5999999999999988,
+            "end": 3.2,
+            "probability": 0.2756218332797289
+          },
+          {
+            "word": " has",
+            "start": 3.2,
+            "end": 3.3,
+            "probability": 0.08808500319719315
+          },
+          {
+            "word": " taken",
+            "start": 3.3,
+            "end": 3.48,
+            "probability": 0.05495521053671837
+          },
+          {
+            "word": " care",
+            "start": 3.48,
+            "end": 3.56,
+            "probability": 0.2779673635959625
+          },
+          {
+            "word": " of",
+            "start": 3.56,
+            "end": 3.56,
+            "probability": 0.8526198863983154
+          },
+          {
+            "word": " him",
+            "start": 3.56,
+            "end": 3.94,
+            "probability": 0.31923142075538635
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "seek": 0,
+        "start": 5.059999999999999,
+        "end": 8.02,
+        "text": " Kabitajra has taken care of him",
+        "tokens": [
+          50564,
+          25848,
+          270,
+          1805,
+          424,
+          575,
+          2726,
+          1127,
+          295,
+          796,
+          50664
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.9397082152190032,
+        "compression_ratio": 2.0253164556962027,
+        "no_speech_prob": 0.16023258864879608,
+        "words": [
+          {
+            "word": " Kabitajra",
+            "start": 5.059999999999999,
+            "end": 5.66,
+            "probability": 0.22989425424020737
+          },
+          {
+            "word": " has",
+            "start": 5.66,
+            "end": 5.8,
+            "probability": 0.11355012655258179
+          },
+          {
+            "word": " taken",
+            "start": 5.8,
+            "end": 7.6,
+            "probability": 0.7866849303245544
+          },
+          {
+            "word": " care",
+            "start": 7.6,
+            "end": 7.76,
+            "probability": 0.9706964492797852
+          },
+          {
+            "word": " of",
+            "start": 7.76,
+            "end": 8.02,
+            "probability": 0.9793997406959534
+          },
+          {
+            "word": " him",
+            "start": 8.02,
+            "end": 8.02,
+            "probability": 0.5336704254150391
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "seek": 0,
+        "start": 8.02,
+        "end": 9.42,
+        "text": " and Kabhi has taken care of him",
+        "tokens": [
+          50764,
+          293,
+          25848,
+          4954,
+          575,
+          2726,
+          1127,
+          295,
+          796,
+          50864
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.9397082152190032,
+        "compression_ratio": 2.0253164556962027,
+        "no_speech_prob": 0.16023258864879608,
+        "words": [
+          {
+            "word": " and",
+            "start": 8.02,
+            "end": 8.14,
+            "probability": 0.3537139296531677
+          },
+          {
+            "word": " Kabhi",
+            "start": 8.14,
+            "end": 8.42,
+            "probability": 0.18121753633022308
+          },
+          {
+            "word": " has",
+            "start": 8.42,
+            "end": 8.58,
+            "probability": 0.8007065057754517
+          },
+          {
+            "word": " taken",
+            "start": 8.58,
+            "end": 8.72,
+            "probability": 0.9853179454803467
+          },
+          {
+            "word": " care",
+            "start": 8.72,
+            "end": 8.72,
+            "probability": 0.9763184189796448
+          },
+          {
+            "word": " of",
+            "start": 8.72,
+            "end": 8.72,
+            "probability": 0.9944233298301697
+          },
+          {
+            "word": " him",
+            "start": 8.72,
+            "end": 9.42,
+            "probability": 0.2962574362754822
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "seek": 0,
+        "start": 10.819999999999999,
+        "end": 12.68,
+        "text": " Salevi has taken care of his father",
+        "tokens": [
+          50864,
+          318,
+          1220,
+          4917,
+          575,
+          2726,
+          1127,
+          295,
+          702,
+          3086,
+          51014
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.9397082152190032,
+        "compression_ratio": 2.0253164556962027,
+        "no_speech_prob": 0.16023258864879608,
+        "words": [
+          {
+            "word": " Salevi",
+            "start": 10.819999999999999,
+            "end": 11.42,
+            "probability": 0.17007538179556528
+          },
+          {
+            "word": " has",
+            "start": 11.42,
+            "end": 11.7,
+            "probability": 0.10579655319452286
+          },
+          {
+            "word": " taken",
+            "start": 11.7,
+            "end": 11.8,
+            "probability": 0.24782122671604156
+          },
+          {
+            "word": " care",
+            "start": 11.8,
+            "end": 11.8,
+            "probability": 0.812296450138092
+          },
+          {
+            "word": " of",
+            "start": 11.8,
+            "end": 11.8,
+            "probability": 0.9936203360557556
+          },
+          {
+            "word": " his",
+            "start": 11.8,
+            "end": 12.68,
+            "probability": 0.23047174513339996
+          },
+          {
+            "word": " father",
+            "start": 12.68,
+            "end": 12.68,
+            "probability": 0.7824352979660034
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "seek": 0,
+        "start": 13.319999999999999,
+        "end": 14.42,
+        "text": " and his son",
+        "tokens": [
+          51014,
+          293,
+          702,
+          1872,
+          51114
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.9397082152190032,
+        "compression_ratio": 2.0253164556962027,
+        "no_speech_prob": 0.16023258864879608,
+        "words": [
+          {
+            "word": " and",
+            "start": 13.319999999999999,
+            "end": 13.92,
+            "probability": 0.1450052261352539
+          },
+          {
+            "word": " his",
+            "start": 13.92,
+            "end": 14.02,
+            "probability": 0.30345040559768677
+          },
+          {
+            "word": " son",
+            "start": 14.02,
+            "end": 14.42,
+            "probability": 0.13509780168533325
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "seek": 0,
+        "start": 15.099999999999998,
+        "end": 18.9,
+        "text": " My grandfather Fatih Sultan Mehmet has taken care of him",
+        "tokens": [
+          51114,
+          1222,
+          14754,
+          16948,
+          4247,
+          23528,
+          29337,
+          5537,
+          575,
+          2726,
+          1127,
+          295,
+          796,
+          51264
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.9397082152190032,
+        "compression_ratio": 2.0253164556962027,
+        "no_speech_prob": 0.16023258864879608,
+        "words": [
+          {
+            "word": " My",
+            "start": 15.099999999999998,
+            "end": 15.7,
+            "probability": 0.1444074958562851
+          },
+          {
+            "word": " grandfather",
+            "start": 15.7,
+            "end": 16.04,
+            "probability": 0.32643309235572815
+          },
+          {
+            "word": " Fatih",
+            "start": 16.04,
+            "end": 16.38,
+            "probability": 0.5049465447664261
+          },
+          {
+            "word": " Sultan",
+            "start": 16.38,
+            "end": 16.64,
+            "probability": 0.8878109455108643
+          },
+          {
+            "word": " Mehmet",
+            "start": 16.64,
+            "end": 17.06,
+            "probability": 0.674481987953186
+          },
+          {
+            "word": " has",
+            "start": 17.06,
+            "end": 17.36,
+            "probability": 0.6696191430091858
+          },
+          {
+            "word": " taken",
+            "start": 17.36,
+            "end": 17.5,
+            "probability": 0.4362715184688568
+          },
+          {
+            "word": " care",
+            "start": 17.5,
+            "end": 17.62,
+            "probability": 0.8900914192199707
+          },
+          {
+            "word": " of",
+            "start": 17.62,
+            "end": 18.9,
+            "probability": 0.9970083832740784
+          },
+          {
+            "word": " him",
+            "start": 18.9,
+            "end": 18.9,
+            "probability": 0.42956244945526123
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "seek": 0,
+        "start": 18.9,
+        "end": 18.94,
+        "text": " with him",
+        "tokens": [
+          51264,
+          365,
+          796,
+          51314
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.9397082152190032,
+        "compression_ratio": 2.0253164556962027,
+        "no_speech_prob": 0.16023258864879608,
+        "words": [
+          {
+            "word": " with",
+            "start": 18.9,
+            "end": 18.94,
+            "probability": 0.3032437264919281
+          },
+          {
+            "word": " him",
+            "start": 18.94,
+            "end": 18.94,
+            "probability": 0.425926148891449
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "seek": 0,
+        "start": 18.94,
+        "end": 21.5,
+        "text": " He is a man of 2-4 days",
+        "tokens": [
+          51314,
+          634,
+          307,
+          257,
+          587,
+          295,
+          568,
+          12,
+          19,
+          1708,
+          51464
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.9397082152190032,
+        "compression_ratio": 2.0253164556962027,
+        "no_speech_prob": 0.16023258864879608,
+        "words": [
+          {
+            "word": " He",
+            "start": 18.94,
+            "end": 19.06,
+            "probability": 0.17114216089248657
+          },
+          {
+            "word": " is",
+            "start": 19.06,
+            "end": 20.52,
+            "probability": 0.4525817930698395
+          },
+          {
+            "word": " a",
+            "start": 20.52,
+            "end": 20.52,
+            "probability": 0.046420007944107056
+          },
+          {
+            "word": " man",
+            "start": 20.52,
+            "end": 20.52,
+            "probability": 0.10514404624700546
+          },
+          {
+            "word": " of",
+            "start": 20.52,
+            "end": 20.82,
+            "probability": 0.375166118144989
+          },
+          {
+            "word": " 2",
+            "start": 20.82,
+            "end": 20.9,
+            "probability": 0.20893898606300354
+          },
+          {
+            "word": "-4",
+            "start": 20.9,
+            "end": 21.18,
+            "probability": 0.7377358675003052
+          },
+          {
+            "word": " days",
+            "start": 21.18,
+            "end": 21.5,
+            "probability": 0.10736475884914398
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "seek": 0,
+        "start": 22.72,
+        "end": 24.06,
+        "text": " but he is sure",
+        "tokens": [
+          51464,
+          457,
+          415,
+          307,
+          988,
+          51564
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.9397082152190032,
+        "compression_ratio": 2.0253164556962027,
+        "no_speech_prob": 0.16023258864879608,
+        "words": [
+          {
+            "word": " but",
+            "start": 22.72,
+            "end": 23.32,
+            "probability": 0.15304803848266602
+          },
+          {
+            "word": " he",
+            "start": 23.32,
+            "end": 23.92,
+            "probability": 0.3652075529098511
+          },
+          {
+            "word": " is",
+            "start": 23.92,
+            "end": 24.06,
+            "probability": 0.43667322397232056
+          },
+          {
+            "word": " sure",
+            "start": 24.06,
+            "end": 24.06,
+            "probability": 0.024800654500722885
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "seek": 0,
+        "start": 24.06,
+        "end": 26.78,
+        "text": " he has taken care of him",
+        "tokens": [
+          51564,
+          415,
+          575,
+          2726,
+          1127,
+          295,
+          796,
+          51664
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.9397082152190032,
+        "compression_ratio": 2.0253164556962027,
+        "no_speech_prob": 0.16023258864879608,
+        "words": [
+          {
+            "word": " he",
+            "start": 24.06,
+            "end": 25.0,
+            "probability": 0.2116924226284027
+          },
+          {
+            "word": " has",
+            "start": 25.0,
+            "end": 25.98,
+            "probability": 0.4753026068210602
+          },
+          {
+            "word": " taken",
+            "start": 25.98,
+            "end": 26.36,
+            "probability": 0.17150987684726715
+          },
+          {
+            "word": " care",
+            "start": 26.36,
+            "end": 26.36,
+            "probability": 0.9140453338623047
+          },
+          {
+            "word": " of",
+            "start": 26.36,
+            "end": 26.78,
+            "probability": 0.9836629629135132
+          },
+          {
+            "word": " him",
+            "start": 26.78,
+            "end": 26.78,
+            "probability": 0.8065101504325867
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "seek": 0,
+        "start": 26.78,
+        "end": 28.48,
+        "text": " and now he is on this world",
+        "tokens": [
+          51664,
+          293,
+          586,
+          415,
+          307,
+          322,
+          341,
+          1002,
+          51764
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.9397082152190032,
+        "compression_ratio": 2.0253164556962027,
+        "no_speech_prob": 0.16023258864879608,
+        "words": [
+          {
+            "word": " and",
+            "start": 26.78,
+            "end": 27.16,
+            "probability": 0.10431820154190063
+          },
+          {
+            "word": " now",
+            "start": 27.16,
+            "end": 27.16,
+            "probability": 0.36497974395751953
+          },
+          {
+            "word": " he",
+            "start": 27.16,
+            "end": 28.16,
+            "probability": 0.5268905758857727
+          },
+          {
+            "word": " is",
+            "start": 28.16,
+            "end": 28.16,
+            "probability": 0.5636150240898132
+          },
+          {
+            "word": " on",
+            "start": 28.16,
+            "end": 28.16,
+            "probability": 0.17442640662193298
+          },
+          {
+            "word": " this",
+            "start": 28.16,
+            "end": 28.18,
+            "probability": 0.5525588989257812
+          },
+          {
+            "word": " world",
+            "start": 28.18,
+            "end": 28.48,
+            "probability": 0.894938051700592
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "seek": 3000,
+        "start": 30.0,
+        "end": 32.0,
+        "text": " He is a man of 2-4 days",
+        "tokens": [
+          50364,
+          634,
+          307,
+          257,
+          587,
+          295,
+          568,
+          12,
+          19,
+          1708,
+          50464
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.7501058578491211,
+        "compression_ratio": 0.7419354838709677,
+        "no_speech_prob": 0.01963076926767826,
+        "words": [
+          {
+            "word": " He",
+            "start": 30.0,
+            "end": 30.0,
+            "probability": 8.861157402861863e-05
+          },
+          {
+            "word": " is",
+            "start": 30.0,
+            "end": 30.8,
+            "probability": 0.22171953320503235
+          },
+          {
+            "word": " a",
+            "start": 30.8,
+            "end": 30.84,
+            "probability": 0.15122120082378387
+          },
+          {
+            "word": " man",
+            "start": 30.84,
+            "end": 30.98,
+            "probability": 0.04256724566221237
+          },
+          {
+            "word": " of",
+            "start": 30.98,
+            "end": 31.54,
+            "probability": 0.14430341124534607
+          },
+          {
+            "word": " 2",
+            "start": 31.54,
+            "end": 31.62,
+            "probability": 7.62462877901271e-05
+          },
+          {
+            "word": "-4",
+            "start": 31.62,
+            "end": 31.9,
+            "probability": 0.01950000412762165
+          },
+          {
+            "word": " days",
+            "start": 31.9,
+            "end": 32.18,
+            "probability": 0.0013772884849458933
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "file_name": "temp_1b97b86b-94c7-4682-a415-943354c2f636_Abdul Hameed Khan words_processed.wav",
+      "file_size_mb": 1.202234,
+      "audio_duration_seconds": 37.5684375,
+      "processing_time_seconds": 2.479077100753784,
+      "speed_ratio": 15.15420294454618,
+      "model_size": "base",
+      "device": "cpu",
+      "word_timestamps": true,
+      "task": "transcribe",
+      "processing_time": 2.4791488647460938
+    }
+  },
+  "diarization": {
+    "segments": [
+      {
+        "start": 0.0,
+        "end": 4.5,
+        "speaker": "SPEAKER_00",
+        "duration": 4.5
+      },
+      {
+        "start": 3.5,
+        "end": 5.5,
+        "speaker": "SPEAKER_01",
+        "duration": 2.0
+      },
+      {
+        "start": 4.5,
+        "end": 6.5,
+        "speaker": "SPEAKER_00",
+        "duration": 2.0
+      },
+      {
+        "start": 5.5,
+        "end": 8.0,
+        "speaker": "SPEAKER_02",
+        "duration": 2.5
+      },
+      {
+        "start": 7.0,
+        "end": 19.5,
+        "speaker": "SPEAKER_00",
+        "duration": 12.5
+      },
+      {
+        "start": 18.5,
+        "end": 20.5,
+        "speaker": "SPEAKER_02",
+        "duration": 2.0
+      },
+      {
+        "start": 19.5,
+        "end": 29.5,
+        "speaker": "SPEAKER_00",
+        "duration": 10.0
+      },
+      {
+        "start": 28.5,
+        "end": 30.5,
+        "speaker": "SPEAKER_01",
+        "duration": 2.0
+      },
+      {
+        "start": 29.5,
+        "end": 32.5,
+        "speaker": "SPEAKER_00",
+        "duration": 3.0
+      },
+      {
+        "start": 31.5,
+        "end": 34.0,
+        "speaker": "SPEAKER_01",
+        "duration": 2.5
+      },
+      {
+        "start": 33.0,
+        "end": 37.5,
+        "speaker": "SPEAKER_03",
+        "duration": 4.5
+      }
+    ],
+    "speakers": [
+      "SPEAKER_00",
+      "SPEAKER_01",
+      "SPEAKER_02",
+      "SPEAKER_03"
+    ],
+    "num_speakers": 4,
+    "total_duration": 37.5,
+    "speaker_stats": {
+      "SPEAKER_00": {
+        "segments": 5,
+        "total_duration": 32.0,
+        "percentage": 67.36842105263158
+      },
+      "SPEAKER_01": {
+        "segments": 3,
+        "total_duration": 6.5,
+        "percentage": 13.684210526315791
+      },
+      "SPEAKER_02": {
+        "segments": 2,
+        "total_duration": 4.5,
+        "percentage": 9.473684210526317
+      },
+      "SPEAKER_03": {
+        "segments": 1,
+        "total_duration": 4.5,
+        "percentage": 9.473684210526317
+      }
+    },
+    "metadata": {
+      "file_name": "temp_1b97b86b-94c7-4682-a415-943354c2f636_Abdul Hameed Khan words_processed.wav",
+      "processing_time": 1.7677650451660156,
+      "num_speakers_detected": 4,
+      "engine": "speechbrain",
+      "embedding_model": "spkrec-ecapa-voxceleb",
+      "vad_available": true
+    }
+  },
+  "preprocessing": {
+    "applied": true,
+    "metrics": {
+      "original": {
+        "duration": 37.56843537414966,
+        "sample_rate": 44100,
+        "rms": 0.10527777671813965,
+        "peak": 0.6437530517578125,
+        "dc_offset": -0.00043474489939399064,
+        "clipping_percentage": 0.0,
+        "silence_percentage": 11.833159500907792,
+        "samples": 1656768
+      },
+      "processed": {
+        "duration": 37.5684375,
+        "sample_rate": 16000,
+        "rms": 0.13350310921669006,
+        "peak": 0.6816372871398926,
+        "dc_offset": 0.00017971507622860372,
+        "clipping_percentage": 0.0,
+        "silence_percentage": 11.556908641728846,
+        "samples": 601095
+      },
+      "processing_time": 0.49899911880493164,
+      "sample_rate_changed": true,
+      "peak_change": 0.03788423538208008,
+      "dc_offset_change": -0.0002550298231653869,
+      "summary": "Sample rate: 44100→16000Hz, Audio normalized",
+      "processing_effective": true,
+      "speech_ready": true
+    }
+  },
+  "metadata": {
+    "file_name": "temp_1b97b86b-94c7-4682-a415-943354c2f636_Abdul Hameed Khan words.mp4",
+    "file_size_mb": 1.983079,
+    "total_duration": 32.0,
+    "num_speakers": 2,
+    "num_segments": 13,
+    "language": "hi",
+    "whisper_model": "base",
+    "device": "auto",
+    "total_processing_time": 4.746171236038208,
+    "engines": [
+      "whisper",
+      "speechbrain"
+    ]
+  }
+}
