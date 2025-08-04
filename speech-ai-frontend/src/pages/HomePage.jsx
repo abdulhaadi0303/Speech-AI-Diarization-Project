@@ -1,19 +1,14 @@
-// src/pages/HomePage.jsx - Fixed: Don't Clear File After Processing
-import React, { useCallback, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+// src/pages/HomePage.jsx - Cleaned up with Option A Implementation
+import React, { useCallback, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
   Upload, 
-  FileAudio, 
   X, 
-  AlertCircle, 
-  Settings,
+  AlertCircle,
   Loader2,
   CheckCircle,
-  Volume2,
-  Zap,
-  Clock,
-  PlayCircle
+  Volume2
 } from 'lucide-react';
 import { useBackend } from '../contexts/BackendContext';
 import { backendApi } from '../services/api';
@@ -21,7 +16,7 @@ import useAppStore from '../stores/appStore';
 import AddNewButton from '../components/common/AddNewButton';
 import toast from 'react-hot-toast';
 
-// Processing Status Banner Component - NO CHANGES
+// Processing Status Banner Component
 const ProcessingBanner = ({ processingSessions, onViewSession }) => {
   if (processingSessions.length === 0) return null;
 
@@ -62,8 +57,8 @@ const ProcessingBanner = ({ processingSessions, onViewSession }) => {
   );
 };
 
-// Audio Upload Component - NO CHANGES
-const AudioUploader = ({ onFileUpload, selectedFile, isProcessing, setSelectedFile }) => {
+// Audio Upload Component - UPDATED: No cross button, handle processed state
+const AudioUploader = ({ onFileUpload, selectedFile, isProcessing, currentSessionId, processingStatus }) => {
   const [dragActive, setDragActive] = React.useState(false);
   const [error, setError] = React.useState(null);
   const fileInputRef = useRef(null);
@@ -96,9 +91,8 @@ const AudioUploader = ({ onFileUpload, selectedFile, isProcessing, setSelectedFi
     }
 
     setError(null);
-    setSelectedFile(file);
     onFileUpload(file);
-  }, [onFileUpload, setSelectedFile]);
+  }, [onFileUpload]);
 
   const handleDrag = useCallback((e) => {
     e.preventDefault();
@@ -142,6 +136,10 @@ const AudioUploader = ({ onFileUpload, selectedFile, isProcessing, setSelectedFi
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  // ✅ NEW: Check if we have a processed session (for after refresh)
+  const hasProcessedSession = currentSessionId && processingStatus?.status === 'completed';
+  const isCurrentlyProcessing = currentSessionId && processingStatus?.status === 'processing';
+
   return (
     <div className="bg-gray-100 p-6 rounded-lg">
       <h3 className="text-cyan-400 text-lg font-semibold mb-4 flex items-center">
@@ -149,7 +147,31 @@ const AudioUploader = ({ onFileUpload, selectedFile, isProcessing, setSelectedFi
         Audio
       </h3>
       
-      {!selectedFile ? (
+      {/* ✅ NEW: Show processed session state (after refresh) */}
+      {hasProcessedSession && !selectedFile ? (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+          <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
+          <div>
+            <p className="text-lg font-medium text-green-700 mb-1">Audio Processed Successfully</p>
+            <p className="text-sm text-green-600">Session: {currentSessionId.slice(0, 8)}...</p>
+            <p className="text-xs text-green-600 mt-2">
+              Use "Add New" button to upload a different file
+            </p>
+          </div>
+        </div>
+      ) : isCurrentlyProcessing && !selectedFile ? (
+        <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-6 text-center">
+          <Loader2 className="w-12 h-12 text-cyan-500 mx-auto mb-3 animate-spin" />
+          <div>
+            <p className="text-lg font-medium text-cyan-700 mb-1">Processing Audio...</p>
+            <p className="text-sm text-cyan-600">Session: {currentSessionId.slice(0, 8)}...</p>
+            <p className="text-xs text-cyan-600 mt-2">
+              Processing continues in background
+            </p>
+          </div>
+        </div>
+      ) : !selectedFile ? (
+        /* ✅ UNCHANGED: Upload area for new files */
         <div
           className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
             dragActive
@@ -207,23 +229,14 @@ const AudioUploader = ({ onFileUpload, selectedFile, isProcessing, setSelectedFi
           )}
         </div>
       ) : (
+        /* ✅ UPDATED: Selected file display WITHOUT cross button */
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <CheckCircle className="w-8 h-8 text-green-500" />
-              <div>
-                <p className="text-sm font-medium text-green-700">{selectedFile.name}</p>
-                <p className="text-xs text-green-600">{formatFileSize(selectedFile.size)}</p>
-              </div>
+          <div className="flex items-center space-x-3">
+            <CheckCircle className="w-8 h-8 text-green-500" />
+            <div>
+              <p className="text-sm font-medium text-green-700">{selectedFile.name}</p>
+              <p className="text-xs text-green-600">{formatFileSize(selectedFile.size)}</p>
             </div>
-            {!isProcessing && (
-              <button
-                onClick={() => setSelectedFile(null)}
-                className="text-green-600 hover:text-green-800 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            )}
           </div>
         </div>
       )}
@@ -231,8 +244,8 @@ const AudioUploader = ({ onFileUpload, selectedFile, isProcessing, setSelectedFi
   );
 };
 
-// Audio Visualization Section - NO CHANGES
-const AudioVisualizationSection = ({ isProcessing, language, setLanguage, speakers, setSpeakers }) => {
+// Audio Visualization Section - UNCHANGED
+const AudioVisualizationSection = ({ isProcessing, language, setLanguage, speakers, setSpeakers, handleStartProcessing, canProcess }) => {
   const languages = [
     { code: '', name: 'Auto-detect' },
     { code: 'en', name: 'English' },
@@ -313,66 +326,9 @@ const AudioVisualizationSection = ({ isProcessing, language, setLanguage, speake
           </div>
         </div>
       </div>
-    </div>
-  );
-};
 
-// Processing Structure Component - NO CHANGES  
-const ProcessingStructureSection = ({ structures, onStructureToggle, disabled }) => {
-  return (
-    <div className="bg-gray-100 p-6 rounded-lg">
-      <h3 className="text-cyan-400 text-lg font-semibold mb-4">Structures</h3>
-      <p className="text-gray-600 mb-4">Specify the Order in which Conversation should be Processed</p>
-      
-      <div className="space-y-3">
-        {structures.map((structure, index) => (
-          <div key={index} className="flex items-center justify-between">
-            <span className="text-gray-700">
-              {index + 1}. {structure.name}
-            </span>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                className="sr-only peer"
-                checked={structure.enabled}
-                onChange={() => onStructureToggle(index)}
-                disabled={disabled}
-              />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-400 disabled:opacity-50"></div>
-            </label>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// Processing Parameters Component - NO CHANGES
-const ProcessingParametersSection = ({ parameters, onParameterToggle, onStartProcessing, canProcess, isProcessing }) => {
-  return (
-    <div className="bg-gray-100 p-6 rounded-lg">
-      <h3 className="text-cyan-400 text-lg font-semibold mb-4">Parameters</h3>
-      <p className="text-gray-600 mb-4">Specify the Order in which Conversation should be Processed</p>
-      
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        {parameters.map((param, index) => (
-          <button
-            key={index}
-            onClick={() => onParameterToggle(index)}
-            disabled={isProcessing}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${
-              param.enabled
-                ? 'bg-cyan-400 text-white'
-                : 'bg-gray-800 text-white hover:bg-gray-700'
-            }`}
-          >
-            {param.name}
-          </button>
-        ))}
-      </div>
-      
       <button
-        onClick={onStartProcessing}
+        onClick={handleStartProcessing}
         disabled={!canProcess || isProcessing}
         className={`w-full py-3 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2 ${
           canProcess && !isProcessing
@@ -393,7 +349,7 @@ const ProcessingParametersSection = ({ parameters, onParameterToggle, onStartPro
   );
 };
 
-// Main HomePage Component - FIXED: Don't clear file after processing
+// ✅ UPDATED: Main HomePage Component - Cleaner with Option A
 const HomePage = () => {
   const navigate = useNavigate();
   const { 
@@ -403,7 +359,7 @@ const HomePage = () => {
     getProcessingSessions 
   } = useBackend();
   
-  // Zustand state - NO CHANGES
+  // ✅ UPDATED: selectedFile is NOT persisted, only processing state is
   const selectedFile = useAppStore((state) => state.selectedFile);
   const setSelectedFile = useAppStore((state) => state.setSelectedFile);
   const isProcessing = useAppStore((state) => state.isProcessing);
@@ -415,34 +371,19 @@ const HomePage = () => {
   const speakers = useAppStore((state) => state.speakers);
   const setSpeakers = useAppStore((state) => state.setSpeakers);
   const structures = useAppStore((state) => state.structures);
-  const setStructures = useAppStore((state) => state.setStructures);
   const parameters = useAppStore((state) => state.parameters);
-  const setParameters = useAppStore((state) => state.setParameters);
+  
+  // ✅ NEW: Get processing state for display
+  const currentSessionId = useAppStore((state) => state.currentSessionId);
+  const processingStatus = useAppStore((state) => state.processingStatus);
 
-  // Get processing sessions for banner - NO CHANGE
   const processingSessions = getProcessingSessions();
 
-  // Handle file upload - NO CHANGE
+  // ✅ SIMPLIFIED: Handle file upload (no setSelectedFile in store)
   const handleFileUpload = useCallback((file) => {
     setSelectedFile(file);
   }, [setSelectedFile]);
 
-  // Toggle functions - NO CHANGE
-  const handleStructureToggle = (index) => {
-    if (isProcessing) return;
-    const newStructures = [...structures];
-    newStructures[index].enabled = !newStructures[index].enabled;
-    setStructures(newStructures);
-  };
-
-  const handleParameterToggle = (index) => {
-    if (isProcessing) return;
-    const newParameters = [...parameters];
-    newParameters[index].enabled = !newParameters[index].enabled;
-    setParameters(newParameters);
-  };
-
-  // FIXED: Start processing - DON'T clear file after processing
   const handleStartProcessing = useCallback(async () => {
     if (!selectedFile || !isConnected) {
       toast.error('Please select a file and ensure backend is connected');
@@ -471,7 +412,6 @@ const HomePage = () => {
       
       setCurrentSession(sessionId);
       
-      // Add session with processing status
       addSession(sessionId, {
         status: 'processing',
         progress: 0,
@@ -481,7 +421,6 @@ const HomePage = () => {
         startTime: new Date()
       });
 
-      // Register callback for auto-navigation when complete
       registerNavigationCallback(sessionId, (completedSessionId) => {
         navigate('/results', { 
           state: { 
@@ -497,18 +436,15 @@ const HomePage = () => {
         duration: 5000 
       });
       
-      // ✅ FIXED: Don't clear the file! Keep it so user can see what was processed
-      // setSelectedFile(null); // ❌ REMOVED THIS LINE
-      setIsProcessing(false); // Only reset processing flag
+      setIsProcessing(false);
       
     } catch (error) {
       console.error('Upload error:', error);
       toast.error(error.userMessage || 'Upload failed', { id: 'upload' });
       setIsProcessing(false);
     }
-  }, [selectedFile, isConnected, language, speakers, structures, parameters, addSession, registerNavigationCallback, navigate, setIsProcessing, setCurrentSession]); // ✅ Removed setSelectedFile from dependencies
+  }, [selectedFile, isConnected, language, speakers, structures, parameters, addSession, registerNavigationCallback, navigate, setIsProcessing, setCurrentSession]);
 
-  // Handle viewing processing session - NO CHANGE
   const handleViewSession = useCallback((sessionId) => {
     const sessionData = processingSessions.find(s => s.sessionId === sessionId);
     if (sessionData) {
@@ -522,7 +458,6 @@ const HomePage = () => {
     }
   }, [processingSessions, navigate]);
 
-  // Connection check - NO CHANGE
   if (!isConnected) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6">
@@ -547,20 +482,17 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen bg-gray-900 overflow-auto">
-      <div className="p-6 max-w-6xl mx-auto">
-        {/* Add New Button in Header */}
+      <div className="p-6 max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <div></div>
           <AddNewButton />
         </div>
 
-        {/* Processing Banner */}
         <ProcessingBanner 
           processingSessions={processingSessions}
           onViewSession={handleViewSession}
         />
 
-        {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
             <span className="text-white text-xl mr-2">Exploration &</span>
@@ -573,33 +505,25 @@ const HomePage = () => {
           </h1>
         </div>
 
-        {/* Main Grid Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Column */}
+        <div className="max-w-2xl mx-auto space-y-6">
           <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="space-y-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
           >
             <AudioUploader 
               onFileUpload={handleFileUpload}
               selectedFile={selectedFile}
-              setSelectedFile={setSelectedFile}
               isProcessing={isProcessing}
-            />
-            
-            <ProcessingStructureSection 
-              structures={structures}
-              onStructureToggle={handleStructureToggle}
-              disabled={isProcessing}
+              currentSessionId={currentSessionId}
+              processingStatus={processingStatus}
             />
           </motion.div>
           
-          {/* Right Column */}
           <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="space-y-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
           >
             <AudioVisualizationSection 
               isProcessing={isProcessing}
@@ -607,14 +531,8 @@ const HomePage = () => {
               setLanguage={setLanguage}
               speakers={speakers}
               setSpeakers={setSpeakers}
-            />
-            
-            <ProcessingParametersSection 
-              parameters={parameters}
-              onParameterToggle={handleParameterToggle}
-              onStartProcessing={handleStartProcessing}
+              handleStartProcessing={handleStartProcessing}
               canProcess={canProcess}
-              isProcessing={isProcessing}
             />
           </motion.div>
         </div>
