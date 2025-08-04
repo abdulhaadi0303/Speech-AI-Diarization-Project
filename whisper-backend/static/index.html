@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech Diarization Platform with AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        .drag-over {
+            border-color: #3b82f6 !important;
+            background-color: #eff6ff !important;
+        }
+        
+        .processing {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .speaker-tag {
+            transition: all 0.3s ease;
+        }
+        
+        .speaker-tag:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .transcript-segment {
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+        
+        .transcript-segment:hover {
+            background-color: #f8fafc;
+            border-left-color: #3b82f6;
+        }
+        
+        .speaker-editor-item {
+            transition: all 0.2s ease;
+        }
+        
+        .speaker-editor-item:hover {
+            background-color: #f1f5f9;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .slide-down {
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #1d4ed8, #1e40af);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #047857);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-success:hover {
+            background: linear-gradient(135deg, #047857, #065f46);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+        }
+        
+        .btn-purple {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-purple:hover {
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+        }
+        
+        .progress-bar {
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6, #3b82f6);
+            background-size: 200% 100%;
+            animation: shimmer 2s linear infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        .status-dot {
+            box-shadow: 0 0 10px currentColor;
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        
+        .llm-response {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 1px solid #0ea5e9;
+        }
+        
+        .custom-prompt-area {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-3xl font-bold text-white">🎙️ Speech Diarization + AI</h1>
+                        <p class="text-white/80 text-sm mt-1">AI-Powered Speaker Recognition & Analysis</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div id="status-indicator" class="flex items-center glass-effect px-3 py-2 rounded-full">
+                        <div class="w-3 h-3 bg-gray-400 rounded-full mr-2 status-dot"></div>
+                        <span class="text-sm text-gray-700 font-medium">Checking...</span>
+                    </div>
+                    <div id="llm-status" class="flex items-center glass-effect px-3 py-2 rounded-full">
+                        <div class="w-3 h-3 bg-gray-400 rounded-full mr-2"></div>
+                        <span class="text-sm text-gray-700 font-medium">LLM: Checking...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Upload Section -->
+        <div class="glass-effect rounded-xl shadow-xl p-8 mb-8 fade-in">
+            <div class="flex items-center mb-6">
+                <i data-lucide="upload" class="w-6 h-6 text-blue-600 mr-3"></i>
+                <h2 class="text-2xl font-bold text-gray-900">Upload Audio File</h2>
+            </div>
+            
+            <!-- Drag and Drop Area -->
+            <div id="drop-zone" class="border-2 border-dashed border-gray-300 rounded-xl p-10 text-center hover:border-blue-400 transition-all duration-300 cursor-pointer group">
+                <div class="space-y-4">
+                    <div class="mx-auto w-20 h-20 text-gray-400 group-hover:text-blue-500 transition-colors">
+                        <i data-lucide="upload-cloud" class="w-full h-full"></i>
+                    </div>
+                    <div>
+                        <p class="text-xl text-gray-600 group-hover:text-gray-700">Drop your audio file here, or <span class="text-blue-600 font-semibold">browse</span></p>
+                        <p class="text-sm text-gray-500 mt-2">Supports MP3, WAV, MP4, M4A, FLAC, OGG • Max 100MB</p>
+                    </div>
+                </div>
+                <input type="file" id="file-input" class="hidden" accept=".mp3,.wav,.mp4,.m4a,.flac,.ogg">
+            </div>
+
+            <!-- File Info -->
+            <div id="file-info" class="hidden mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200 slide-down">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <i data-lucide="file-audio" class="w-6 h-6 text-blue-600 mr-3"></i>
+                        <div>
+                            <span id="file-name" class="text-lg font-semibold text-gray-900"></span>
+                            <span id="file-size" class="text-sm text-gray-600 ml-2"></span>
+                        </div>
+                    </div>
+                    <button id="remove-file" class="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-50 transition-colors">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Settings -->
+            <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label for="language" class="block text-sm font-semibold text-gray-700 mb-3">🌐 Language</label>
+                    <select id="language" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                        <option value="">Auto-detect</option>
+                        <option value="en">🇺🇸 English</option>
+                        <option value="es">🇪🇸 Spanish</option>
+                        <option value="fr">🇫🇷 French</option>
+                        <option value="de">🇩🇪 German</option>
+                        <option value="it">🇮🇹 Italian</option>
+                        <option value="pt">🇧🇷 Portuguese</option>
+                        <option value="ru">🇷🇺 Russian</option>
+                        <option value="ja">🇯🇵 Japanese</option>
+                        <option value="ko">🇰🇷 Korean</option>
+                        <option value="zh">🇨🇳 Chinese</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="num-speakers" class="block text-sm font-semibold text-gray-700 mb-3">👥 Speakers</label>
+                    <select id="num-speakers" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                        <option value="">Auto-detect</option>
+                        <option value="1">1 Speaker</option>
+                        <option value="2">2 Speakers</option>
+                        <option value="3">3 Speakers</option>
+                        <option value="4">4 Speakers</option>
+                        <option value="5">5 Speakers</option>
+                        <option value="6">6 Speakers</option>
+                        <option value="7">7 Speakers</option>
+                        <option value="8">8 Speakers</option>
+                        <option value="9">9 Speakers</option>
+                        <option value="10">10 Speakers</option>
+                    </select>
+                </div>
+                <div class="flex items-center">
+                    <div class="flex items-center h-full">
+                        <input type="checkbox" id="preprocessing" checked class="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label for="preprocessing" class="ml-3 block text-sm font-semibold text-gray-700">
+                            ⚡ Audio Enhancement
+                            <div class="text-xs text-gray-500 font-normal">Improves quality & accuracy</div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Process Button -->
+            <div class="mt-8">
+                <button id="process-btn" disabled class="w-full btn-primary text-white py-4 px-6 rounded-xl font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center">
+                    <i data-lucide="play" class="w-6 h-6 mr-3"></i>
+                    🚀 Process Audio
+                </button>
+            </div>
+        </div>
+
+        <!-- Progress Section -->
+        <div id="progress-section" class="hidden glass-effect rounded-xl shadow-xl p-8 mb-8 fade-in">
+            <div class="flex items-center mb-6">
+                <i data-lucide="cpu" class="w-6 h-6 text-purple-600 mr-3"></i>
+                <h3 class="text-xl font-bold text-gray-900">Processing Audio...</h3>
+            </div>
+            <div class="space-y-4">
+                <div class="flex items-center">
+                    <div id="progress-bar" class="flex-1 bg-gray-200 rounded-full h-3 mr-4 overflow-hidden">
+                        <div class="progress-bar h-3 rounded-full" style="width: 0%"></div>
+                    </div>
+                    <span id="progress-text" class="text-sm font-semibold text-gray-600 min-w-[3rem]">0%</span>
+                </div>
+                <p id="progress-status" class="text-sm text-gray-600 font-medium">🔄 Initializing AI models...</p>
+            </div>
+        </div>
+
+        <!-- Speaker Editor Section -->
+        <div id="speaker-editor-section" class="hidden glass-effect rounded-xl shadow-xl p-8 mb-8 fade-in">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center">
+                    <i data-lucide="edit" class="w-6 h-6 text-orange-600 mr-3"></i>
+                    <h3 class="text-xl font-bold text-gray-900">Speaker Editor</h3>
+                </div>
+                <button id="apply-changes-btn" class="btn-success text-white px-6 py-2 rounded-lg font-semibold flex items-center">
+                    <i data-lucide="check" class="w-4 h-4 mr-2"></i>
+                    Apply Changes
+                </button>
+            </div>
+            <p class="text-gray-600 mb-6">Rename speakers to meaningful names. Changes will update the entire transcript and downloads.</p>
+            
+            <div id="speaker-editor-list" class="space-y-3">
+                <!-- Speaker editor items will be populated here -->
+            </div>
+        </div>
+
+        <!-- LLM Processing Section -->
+        <div id="llm-section" class="hidden glass-effect rounded-xl shadow-xl p-8 mb-8 fade-in">
+            <div class="flex items-center mb-6">
+                <i data-lucide="brain" class="w-6 h-6 text-purple-600 mr-3"></i>
+                <h3 class="text-xl font-bold text-gray-900">AI Analysis</h3>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Prompt Selection -->
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Select Analysis Type</h4>
+                    
+                    <!-- Predefined Prompts -->
+                    <div class="space-y-3 mb-6">
+                        <div id="prompt-buttons" class="grid grid-cols-1 gap-2">
+                            <!-- Prompt buttons will be populated here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Custom Prompt -->
+                    <div class="custom-prompt-area p-4 rounded-lg border border-yellow-300">
+                        <h5 class="font-semibold text-gray-900 mb-2">💡 Custom Prompt</h5>
+                        <textarea 
+                            id="custom-prompt" 
+                            placeholder="Write your custom analysis prompt here... Use {transcript} to reference the conversation."
+                            class="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 resize-none"
+                        ></textarea>
+                        <button id="use-custom-btn" class="mt-3 bg-yellow-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-yellow-700 transition-colors">
+                            Use Custom Prompt
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- LLM Response -->
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-lg font-semibold text-gray-900">AI Response</h4>
+                        <div id="llm-progress" class="hidden flex items-center text-purple-600">
+                            <div class="animate-spin w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full mr-2"></div>
+                            <span class="text-sm">Processing...</span>
+                        </div>
+                    </div>
+                    
+                    <div id="llm-response" class="llm-response p-6 rounded-lg min-h-[300px]">
+                        <div class="text-center text-gray-500">
+                            <i data-lucide="sparkles" class="w-12 h-12 mx-auto mb-3 opacity-50"></i>
+                            <p>Select an analysis type or write a custom prompt to analyze your transcript with AI.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Download AI Response -->
+                    <button id="download-ai-response" class="hidden mt-4 btn-purple text-white px-4 py-2 rounded-lg font-semibold flex items-center">
+                        <i data-lucide="download" class="w-4 h-4 mr-2"></i>
+                        Download AI Analysis
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results-section" class="hidden">
+            <!-- Results Summary -->
+            <div class="glass-effect rounded-xl shadow-xl p-8 mb-8 fade-in">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center">
+                        <i data-lucide="bar-chart-3" class="w-6 h-6 text-green-600 mr-3"></i>
+                        <h3 class="text-xl font-bold text-gray-900">Processing Results</h3>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button id="download-json" class="btn-success text-white px-4 py-2 rounded-lg font-semibold flex items-center">
+                            <i data-lucide="download" class="w-4 h-4 mr-2"></i>
+                            📄 JSON
+                        </button>
+                        <button id="download-txt" class="btn-primary text-white px-4 py-2 rounded-lg font-semibold flex items-center">
+                            <i data-lucide="download" class="w-4 h-4 mr-2"></i>
+                            📝 TXT
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Metadata -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+                    <div class="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+                        <div id="total-duration" class="text-3xl font-bold text-blue-700">--</div>
+                        <div class="text-sm text-blue-600 font-medium">Duration</div>
+                    </div>
+                    <div class="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
+                        <div id="num-speakers" class="text-3xl font-bold text-green-700">--</div>
+                        <div class="text-sm text-green-600 font-medium">Speakers</div>
+                    </div>
+                    <div class="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200">
+                        <div id="num-segments" class="text-3xl font-bold text-purple-700">--</div>
+                        <div class="text-sm text-purple-600 font-medium">Segments</div>
+                    </div>
+                    <div class="text-center p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl border border-orange-200">
+                        <div id="detected-language" class="text-3xl font-bold text-orange-700">--</div>
+                        <div class="text-sm text-orange-600 font-medium">Language</div>
+                    </div>
+                </div>
+
+                <!-- Speaker Stats -->
+                <div id="speaker-stats" class="mb-6">
+                    <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                        <i data-lucide="users" class="w-5 h-5 mr-2"></i>
+                        Speaker Breakdown
+                    </h4>
+                    <div id="speaker-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Speaker stats will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transcript -->
+            <div class="glass-effect rounded-xl shadow-xl p-8 fade-in">
+                <div class="flex items-center mb-6">
+                    <i data-lucide="file-text" class="w-6 h-6 text-indigo-600 mr-3"></i>
+                    <h3 class="text-xl font-bold text-gray-900">Transcript</h3>
+                </div>
+                <div id="transcript" class="space-y-2 max-h-96 overflow-y-auto bg-white rounded-lg border border-gray-200 p-4">
+                    <!-- Transcript segments will be populated here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Global variables
+        let selectedFile = null;
+        let currentResults = null;
+        let speakerMappings = {};
+        let predefinedPrompts = {};
+        let currentLLMResponse = null;
+
+        // DOM elements
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const fileInfo = document.getElementById('file-info');
+        const fileName = document.getElementById('file-name');
+        const fileSize = document.getElementById('file-size');
+        const removeFileBtn = document.getElementById('remove-file');
+        const processBtn = document.getElementById('process-btn');
+        const progressSection = document.getElementById('progress-section');
+        const speakerEditorSection = document.getElementById('speaker-editor-section');
+        const llmSection = document.getElementById('llm-section');
+        const resultsSection = document.getElementById('results-section');
+        const statusIndicator = document.getElementById('status-indicator');
+        const llmStatus = document.getElementById('llm-status');
+
+        // Check API health and LLM status
+        async function checkHealth() {
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                
+                // Update main status
+                const indicator = statusIndicator.children[0];
+                const text = statusIndicator.children[1];
+                
+                if (data.status === 'healthy') {
+                    indicator.className = 'w-3 h-3 bg-green-400 rounded-full mr-2 status-dot';
+                    text.textContent = 'System Ready';
+                } else {
+                    indicator.className = 'w-3 h-3 bg-red-400 rounded-full mr-2 status-dot';
+                    text.textContent = 'System Error';
+                }
+                
+                // Update LLM status
+                const llmIndicator = llmStatus.children[0];
+                const llmText = llmStatus.children[1];
+                
+                if (data.llm && data.llm.status === 'connected') {
+                    llmIndicator.className = 'w-3 h-3 bg-green-400 rounded-full mr-2';
+                    llmText.textContent = `LLM: ${data.llm.current_model}`;
+                } else {
+                    llmIndicator.className = 'w-3 h-3 bg-red-400 rounded-full mr-2';
+                    llmText.textContent = 'LLM: Offline';
+                }
+                
+            } catch (error) {
+                const indicator = statusIndicator.children[0];
+                const text = statusIndicator.children[1];
+                indicator.className = 'w-3 h-3 bg-red-400 rounded-full mr-2 status-dot';
+                text.textContent = 'API Offline';
+                
+                const llmIndicator = llmStatus.children[0];
+                const llmText = llmStatus.children[1];
+                llmIndicator.className = 'w-3 h-3 bg-red-400 rounded-full mr-2';
+                llmText.textContent = 'LLM: Offline';
+            }
+        }
+
+        // Load LLM prompts
+        async function loadLLMPrompts() {
+            try {
+                const response = await fetch('/api/llm-prompts');
+                const data = await response.json();
+                
+                predefinedPrompts = data.predefined_prompts;
+                populatePromptButtons();
+                
+            } catch (error) {
+                console.error('Failed to load LLM prompts:', error);
+            }
+        }
+
+        // Populate prompt buttons
+        function populatePromptButtons() {
+            const promptButtons = document.getElementById('prompt-buttons');
+            promptButtons.innerHTML = '';
+            
+            Object.entries(predefinedPrompts).forEach(([key, prompt]) => {
+                const button = document.createElement('button');
+                button.className = 'text-left p-3 border border-gray-300 rounded-lg hover:border-purple-400 hover:bg-purple-50 transition-colors';
+                button.innerHTML = `
+                    <div class="font-semibold text-gray-900">${prompt.name}</div>
+                    <div class="text-sm text-gray-600">${prompt.description}</div>
+                `;
+                button.onclick = () => processWithLLM(key);
+                promptButtons.appendChild(button);
+            });
+        }
+
+        // File handling
+        function handleFileSelect(file) {
+            console.log('File selected:', file.name);
+            selectedFile = file;
+            fileName.textContent = file.name;
+            fileSize.textContent = `(${(file.size / 1024 / 1024).toFixed(1)} MB)`;
+            fileInfo.classList.remove('hidden');
+            processBtn.disabled = false;
+        }
+
+        function clearFile() {
+            selectedFile = null;
+            fileInput.value = '';
+            fileInfo.classList.add('hidden');
+            processBtn.disabled = true;
+            resultsSection.classList.add('hidden');
+            speakerEditorSection.classList.add('hidden');
+            llmSection.classList.add('hidden');
+            progressSection.classList.add('hidden');
+            speakerMappings = {};
+            currentResults = null;
+            currentLLMResponse = null;
+        }
+
+        // Drag and drop events
+        dropZone.addEventListener('click', (e) => {
+            console.log('Drop zone clicked');
+            fileInput.click();
+        });
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-over');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileSelect(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            console.log('File input changed');
+            if (e.target.files.length > 0) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+
+        removeFileBtn.addEventListener('click', clearFile);
+
+        // Process audio
+        processBtn.addEventListener('click', async () => {
+            if (!selectedFile) {
+                alert('Please select an audio file first');
+                return;
+            }
+
+            console.log('Starting processing...');
+
+            // Show progress
+            progressSection.classList.remove('hidden');
+            resultsSection.classList.add('hidden');
+            speakerEditorSection.classList.add('hidden');
+            llmSection.classList.add('hidden');
+            processBtn.disabled = true;
+
+            // Get settings
+            const language = document.getElementById('language').value;
+            const numSpeakers = document.getElementById('num-speakers').value;
+            const preprocessing = document.getElementById('preprocessing').checked;
+
+            // Create form data
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            formData.append('language', language);
+            formData.append('num_speakers', numSpeakers);
+            formData.append('apply_preprocessing', preprocessing ? 'true' : 'false');
+
+            // Simulate progress updates
+            let progress = 0;
+            const progressBar = document.querySelector('#progress-bar > div');
+            const progressText = document.getElementById('progress-text');
+            const progressStatus = document.getElementById('progress-status');
+
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 10;
+                if (progress > 90) progress = 90;
+                
+                progressBar.style.width = `${progress}%`;
+                progressText.textContent = `${Math.round(progress)}%`;
+                
+                if (progress < 30) {
+                    progressStatus.textContent = '🔄 Loading audio file...';
+                } else if (progress < 60) {
+                    progressStatus.textContent = '🧠 AI speech recognition...';
+                } else if (progress < 90) {
+                    progressStatus.textContent = '👥 Identifying speakers...';
+                }
+            }, 500);
+
+            try {
+                const response = await fetch('/api/upload-audio', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                clearInterval(progressInterval);
+                progressBar.style.width = '100%';
+                progressText.textContent = '100%';
+                progressStatus.textContent = '✅ Processing complete!';
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Server error: ${response.status} - ${errorText}`);
+                }
+
+                const result = await response.json();
+                currentResults = result;
+                
+                // Initialize speaker mappings
+                initializeSpeakerMappings(result.results.speakers);
+                
+                setTimeout(() => {
+                    progressSection.classList.add('hidden');
+                    showSpeakerEditor();
+                }, 1000);
+
+            } catch (error) {
+                console.error('Processing error:', error);
+                clearInterval(progressInterval);
+                progressSection.classList.add('hidden');
+                alert(`Error: ${error.message}`);
+            } finally {
+                processBtn.disabled = false;
+            }
+        });
+
+        // Speaker Editor Functions
+        function initializeSpeakerMappings(speakers) {
+            speakerMappings = {};
+            speakers.forEach(speaker => {
+                speakerMappings[speaker] = speaker;
+            });
+        }
+
+        function showSpeakerEditor() {
+            const editorList = document.getElementById('speaker-editor-list');
+            editorList.innerHTML = '';
+
+            Object.keys(speakerMappings).forEach((originalSpeaker, index) => {
+                const editorItem = document.createElement('div');
+                editorItem.className = 'speaker-editor-item flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200';
+                
+                editorItem.innerHTML = `
+                    <div class="flex items-center space-x-4">
+                        <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+                            ${index + 1}
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-500">Original:</div>
+                            <div class="font-semibold text-gray-900">${originalSpeaker}</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <i data-lucide="arrow-right" class="w-4 h-4 text-gray-400"></i>
+                        <div>
+                            <div class="text-sm text-gray-500">Custom Name:</div>
+                            <input 
+                                type="text" 
+                                class="speaker-name-input px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
+                                value="${speakerMappings[originalSpeaker]}"
+                                data-original="${originalSpeaker}"
+                                placeholder="Enter speaker name..."
+                            />
+                        </div>
+                    </div>
+                `;
+                
+                editorList.appendChild(editorItem);
+            });
+
+            lucide.createIcons();
+            speakerEditorSection.classList.remove('hidden');
+        }
+
+        // Apply speaker changes
+        document.getElementById('apply-changes-btn').addEventListener('click', () => {
+            // Update speaker mappings from inputs
+            document.querySelectorAll('.speaker-name-input').forEach(input => {
+                const originalSpeaker = input.dataset.original;
+                const newName = input.value.trim() || originalSpeaker;
+                speakerMappings[originalSpeaker] = newName;
+            });
+
+            // Update the results with new speaker names
+            updateResultsWithNewSpeakerNames();
+            
+            // Show results and LLM section
+            speakerEditorSection.classList.add('hidden');
+            displayResults(currentResults);
+            resultsSection.classList.remove('hidden');
+            llmSection.classList.remove('hidden');
+        });
+
+        function updateResultsWithNewSpeakerNames() {
+            // Update segments
+            currentResults.results.segments.forEach(segment => {
+                if (speakerMappings[segment.speaker]) {
+                    segment.speaker = speakerMappings[segment.speaker];
+                }
+            });
+
+            // Update speaker stats
+            const newSpeakerStats = {};
+            Object.entries(currentResults.results.speaker_stats).forEach(([originalSpeaker, stats]) => {
+                const newSpeakerName = speakerMappings[originalSpeaker] || originalSpeaker;
+                newSpeakerStats[newSpeakerName] = stats;
+            });
+            currentResults.results.speaker_stats = newSpeakerStats;
+
+            // Update speakers list
+            currentResults.results.speakers = Object.values(speakerMappings);
+        }
+
+        // LLM Processing Functions
+        async function processWithLLM(promptType) {
+            if (!currentResults) {
+                alert('Please process an audio file first');
+                return;
+            }
+
+            // Show loading
+            const llmProgress = document.getElementById('llm-progress');
+            const llmResponse = document.getElementById('llm-response');
+            const downloadBtn = document.getElementById('download-ai-response');
+            
+            llmProgress.classList.remove('hidden');
+            llmResponse.innerHTML = `
+                <div class="text-center text-purple-600">
+                    <div class="animate-spin w-8 h-8 border-2 border-purple-600 border-t-transparent rounded-full mx-auto mb-3"></div>
+                    <p>AI is analyzing your transcript...</p>
+                </div>
+            `;
+            downloadBtn.classList.add('hidden');
+
+            try {
+                const response = await fetch('/api/llm-process', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        transcript_data: currentResults.results,
+                        prompt_type: promptType,
+                        custom_prompt: '',
+                        max_tokens: 2000
+                    })
+                });
+
+                llmProgress.classList.add('hidden');
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`LLM processing failed: ${response.status} - ${errorText}`);
+                }
+
+                const result = await response.json();
+                currentLLMResponse = result;
+                
+                // Display response
+                llmResponse.innerHTML = `
+                    <div class="mb-4">
+                        <h5 class="font-semibold text-gray-900 mb-2">${predefinedPrompts[promptType].name}</h5>
+                        <p class="text-sm text-gray-600 mb-4">${predefinedPrompts[promptType].description}</p>
+                    </div>
+                    <div class="prose prose-sm max-w-none">
+                        <div class="whitespace-pre-wrap text-gray-800">${result.response}</div>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-blue-200">
+                        <div class="text-xs text-gray-500">
+                            Model: ${result.model} • Transcript: ${result.transcript_length} chars
+                        </div>
+                    </div>
+                `;
+                
+                downloadBtn.classList.remove('hidden');
+
+            } catch (error) {
+                console.error('LLM processing error:', error);
+                llmProgress.classList.add('hidden');
+                llmResponse.innerHTML = `
+                    <div class="text-center text-red-600">
+                        <i data-lucide="alert-circle" class="w-8 h-8 mx-auto mb-3"></i>
+                        <p class="font-semibold">Analysis Failed</p>
+                        <p class="text-sm mt-2">${error.message}</p>
+                    </div>
+                `;
+                lucide.createIcons();
+            }
+        }
+
+        // Custom prompt processing
+        document.getElementById('use-custom-btn').addEventListener('click', async () => {
+            const customPrompt = document.getElementById('custom-prompt').value.trim();
+            
+            if (!customPrompt) {
+                alert('Please enter a custom prompt');
+                return;
+            }
+
+            if (!currentResults) {
+                alert('Please process an audio file first');
+                return;
+            }
+
+            // Show loading
+            const llmProgress = document.getElementById('llm-progress');
+            const llmResponse = document.getElementById('llm-response');
+            const downloadBtn = document.getElementById('download-ai-response');
+            
+            llmProgress.classList.remove('hidden');
+            llmResponse.innerHTML = `
+                <div class="text-center text-purple-600">
+                    <div class="animate-spin w-8 h-8 border-2 border-purple-600 border-t-transparent rounded-full mx-auto mb-3"></div>
+                    <p>AI is processing your custom prompt...</p>
+                </div>
+            `;
+            downloadBtn.classList.add('hidden');
+
+            try {
+                const response = await fetch('/api/llm-process', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        transcript_data: currentResults.results,
+                        prompt_type: 'custom',
+                        custom_prompt: customPrompt,
+                        max_tokens: 2000
+                    })
+                });
+
+                llmProgress.classList.add('hidden');
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`LLM processing failed: ${response.status} - ${errorText}`);
+                }
+
+                const result = await response.json();
+                currentLLMResponse = result;
+                
+                // Display response
+                llmResponse.innerHTML = `
+                    <div class="mb-4">
+                        <h5 class="font-semibold text-gray-900 mb-2">💡 Custom Analysis</h5>
+                        <p class="text-sm text-gray-600 mb-4">Your custom prompt response</p>
+                    </div>
+                    <div class="prose prose-sm max-w-none">
+                        <div class="whitespace-pre-wrap text-gray-800">${result.response}</div>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-blue-200">
+                        <div class="text-xs text-gray-500">
+                            Model: ${result.model} • Transcript: ${result.transcript_length} chars
+                        </div>
+                    </div>
+                `;
+                
+                downloadBtn.classList.remove('hidden');
+
+            } catch (error) {
+                console.error('LLM processing error:', error);
+                llmProgress.classList.add('hidden');
+                llmResponse.innerHTML = `
+                    <div class="text-center text-red-600">
+                        <i data-lucide="alert-circle" class="w-8 h-8 mx-auto mb-3"></i>
+                        <p class="font-semibold">Analysis Failed</p>
+                        <p class="text-sm mt-2">${error.message}</p>
+                    </div>
+                `;
+                lucide.createIcons();
+            }
+        });
+
+        // Download AI response
+        document.getElementById('download-ai-response').addEventListener('click', () => {
+            if (!currentLLMResponse) return;
+
+            const content = `AI ANALYSIS REPORT
+${'='.repeat(50)}
+
+File: ${currentResults.results.metadata.file_name}
+Analysis Type: ${currentLLMResponse.prompt_type}
+Generated: ${new Date().toLocaleString()}
+Model: ${currentLLMResponse.model}
+
+${'='.repeat(50)}
+
+${currentLLMResponse.response}
+
+${'='.repeat(50)}
+Generated by Speech Diarization Platform with AI
+`;
+
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${selectedFile.name.split('.')[0]}_ai_analysis.txt`;
+            link.click();
+            URL.revokeObjectURL(url);
+        });
+
+        // Display results
+        function displayResults(result) {
+            const { results } = result;
+            const { metadata, segments, speaker_stats } = results;
+
+            // Update metadata
+            document.getElementById('total-duration').textContent = `${Math.round(metadata.total_duration)}s`;
+            document.getElementById('num-speakers').textContent = metadata.num_speakers;
+            document.getElementById('num-segments').textContent = metadata.num_segments;
+            document.getElementById('detected-language').textContent = metadata.language.toUpperCase();
+
+            // Speaker stats
+            const speakerList = document.getElementById('speaker-list');
+            speakerList.innerHTML = '';
+            
+            const colors = ['blue', 'green', 'purple', 'orange', 'pink', 'indigo', 'red', 'teal'];
+            
+            Object.entries(speaker_stats).forEach(([speaker, stats], index) => {
+                const color = colors[index % colors.length];
+                const speakerDiv = document.createElement('div');
+                speakerDiv.className = `speaker-tag p-4 bg-gradient-to-br from-${color}-50 to-${color}-100 rounded-lg border border-${color}-200`;
+                speakerDiv.innerHTML = `
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 bg-${color}-500 rounded-full mr-2"></div>
+                            <span class="font-bold text-gray-900">${speaker}</span>
+                        </div>
+                        <span class="text-lg font-bold text-${color}-700">${stats.duration_percentage.toFixed(1)}%</span>
+                    </div>
+                    <div class="text-sm text-gray-600">
+                        ${stats.total_words} words • ${stats.segments} segments
+                    </div>
+                `;
+                speakerList.appendChild(speakerDiv);
+            });
+
+            // Transcript
+            const transcript = document.getElementById('transcript');
+            transcript.innerHTML = '';
+            
+            segments.forEach((segment, index) => {
+                const segmentDiv = document.createElement('div');
+                const speakerIndex = Object.keys(speaker_stats).indexOf(segment.speaker);
+                const color = colors[speakerIndex % colors.length];
+                
+                segmentDiv.className = 'transcript-segment flex space-x-4 p-4 rounded-lg';
+                
+                const startMin = Math.floor(segment.start / 60);
+                const startSec = Math.floor(segment.start % 60);
+                const endMin = Math.floor(segment.end / 60);
+                const endSec = Math.floor(segment.end % 60);
+                
+                segmentDiv.innerHTML = `
+                    <div class="flex-shrink-0">
+                        <div class="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-1 rounded">
+                            ${String(startMin).padStart(2, '0')}:${String(startSec).padStart(2, '0')} - 
+                            ${String(endMin).padStart(2, '0')}:${String(endSec).padStart(2, '0')}
+                        </div>
+                        <div class="text-sm font-bold text-${color}-600 mt-2 bg-${color}-50 px-2 py-1 rounded border border-${color}-200">
+                            ${segment.speaker}
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-gray-900 leading-relaxed">${segment.text}</p>
+                    </div>
+                `;
+                
+                transcript.appendChild(segmentDiv);
+            });
+
+            // Set up download buttons with updated data
+            document.getElementById('download-json').onclick = () => {
+                downloadUpdatedFile('json');
+            };
+            
+            document.getElementById('download-txt').onclick = () => {
+                downloadUpdatedFile('txt');
+            };
+        }
+
+        // Download functions with updated speaker names
+        function downloadUpdatedFile(format) {
+            if (format === 'json') {
+                const dataStr = JSON.stringify(currentResults.results, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `${selectedFile.name.split('.')[0]}_results.json`;
+                link.click();
+                URL.revokeObjectURL(url);
+            } else if (format === 'txt') {
+                let txtContent = `SPEECH DIARIZATION TRANSCRIPT\n`;
+                txtContent += `${'='.repeat(50)}\n\n`;
+                txtContent += `File: ${currentResults.results.metadata.file_name}\n`;
+                txtContent += `Duration: ${Math.round(currentResults.results.metadata.total_duration)}s\n`;
+                txtContent += `Speakers: ${currentResults.results.metadata.num_speakers}\n`;
+                txtContent += `Language: ${currentResults.results.metadata.language.toUpperCase()}\n\n`;
+                txtContent += `TRANSCRIPT:\n`;
+                txtContent += `${'-'.repeat(50)}\n\n`;
+                
+                currentResults.results.segments.forEach(segment => {
+                    const startMin = Math.floor(segment.start / 60);
+                    const startSec = Math.floor(segment.start % 60);
+                    const endMin = Math.floor(segment.end / 60);
+                    const endSec = Math.floor(segment.end % 60);
+                    
+                    txtContent += `[${String(startMin).padStart(2, '0')}:${String(startSec).padStart(2, '0')} - ${String(endMin).padStart(2, '0')}:${String(endSec).padStart(2, '0')}] `;
+                    txtContent += `${segment.speaker}: ${segment.text}\n`;
+                });
+                
+                const dataBlob = new Blob([txtContent], { type: 'text/plain' });
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `${selectedFile.name.split('.')[0]}_transcript.txt`;
+                link.click();
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        // Initialize
+        console.log('Initializing application...');
+        checkHealth();
+        loadLLMPrompts();
+        setInterval(checkHealth, 30000); // Check every 30 seconds
+    </script>
+</body>
+</html>
