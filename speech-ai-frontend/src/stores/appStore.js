@@ -1,4 +1,4 @@
-// src/stores/appStore.js - Fixed Store with Correct Defaults & Persistence
+// src/stores/appStore.js - Updated Store with Analysis State Persistence
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -65,29 +65,29 @@ const useAppStore = create(
       expandedTranscript: false,
       setExpandedTranscript: (expanded) => set({ expandedTranscript: expanded }),
 
-      // AnalysisPage state
-      selectedAnalysisSession: '',
+      // AnalysisPage state - UPDATED for persistence
+      selectedAnalysisSession: '', // ✅ Kept for compatibility
       setSelectedAnalysisSession: (sessionId) => set({ selectedAnalysisSession: sessionId }),
       
-      sessionData: null,
+      sessionData: null, // ✅ Kept for compatibility  
       setSessionData: (data) => set({ sessionData: data }),
       
-      customPrompt: '',
+      customPrompt: '', // ✅ Persisted
       setCustomPrompt: (prompt) => set({ customPrompt: prompt }),
       
-      analysisResults: {},
+      analysisResults: {}, // ✅ Persisted - survives navigation
       setAnalysisResults: (results) => set({ analysisResults: results }),
       
-      analysisProgress: {},
+      analysisProgress: {}, // ✅ Persisted - survives navigation
       setAnalysisProgress: (progress) => set({ analysisProgress: progress }),
       
-      loadingPrompts: [],
+      loadingPrompts: [], // ✅ Kept for compatibility
       setLoadingPrompts: (prompts) => set({ loadingPrompts: prompts }),
       
-      backgroundPolling: [],
+      backgroundPolling: [], // ✅ Kept for compatibility
       setBackgroundPolling: (polling) => set({ backgroundPolling: polling }),
       
-      showHistoryModal: false,
+      showHistoryModal: false, // ✅ Persisted
       setShowHistoryModal: (show) => set({ showHistoryModal: show }),
 
       // ChatPage state
@@ -118,7 +118,7 @@ const useAppStore = create(
         results: null,
         expandedSummary: false,
         expandedTranscript: false,
-        // Clear analysis
+        // ✅ NEW: Clear analysis state on reset
         selectedAnalysisSession: '',
         sessionData: null,
         customPrompt: '',
