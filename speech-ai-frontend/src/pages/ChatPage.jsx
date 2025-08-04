@@ -1,5 +1,5 @@
-// src/pages/ChatPage.jsx - AI Assistant Chat Interface
-import React, { useState, useRef, useEffect } from 'react';
+// src/pages/ChatPage.jsx - AI Assistant Chat Interface with Zustand State Management
+import React, { useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Send, 
@@ -13,15 +13,38 @@ import {
 } from 'lucide-react';
 import { useBackend } from '../contexts/BackendContext';
 import { backendApi } from '../services/api';
+import useAppStore from '../stores/appStore';
 import toast from 'react-hot-toast';
 
 const ChatPage = () => {
   const { isConnected, isLLMAvailable, activeSessions } = useBackend();
-  const [messages, setMessages] = useState([]);
-  const [inputMessage, setInputMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedSession, setSelectedSession] = useState('');
-  const [contextType, setContextType] = useState('general');
+  
+  // Get state and actions from Zustand
+  const {
+    chatMessages,
+    selectedChatSession,
+    contextType,
+    isLoading,
+    setChatMessages,
+    addChatMessage,
+    clearChatMessages,
+    setSelectedChatSession,
+    setContextType,
+    setChatLoading,
+  } = useAppStore((state) => ({
+    chatMessages: state.chatMessages,
+    selectedChatSession: state.selectedChatSession,
+    contextType: state.contextType,
+    isLoading: state.isLoading,
+    setChatMessages: state.setChatMessages,
+    addChatMessage: state.addChatMessage,
+    clearChatMessages: state.clearChatMessages,
+    setSelectedChatSession: state.setSelectedChatSession,
+    setContextType: state.setContextType,
+    setChatLoading: state.setChatLoading,
+  }));
+
+  const [inputMessage, setInputMessage] = React.useState('');
   
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -33,12 +56,12 @@ const ChatPage = () => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [chatMessages]);
 
   // Welcome message
   useEffect(() => {
-    if (messages.length === 0 && isLLMAvailable) {
-      setMessages([{
+    if (chatMessages.length === 0 && isLLMAvailable) {
+      addChatMessage({
         id: Date.now(),
         type: 'assistant',
         content: `👋 Hello! I'm your AI assistant for speech analysis. I can help you with:
@@ -49,9 +72,9 @@ const ChatPage = () => {
 
 How can I assist you today?`,
         timestamp: new Date()
-      }]);
+      });
     }
-  }, [isLLMAvailable, messages.length]);
+  }, [isLLMAvailable, chatMessages.length, addChatMessage]);
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
@@ -63,14 +86,14 @@ How can I assist you today?`,
       timestamp: new Date()
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    addChatMessage(userMessage);
     setInputMessage('');
-    setIsLoading(true);
+    setChatLoading(true);
 
     try {
       const response = await backendApi.chatWithLLM({
         message: userMessage.content,
-        session_id: selectedSession,
+        session_id: selectedChatSession,
         context_type: contextType
       });
 
@@ -82,21 +105,22 @@ How can I assist you today?`,
         model: response.data.model
       };
 
-      setMessages(prev => [...prev, assistantMessage]);
+      addChatMessage(assistantMessage);
 
     } catch (error) {
       console.error('Chat error:', error);
       const errorMessage = {
         id: Date.now() + 1,
         type: 'assistant',
-        content: `I apologize, but I encountered an error: ${error.userMessage || 'Unable to process your request'}. Please try again.`,
+        content: `I apologize, but I encountered an error: ${error.userMessage || 'Unable to process your request'}. Please try again or check your connection.`,
         timestamp: new Date(),
         isError: true
       };
-      setMessages(prev => [...prev, errorMessage]);
-      toast.error('Failed to send message');
+
+      addChatMessage(errorMessage);
+      toast.error(error.userMessage || 'Chat request failed');
     } finally {
-      setIsLoading(false);
+      setChatLoading(false);
     }
   };
 
@@ -107,25 +131,31 @@ How can I assist you today?`,
     }
   };
 
-  const formatTimestamp = (timestamp) => {
-    return timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
   const getSessionOptions = () => {
-    return Array.from(activeSessions.entries()).map(([sessionId, sessionData]) => ({
-      id: sessionId,
-      name: `Session ${sessionId.slice(0, 8)}...`,
-      status: sessionData.status
-    }));
+    return Array.from(activeSessions.entries())
+      .filter(([_, sessionData]) => sessionData.status === 'completed')
+      .map(([sessionId, sessionData]) => ({
+        id: sessionId,
+        name: `Session ${sessionId.slice(0, 8)}... (${sessionData.filename || 'Unknown'})`,
+        status: sessionData.status
+      }));
   };
 
+  const formatMessageTime = (timestamp) => {
+    return new Date(timestamp).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  // Connection checks
   if (!isConnected) {
     return (
-      <div className="flex-1 flex items-center justify-center p-6">
-        <div className="text-center">
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6">
+        <div className="text-center bg-gray-800 rounded-2xl p-8 shadow-lg max-w-md border border-gray-700">
           <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Backend Disconnected</h2>
-          <p className="text-gray-600">Please ensure the backend server is running to use the AI assistant.</p>
+          <h2 className="text-2xl font-bold text-white mb-2">Backend Offline</h2>
+          <p className="text-gray-300 mb-4">Please ensure the backend server is running.</p>
         </div>
       </div>
     );
@@ -133,11 +163,11 @@ How can I assist you today?`,
 
   if (!isLLMAvailable) {
     return (
-      <div className="flex-1 flex items-center justify-center p-6">
-        <div className="text-center">
-          <Bot className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">AI Assistant Offline</h2>
-          <p className="text-gray-600 mb-4">The LLM service is not available. Please check Ollama setup.</p>
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6">
+        <div className="text-center bg-gray-800 rounded-2xl p-8 shadow-lg max-w-md border border-gray-700">
+          <MessageSquare className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-white mb-2">LLM Unavailable</h2>
+          <p className="text-gray-300 mb-4">Please check Ollama setup.</p>
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-left text-sm">
             <div className="font-medium text-yellow-800 mb-2">To start Ollama:</div>
             <code className="block bg-white p-2 rounded border text-yellow-900">
@@ -197,108 +227,107 @@ How can I assist you today?`,
                 Select Session
               </label>
               <select
-                value={selectedSession}
-                onChange={(e) => setSelectedSession(e.target.value)}
+                value={selectedChatSession}
+                onChange={(e) => setSelectedChatSession(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                 disabled={getSessionOptions().length === 0}
               >
                 <option value="">
-                  {getSessionOptions().length === 0 ? 'No sessions available' : 'Select a session...'}
+                  {getSessionOptions().length === 0 ? 'No completed sessions available' : 'Choose a session...'}
                 </option>
                 {getSessionOptions().map((session) => (
                   <option key={session.id} value={session.id}>
-                    {session.name} ({session.status})
+                    {session.name}
                   </option>
                 ))}
               </select>
             </div>
           )}
+
+          <div className="flex-1"></div>
+
+          <button
+            onClick={() => clearChatMessages()}
+            className="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+          >
+            Clear Chat
+          </button>
         </div>
       </div>
 
       {/* Chat Messages */}
-      <div className="flex-1 bg-white rounded-xl border border-gray-200 flex flex-col overflow-hidden">
+      <div className="flex-1 bg-white rounded-xl border border-gray-200 mb-4 overflow-hidden flex flex-col">
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           <AnimatePresence>
-            {messages.map((message) => (
+            {chatMessages.map((message) => (
               <motion.div
                 key={message.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                exit={{ opacity: 0, y: -20 }}
+                className={`flex items-start space-x-3 ${
+                  message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''
+                }`}
               >
-                <div className={`flex space-x-3 max-w-3xl ${message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                  {/* Avatar */}
-                  <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                    message.type === 'user' 
-                      ? 'bg-blue-100 text-blue-600' 
+                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                  message.type === 'user' 
+                    ? 'bg-purple-500' 
+                    : message.isError 
+                    ? 'bg-red-500' 
+                    : 'bg-gray-700'
+                }`}>
+                  {message.type === 'user' ? (
+                    <User className="w-4 h-4 text-white" />
+                  ) : (
+                    <Bot className="w-4 h-4 text-white" />
+                  )}
+                </div>
+                
+                <div className={`flex-1 max-w-3xl ${
+                  message.type === 'user' ? 'text-right' : 'text-left'
+                }`}>
+                  <div className={`inline-block p-4 rounded-lg ${
+                    message.type === 'user'
+                      ? 'bg-purple-500 text-white'
                       : message.isError
-                      ? 'bg-red-100 text-red-600'
-                      : 'bg-purple-100 text-purple-600'
+                      ? 'bg-red-50 text-red-800 border border-red-200'
+                      : 'bg-gray-100 text-gray-800'
                   }`}>
-                    {message.type === 'user' ? (
-                      <User className="w-4 h-4" />
-                    ) : message.isError ? (
-                      <AlertCircle className="w-4 h-4" />
-                    ) : (
-                      <Bot className="w-4 h-4" />
+                    <div className="whitespace-pre-wrap leading-relaxed">
+                      {message.content}
+                    </div>
+                    {message.model && (
+                      <div className="mt-2 text-xs opacity-70">
+                        Model: {message.model}
+                      </div>
                     )}
                   </div>
-
-                  {/* Message Content */}
-                  <div className={`flex flex-col ${message.type === 'user' ? 'items-end' : 'items-start'}`}>
-                    <div className={`px-4 py-3 rounded-xl ${
-                      message.type === 'user'
-                        ? 'bg-blue-500 text-white'
-                        : message.isError
-                        ? 'bg-red-50 text-red-900 border border-red-200'
-                        : 'bg-gray-50 text-gray-900 border border-gray-200'
-                    }`}>
-                      <div className="prose prose-sm max-w-none">
-                        {message.content.split('\n').map((line, index) => (
-                          <div key={index} className={line.startsWith('•') ? 'ml-4' : ''}>
-                            {line.includes('**') ? (
-                              <span dangerouslySetInnerHTML={{
-                                __html: line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                              }} />
-                            ) : (
-                              line
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2 mt-1 text-xs text-gray-500">
-                      <span>{formatTimestamp(message.timestamp)}</span>
-                      {message.model && (
-                        <>
-                          <span>•</span>
-                          <span>{message.model}</span>
-                        </>
-                      )}
-                    </div>
+                  
+                  <div className={`mt-1 text-xs text-gray-500 ${
+                    message.type === 'user' ? 'text-right' : 'text-left'
+                  }`}>
+                    {formatMessageTime(message.timestamp)}
                   </div>
                 </div>
               </motion.div>
             ))}
           </AnimatePresence>
 
-          {/* Loading Indicator */}
+          {/* Loading indicator */}
           {isLoading && (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex justify-start"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-start space-x-3"
             >
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center">
-                  <Bot className="w-4 h-4" />
-                </div>
-                <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
+                <Bot className="w-4 h-4 text-white" />
+              </div>
+              <div className="flex-1">
+                <div className="inline-block p-4 bg-gray-100 rounded-lg">
                   <div className="flex items-center space-x-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-purple-500" />
-                    <span className="text-sm text-gray-600">AI is thinking...</span>
+                    <Loader2 className="w-4 h-4 animate-spin text-gray-600" />
+                    <span className="text-gray-600">AI is thinking...</span>
                   </div>
                 </div>
               </div>
@@ -308,9 +337,9 @@ How can I assist you today?`,
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Area */}
+        {/* Message Input */}
         <div className="border-t border-gray-200 p-4">
-          <div className="flex items-end space-x-3">
+          <div className="flex items-end space-x-4">
             <div className="flex-1">
               <textarea
                 ref={inputRef}
@@ -318,19 +347,32 @@ How can I assist you today?`,
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder={
-                  contextType === 'transcript' && !selectedSession
-                    ? 'Select a session to analyze transcripts, or switch to general mode...'
-                    : 'Type your message... (Press Enter to send, Shift+Enter for new line)'
+                  contextType === 'transcript' && selectedChatSession
+                    ? 'Ask me about this transcript...'
+                    : 'Ask me anything about speech analysis, AI, or transcription...'
                 }
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 rows="3"
-                disabled={isLoading || (contextType === 'transcript' && !selectedSession)}
+                disabled={isLoading}
               />
+              <div className="mt-2 flex items-center justify-between text-sm text-gray-500">
+                <span>Press Enter to send, Shift+Enter for new line</span>
+                {contextType === 'transcript' && selectedChatSession && (
+                  <span className="text-purple-600">
+                    Analyzing session {selectedChatSession.slice(0, 8)}...
+                  </span>
+                )}
+              </div>
             </div>
+            
             <button
               onClick={handleSendMessage}
-              disabled={!inputMessage.trim() || isLoading || (contextType === 'transcript' && !selectedSession)}
-              className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105"
+              disabled={!inputMessage.trim() || isLoading}
+              className={`px-6 py-3 rounded-lg font-medium transition-all ${
+                inputMessage.trim() && !isLoading
+                  ? 'bg-purple-500 hover:bg-purple-600 text-white shadow-lg hover:shadow-xl'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
             >
               {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -341,6 +383,37 @@ How can I assist you today?`,
           </div>
         </div>
       </div>
+
+      {/* Context Info */}
+      {contextType === 'transcript' && !selectedChatSession && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
+          <FileText className="w-8 h-8 text-yellow-600 mx-auto mb-2" />
+          <p className="text-yellow-800 font-medium">Transcript Analysis Mode</p>
+          <p className="text-yellow-700 text-sm mt-1">
+            Select a completed session above to ask questions about specific transcripts
+          </p>
+        </div>
+      )}
+
+      {contextType === 'transcript' && selectedChatSession && (
+        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 text-center">
+          <MessageSquare className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+          <p className="text-purple-800 font-medium">Analyzing Session {selectedChatSession.slice(0, 8)}...</p>
+          <p className="text-purple-700 text-sm mt-1">
+            I can answer questions about this specific transcript, analyze sentiment, extract insights, and more
+          </p>
+        </div>
+      )}
+
+      {getSessionOptions().length === 0 && contextType === 'transcript' && (
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+          <AlertCircle className="w-8 h-8 text-gray-600 mx-auto mb-2" />
+          <p className="text-gray-800 font-medium">No Completed Sessions</p>
+          <p className="text-gray-600 text-sm mt-1">
+            Process an audio file first to use transcript analysis mode
+          </p>
+        </div>
+      )}
     </div>
   );
 };

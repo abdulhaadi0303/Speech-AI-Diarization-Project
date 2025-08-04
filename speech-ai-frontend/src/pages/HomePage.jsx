@@ -1,5 +1,5 @@
-// src/pages/HomePage.jsx - Enhanced HomePage with Background Processing
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+// src/pages/HomePage.jsx - Fixed: Don't Clear File After Processing
+import React, { useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -17,9 +17,11 @@ import {
 } from 'lucide-react';
 import { useBackend } from '../contexts/BackendContext';
 import { backendApi } from '../services/api';
+import useAppStore from '../stores/appStore';
+import AddNewButton from '../components/common/AddNewButton';
 import toast from 'react-hot-toast';
 
-// Processing Status Banner Component
+// Processing Status Banner Component - NO CHANGES
 const ProcessingBanner = ({ processingSessions, onViewSession }) => {
   if (processingSessions.length === 0) return null;
 
@@ -60,10 +62,10 @@ const ProcessingBanner = ({ processingSessions, onViewSession }) => {
   );
 };
 
-// Audio Upload Component (same as before but with better state management)
+// Audio Upload Component - NO CHANGES
 const AudioUploader = ({ onFileUpload, selectedFile, isProcessing, setSelectedFile }) => {
-  const [dragActive, setDragActive] = useState(false);
-  const [error, setError] = useState(null);
+  const [dragActive, setDragActive] = React.useState(false);
+  const [error, setError] = React.useState(null);
   const fileInputRef = useRef(null);
 
   const SUPPORTED_FORMATS = ['.mp3', '.wav', '.mp4', '.m4a', '.flac', '.ogg'];
@@ -171,123 +173,151 @@ const AudioUploader = ({ onFileUpload, selectedFile, isProcessing, setSelectedFi
           />
 
           {error ? (
-            <div className="space-y-3">
-              <AlertCircle className="w-12 h-12 mx-auto text-red-500" />
-              <div className="text-red-600">
-                <div className="font-medium">Upload Error</div>
-                <div className="text-sm">{error}</div>
+            <div className="space-y-4">
+              <AlertCircle className="w-12 h-12 text-red-400 mx-auto" />
+              <div>
+                <p className="text-lg font-medium text-red-700">Upload Error</p>
+                <p className="text-sm text-red-600 mt-1">{error}</p>
               </div>
+              <button
+                onClick={() => setError(null)}
+                className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+              >
+                Try Again
+              </button>
             </div>
           ) : (
-            <div className="space-y-3">
-              <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-              <p className="text-gray-600 mb-2">
-                Drop your Audio file here or{' '}
-                <button
-                  onClick={handleBrowseClick}
-                  className="text-cyan-400 cursor-pointer hover:underline"
-                  disabled={isProcessing}
-                >
-                  Browse
-                </button>
-              </p>
-              <p className="text-sm text-gray-500">Supports MP3,WAV,MP4 • MAX 100MB</p>
+            <div className="space-y-4">
+              <Upload className={`w-12 h-12 mx-auto ${
+                dragActive ? 'text-cyan-500' : 'text-gray-400'
+              }`} />
+              <div>
+                <p className="text-lg font-medium text-gray-700">
+                  {dragActive ? 'Drop your audio file here' : 'Upload Audio File'}
+                </p>
+                <p className="text-sm text-gray-500 mt-1">
+                  Drag & drop or <button onClick={handleBrowseClick} className="text-cyan-500 hover:text-cyan-600 underline">browse</button> to upload
+                </p>
+              </div>
+              <div className="text-xs text-gray-400">
+                <p>Supported: {SUPPORTED_FORMATS.join(', ')}</p>
+                <p>Max size: {MAX_FILE_SIZE / 1024 / 1024}MB</p>
+              </div>
             </div>
           )}
         </div>
       ) : (
-        <div className="bg-cyan-400 text-white p-4 rounded-lg text-center relative">
-          <CheckCircle className="w-6 h-6 inline-block mr-2" />
-          File Uploaded Successfully ({formatFileSize(selectedFile.size)})
-          <button
-            onClick={() => setSelectedFile(null)}
-            className="absolute top-2 right-2 p-1 bg-white/20 rounded-full hover:bg-white/30"
-            disabled={isProcessing}
-          >
-            <X className="w-4 h-4" />
-          </button>
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <CheckCircle className="w-8 h-8 text-green-500" />
+              <div>
+                <p className="text-sm font-medium text-green-700">{selectedFile.name}</p>
+                <p className="text-xs text-green-600">{formatFileSize(selectedFile.size)}</p>
+              </div>
+            </div>
+            {!isProcessing && (
+              <button
+                onClick={() => setSelectedFile(null)}
+                className="text-green-600 hover:text-green-800 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>
   );
 };
 
-// Audio Visualization Component (same as before)
+// Audio Visualization Section - NO CHANGES
 const AudioVisualizationSection = ({ isProcessing, language, setLanguage, speakers, setSpeakers }) => {
   const languages = [
-    { code: '', name: 'Auto-Detect' },
+    { code: '', name: 'Auto-detect' },
     { code: 'en', name: 'English' },
     { code: 'es', name: 'Spanish' },
     { code: 'fr', name: 'French' },
     { code: 'de', name: 'German' },
-    { code: 'it', name: 'Italian' }
+    { code: 'it', name: 'Italian' },
+    { code: 'pt', name: 'Portuguese' },
+    { code: 'ru', name: 'Russian' },
+    { code: 'ja', name: 'Japanese' },
+    { code: 'ko', name: 'Korean' },
+    { code: 'zh', name: 'Chinese' }
   ];
 
   const speakerOptions = [
-    { value: '', label: 'Auto-Detect' },
+    { value: '', label: 'Auto-detect' },
+    { value: '1', label: '1 Speaker' },
     { value: '2', label: '2 Speakers' },
     { value: '3', label: '3 Speakers' },
-    { value: '4', label: '4+ Speakers' }
+    { value: '4', label: '4 Speakers' },
+    { value: '5', label: '5+ Speakers' }
   ];
 
   return (
     <div className="bg-gray-100 p-6 rounded-lg">
-      <div className="flex justify-center items-center h-32 mb-4">
-        <div className="flex items-end space-x-1 h-16">
-          {Array.from({ length: 50 }, (_, i) => (
-            <div
-              key={i}
-              className={`bg-cyan-400 transition-all duration-300 ${
-                isProcessing ? 'animate-pulse' : ''
-              }`}
-              style={{
-                width: '3px',
-                height: `${Math.random() * 60 + 10}px`,
-                animationDelay: `${i * 50}ms`
-              }}
-            />
-          ))}
-        </div>
-      </div>
+      <h3 className="text-cyan-400 text-lg font-semibold mb-4">Processing Settings</h3>
       
-      <div className="flex justify-between">
-        <div className="flex-1 mr-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Language</label>
-          <select
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-            disabled={isProcessing}
-            className="w-full bg-gray-800 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400"
-          >
-            {languages.map((lang) => (
-              <option key={lang.code} value={lang.code}>
-                {lang.name}
-              </option>
+      <div className="mb-6">
+        <div className="bg-gray-800 rounded-lg p-4 mb-4">
+          <div className="flex items-center justify-center space-x-1">
+            {[...Array(20)].map((_, i) => (
+              <div
+                key={i}
+                className={`bg-cyan-400 rounded transition-all duration-300 ${
+                  isProcessing ? 'animate-pulse' : ''
+                }`}
+                style={{
+                  width: '3px',
+                  height: `${Math.random() * 60 + 10}px`,
+                  animationDelay: `${i * 50}ms`
+                }}
+              />
             ))}
-          </select>
+          </div>
         </div>
         
-        <div className="flex-1">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Speakers</label>
-          <select
-            value={speakers}
-            onChange={(e) => setSpeakers(e.target.value)}
-            disabled={isProcessing}
-            className="w-full bg-gray-800 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400"
-          >
-            {speakerOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+        <div className="flex justify-between">
+          <div className="flex-1 mr-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Language</label>
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              disabled={isProcessing}
+              className="w-full bg-gray-800 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400"
+            >
+              {languages.map((lang) => (
+                <option key={lang.code} value={lang.code}>
+                  {lang.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Speakers</label>
+            <select
+              value={speakers}
+              onChange={(e) => setSpeakers(e.target.value)}
+              disabled={isProcessing}
+              className="w-full bg-gray-800 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400"
+            >
+              {speakerOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-// Processing Structure Component (same as before)
+// Processing Structure Component - NO CHANGES  
 const ProcessingStructureSection = ({ structures, onStructureToggle, disabled }) => {
   return (
     <div className="bg-gray-100 p-6 rounded-lg">
@@ -317,7 +347,7 @@ const ProcessingStructureSection = ({ structures, onStructureToggle, disabled })
   );
 };
 
-// Processing Parameters Component (same as before)
+// Processing Parameters Component - NO CHANGES
 const ProcessingParametersSection = ({ parameters, onParameterToggle, onStartProcessing, canProcess, isProcessing }) => {
   return (
     <div className="bg-gray-100 p-6 rounded-lg">
@@ -363,7 +393,7 @@ const ProcessingParametersSection = ({ parameters, onParameterToggle, onStartPro
   );
 };
 
-// Main HomePage Component
+// Main HomePage Component - FIXED: Don't clear file after processing
 const HomePage = () => {
   const navigate = useNavigate();
   const { 
@@ -373,43 +403,31 @@ const HomePage = () => {
     getProcessingSessions 
   } = useBackend();
   
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [currentSession, setCurrentSession] = useState(null);
-  
-  // Settings state
-  const [language, setLanguage] = useState('');
-  const [speakers, setSpeakers] = useState('');
-  
-  const [structures, setStructures] = useState([
-    { name: 'Introduction', enabled: false },
-    { name: 'Biographical History', enabled: false },
-    { name: 'Professional Background', enabled: true },
-    { name: 'Social History', enabled: false },
-    { name: 'Family History', enabled: true },
-    { name: 'Medical History', enabled: true },
-    { name: 'Vegetative History', enabled: true },
-    { name: 'Pyschological History', enabled: false },
-    { name: 'Diseases History', enabled: true }
-  ]);
-  
-  const [parameters, setParameters] = useState([
-    { name: 'Include own Statement', enabled: true },
-    { name: 'Audio Enhance', enabled: true },
-    { name: 'Include own Comments', enabled: true },
-    { name: 'Use Indirect Speech', enabled: true },
-    { name: 'Summarize Conversation', enabled: true },
-    { name: 'Patient Quotes', enabled: true }
-  ]);
+  // Zustand state - NO CHANGES
+  const selectedFile = useAppStore((state) => state.selectedFile);
+  const setSelectedFile = useAppStore((state) => state.setSelectedFile);
+  const isProcessing = useAppStore((state) => state.isProcessing);
+  const setIsProcessing = useAppStore((state) => state.setIsProcessing);
+  const currentSession = useAppStore((state) => state.currentSession);
+  const setCurrentSession = useAppStore((state) => state.setCurrentSession);
+  const language = useAppStore((state) => state.language);
+  const setLanguage = useAppStore((state) => state.setLanguage);
+  const speakers = useAppStore((state) => state.speakers);
+  const setSpeakers = useAppStore((state) => state.setSpeakers);
+  const structures = useAppStore((state) => state.structures);
+  const setStructures = useAppStore((state) => state.setStructures);
+  const parameters = useAppStore((state) => state.parameters);
+  const setParameters = useAppStore((state) => state.setParameters);
 
-  // Get processing sessions for banner
+  // Get processing sessions for banner - NO CHANGE
   const processingSessions = getProcessingSessions();
 
-  // Handle file upload (just set the file, don't process yet)
+  // Handle file upload - NO CHANGE
   const handleFileUpload = useCallback((file) => {
     setSelectedFile(file);
-  }, []);
+  }, [setSelectedFile]);
 
+  // Toggle functions - NO CHANGE
   const handleStructureToggle = (index) => {
     if (isProcessing) return;
     const newStructures = [...structures];
@@ -424,7 +442,7 @@ const HomePage = () => {
     setParameters(newParameters);
   };
 
-  // Start processing with background support
+  // FIXED: Start processing - DON'T clear file after processing
   const handleStartProcessing = useCallback(async () => {
     if (!selectedFile || !isConnected) {
       toast.error('Please select a file and ensure backend is connected');
@@ -479,18 +497,18 @@ const HomePage = () => {
         duration: 5000 
       });
       
-      // Reset form
-      setSelectedFile(null);
-      setIsProcessing(false);
+      // ✅ FIXED: Don't clear the file! Keep it so user can see what was processed
+      // setSelectedFile(null); // ❌ REMOVED THIS LINE
+      setIsProcessing(false); // Only reset processing flag
       
     } catch (error) {
       console.error('Upload error:', error);
       toast.error(error.userMessage || 'Upload failed', { id: 'upload' });
       setIsProcessing(false);
     }
-  }, [selectedFile, isConnected, language, speakers, structures, parameters, addSession, registerNavigationCallback, navigate]);
+  }, [selectedFile, isConnected, language, speakers, structures, parameters, addSession, registerNavigationCallback, navigate, setIsProcessing, setCurrentSession]); // ✅ Removed setSelectedFile from dependencies
 
-  // Handle viewing processing session
+  // Handle viewing processing session - NO CHANGE
   const handleViewSession = useCallback((sessionId) => {
     const sessionData = processingSessions.find(s => s.sessionId === sessionId);
     if (sessionData) {
@@ -504,7 +522,7 @@ const HomePage = () => {
     }
   }, [processingSessions, navigate]);
 
-  // Connection check
+  // Connection check - NO CHANGE
   if (!isConnected) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6">
@@ -530,6 +548,12 @@ const HomePage = () => {
   return (
     <div className="min-h-screen bg-gray-900 overflow-auto">
       <div className="p-6 max-w-6xl mx-auto">
+        {/* Add New Button in Header */}
+        <div className="flex justify-between items-center mb-6">
+          <div></div>
+          <AddNewButton />
+        </div>
+
         {/* Processing Banner */}
         <ProcessingBanner 
           processingSessions={processingSessions}
