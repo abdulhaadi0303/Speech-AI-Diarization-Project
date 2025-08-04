@@ -1,4 +1,4 @@
-// src/pages/TranscriptionPage.jsx - Clean Results Page with Processing Status
+// src/pages/TranscriptionPage.jsx - Persistent Results Page with State Management
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
@@ -23,9 +23,10 @@ import {
 } from 'lucide-react';
 import { useBackend } from '../contexts/BackendContext';
 import { backendApi } from '../services/api';
+import useAppStore from '../stores/appStore'; // ✅ Use Zustand store for persistence
 import toast from 'react-hot-toast';
 
-// Processing Status Component
+// Processing Status Component - UPDATED to use store state
 const ProcessingStatus = ({ status, onReset }) => {
   const getStatusIcon = () => {
     switch (status?.status) {
@@ -91,7 +92,7 @@ const ProcessingStatus = ({ status, onReset }) => {
   );
 };
 
-// Stats Summary Component
+// Stats Summary Component - UPDATED to use store state
 const StatsSummary = ({ metadata, speakerStats, hasData }) => {
   const formatTime = (seconds) => {
     if (!seconds) return '--:--';
@@ -127,7 +128,7 @@ const StatsSummary = ({ metadata, speakerStats, hasData }) => {
       label: 'Language',
       value: hasData ? (metadata?.language?.toUpperCase() || 'AUTO') : 'AUTO',
       color: 'bg-orange-100 text-orange-800',
-      isLoading: false // Language can show AUTO initially
+      isLoading: false
     }
   ];
 
@@ -156,7 +157,6 @@ const StatsSummary = ({ metadata, speakerStats, hasData }) => {
             </div>
             <div className="text-sm opacity-80">{stat.label}</div>
             
-            {/* Loading overlay */}
             {stat.isLoading && (
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
             )}
@@ -167,7 +167,7 @@ const StatsSummary = ({ metadata, speakerStats, hasData }) => {
   );
 };
 
-// Formatted Text Panel Component (Left Side)
+// Formatted Text Panel Component - UPDATED to use store state
 const FormattedTextPanel = ({ results, structures, isExpanded, onToggleExpand, hasSession }) => {
   const [selectedSection, setSelectedSection] = useState('introduction');
   const [copied, setCopied] = useState(false);
@@ -363,9 +363,8 @@ Academic background and learning experiences.
     { id: 'social', name: 'Social History', enabled: structures?.includes('Social History') },
     { id: 'family', name: 'Family History', enabled: structures?.includes('Family History') },
     { id: 'medical', name: 'Medical History', enabled: structures?.includes('Medical History') },
-    { id: 'educational', name: 'Educational History', enabled: true } // Always show as fallback
+    { id: 'educational', name: 'Educational History', enabled: true }
   ].filter(section => section.enabled) : [
-    // Default sections when no structures are selected
     { id: 'introduction', name: 'Introduction', enabled: true },
     { id: 'biographic', name: 'Biographic History', enabled: true },
     { id: 'professional', name: 'Professional Background', enabled: true },
@@ -450,7 +449,7 @@ Academic background and learning experiences.
   );
 };
 
-// Transcript Panel Component (Right Side)
+// Transcript Panel Component - UPDATED to use store state
 const TranscriptPanel = ({ results, isExpanded, onToggleExpand, hasSession }) => {
   const [copied, setCopied] = useState(false);
   const [selectedSpeaker, setSelectedSpeaker] = useState('all');
@@ -588,7 +587,6 @@ const TranscriptPanel = ({ results, isExpanded, onToggleExpand, hasSession }) =>
         </div>
       </div>
 
-      {/* Active Transcript Button */}
       <div className="mb-4">
         <button className="w-full bg-cyan-400 text-black py-2 px-4 rounded-lg font-semibold hover:bg-cyan-500 transition-colors">
           {hasSession ? 'Active Transcript Here' : 'Sample Transcript (Demo)'}
@@ -640,7 +638,6 @@ const TranscriptPanel = ({ results, isExpanded, onToggleExpand, hasSession }) =>
                     <p>📝 Generating transcript</p>
                   </div>
                   
-                  {/* Simulated processing steps */}
                   <div className="bg-gray-200 rounded-lg p-4 mt-6">
                     <div className="space-y-3">
                       <div className="flex items-center space-x-3">
@@ -672,43 +669,49 @@ const TranscriptPanel = ({ results, isExpanded, onToggleExpand, hasSession }) =>
   );
 };
 
-// Main TranscriptionPage Component
+// ✅ MAIN COMPONENT - UPDATED to use Zustand store for persistent state
 const TranscriptionPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { isConnected, updateSessionStatus } = useBackend();
   
-  const [sessionId, setSessionId] = useState(null);
-  const [processingStatus, setProcessingStatus] = useState(null);
-  const [results, setResults] = useState(null);
-  const [structures, setStructures] = useState([]);
-  const [parameters, setParameters] = useState([]);
-  const [expandedSummary, setExpandedSummary] = useState(false);
-  const [expandedTranscript, setExpandedTranscript] = useState(false);
+  // ✅ Use Zustand store instead of local state for persistence
+  const currentSessionId = useAppStore((state) => state.currentSessionId);
+  const setCurrentSessionId = useAppStore((state) => state.setCurrentSessionId);
+  const processingStatus = useAppStore((state) => state.processingStatus);
+  const setProcessingStatus = useAppStore((state) => state.setProcessingStatus);
+  const results = useAppStore((state) => state.results);
+  const setResults = useAppStore((state) => state.setResults);
+  const expandedSummary = useAppStore((state) => state.expandedSummary);
+  const setExpandedSummary = useAppStore((state) => state.setExpandedSummary);
+  const expandedTranscript = useAppStore((state) => state.expandedTranscript);
+  const setExpandedTranscript = useAppStore((state) => state.setExpandedTranscript);
+  const structures = useAppStore((state) => state.structures);
+  const parameters = useAppStore((state) => state.parameters);
 
   const statusPollingRef = useRef(null);
 
-  // Get session data from navigation state or allow direct access
+  // ✅ Get session data from navigation state OR use persisted store data
   useEffect(() => {
     const stateData = location.state;
     if (stateData?.sessionId) {
-      setSessionId(stateData.sessionId);
-      setStructures(stateData.structures || []);
-      setParameters(stateData.parameters || []);
-      // Set initial processing status immediately
+      // New session from navigation
+      setCurrentSessionId(stateData.sessionId);
       setProcessingStatus({ status: 'processing', progress: 0, message: 'Initializing transcription...' });
     }
-    // If no session ID, just show default state - don't redirect
-  }, [location.state]);
+    // If no new session but we have persisted session, keep using it
+    // If no session at all, show demo content
+  }, [location.state, setCurrentSessionId, setProcessingStatus]);
 
-  // Start polling when session ID is available
+  // ✅ Start polling when session ID is available (from store or navigation)
   useEffect(() => {
-    if (sessionId) {
-      startStatusPolling(sessionId);
+    const sessionToUse = currentSessionId;
+    if (sessionToUse && (!processingStatus || processingStatus.status !== 'completed')) {
+      startStatusPolling(sessionToUse);
     }
-  }, [sessionId]);
+  }, [currentSessionId, processingStatus]);
 
-  // Poll processing status
+  // ✅ Poll processing status and persist to store
   const startStatusPolling = useCallback((sessionId) => {
     if (statusPollingRef.current) {
       clearInterval(statusPollingRef.current);
@@ -719,15 +722,14 @@ const TranscriptionPage = () => {
         const response = await backendApi.getProcessingStatus(sessionId);
         const status = response.data;
         
-        setProcessingStatus(status);
+        setProcessingStatus(status); // ✅ Persist to store
         updateSessionStatus(sessionId, status);
 
         if (status.status === 'completed') {
-          // Fetch results
+          // Fetch results and persist to store
           const resultsResponse = await backendApi.getResults(sessionId);
-          setResults(resultsResponse.data);
+          setResults(resultsResponse.data); // ✅ Persist to store
           
-          // Stop polling
           clearInterval(statusPollingRef.current);
           toast.success('Transcription completed!');
           
@@ -742,11 +744,11 @@ const TranscriptionPage = () => {
         setProcessingStatus({ status: 'failed', message: 'Connection error' });
       }
     }, 2000); // Poll every 2 seconds
-  }, [updateSessionStatus]);
+  }, [setProcessingStatus, setResults, updateSessionStatus]);
 
-  // Download handlers
+  // ✅ Download handlers - updated to use store state
   const handleDownload = useCallback(async (format, type = 'full') => {
-    if (!sessionId || !results) {
+    if (!currentSessionId || !results) {
       toast.error('No data available to download');
       return;
     }
@@ -757,7 +759,7 @@ const TranscriptionPage = () => {
 
       if (type === 'summary') {
         content = results.summary || results.analysis || 'No summary available';
-        filename = `${sessionId}_summary.${format}`;
+        filename = `${currentSessionId}_summary.${format}`;
       } else if (type === 'transcript') {
         if (format === 'json') {
           content = JSON.stringify(results.results, null, 2);
@@ -766,7 +768,7 @@ const TranscriptionPage = () => {
             `[${Math.floor(segment.start / 60)}:${String(Math.floor(segment.start % 60)).padStart(2, '0')} - ${Math.floor(segment.end / 60)}:${String(Math.floor(segment.end % 60)).padStart(2, '0')}] ${segment.speaker}: ${segment.text}`
           ).join('\n\n') || 'No transcript available';
         }
-        filename = `${sessionId}_transcript.${format}`;
+        filename = `${currentSessionId}_transcript.${format}`;
       } else {
         // Full results
         if (format === 'json') {
@@ -775,14 +777,14 @@ const TranscriptionPage = () => {
           content = `SPEECH ANALYSIS RESULTS
 ${'='.repeat(50)}
 
-Session: ${sessionId}
+Session: ${currentSessionId}
 Generated: ${new Date().toLocaleString()}
 
 STRUCTURES PROCESSED:
-${structures.join(', ') || 'None specified'}
+${structures.filter(s => s.enabled).map(s => s.name).join(', ') || 'None specified'}
 
 PARAMETERS USED:
-${parameters.join(', ') || 'None specified'}
+${parameters.filter(p => p.enabled).map(p => p.name).join(', ') || 'None specified'}
 
 SUMMARY:
 ${results.summary || results.analysis || 'No summary available'}
@@ -798,7 +800,7 @@ ${'='.repeat(50)}
 Generated by AI Speech Diarization Platform
 `;
         }
-        filename = `${sessionId}_results.${format}`;
+        filename = `${currentSessionId}_results.${format}`;
       }
 
       const blob = new Blob([content], { 
@@ -819,9 +821,9 @@ Generated by AI Speech Diarization Platform
       console.error('Download error:', error);
       toast.error('Download failed');
     }
-  }, [sessionId, results, structures, parameters]);
+  }, [currentSessionId, results, structures, parameters]);
 
-  // Handle session reset
+  // ✅ Handle session reset
   const handleReset = useCallback(() => {
     if (statusPollingRef.current) {
       clearInterval(statusPollingRef.current);
@@ -829,7 +831,7 @@ Generated by AI Speech Diarization Platform
     navigate('/');
   }, [navigate]);
 
-  // Cleanup on unmount
+  // ✅ Cleanup on unmount
   useEffect(() => {
     return () => {
       if (statusPollingRef.current) {
@@ -850,7 +852,7 @@ Generated by AI Speech Diarization Platform
     );
   }
 
-  const hasSession = !!sessionId;
+  const hasSession = !!currentSessionId;
 
   return (
     <div className="min-h-screen bg-gray-800 overflow-auto">
@@ -870,8 +872,8 @@ Generated by AI Speech Diarization Platform
                 <h1 className="text-3xl font-bold text-white">
                   Exploration & <span className="text-cyan-400">Interviews</span>
                 </h1>
-                {sessionId ? (
-                  <p className="text-gray-400">Session: {sessionId.slice(0, 8)}...</p>
+                {currentSessionId ? (
+                  <p className="text-gray-400">Session: {currentSessionId.slice(0, 8)}...</p>
                 ) : (
                   <p className="text-gray-400">No active session - showing demo content</p>
                 )}
@@ -935,7 +937,7 @@ Generated by AI Speech Diarization Platform
           <div className="border-4 border-cyan-400 rounded-3xl p-2">
             <FormattedTextPanel 
               results={results}
-              structures={structures}
+              structures={structures.filter(s => s.enabled).map(s => s.name)}
               isExpanded={expandedSummary}
               onToggleExpand={() => setExpandedSummary(!expandedSummary)}
               hasSession={hasSession}

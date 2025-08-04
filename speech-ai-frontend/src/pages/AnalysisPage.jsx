@@ -1,4 +1,4 @@
-// src/pages/AnalysisPage.jsx - Main AI Analysis Interface
+// src/pages/AnalysisPage.jsx - Main AI Analysis Interface with Store Integration
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useBackend } from '../contexts/BackendContext';
 import { backendApi } from '../services/api';
+import useAppStore from '../stores/appStore'; // ✅ Added store import
 import toast from 'react-hot-toast';
 
 // Import sub-components
@@ -24,23 +25,32 @@ import AnalysisTips from '../Components/analysis/AnalysisTips';
 import RecentAnalysisPanel from '../Components/analysis/RecentAnalysisPanel';
 
 const AnalysisPage = () => {
-  const { isConnected, isLLMAvailable, activeSessions } = useBackend();
-  const [selectedSession, setSelectedSession] = useState('');
+  const { isConnected, isLLMAvailable } = useBackend(); // ✅ Removed activeSessions
+  
+  // ✅ NEW: Use store state instead of local state
+  const currentSessionId = useAppStore((state) => state.currentSessionId);
+  const results = useAppStore((state) => state.results);
+  const analysisResults = useAppStore((state) => state.analysisResults);
+  const setAnalysisResults = useAppStore((state) => state.setAnalysisResults);
+  const analysisProgress = useAppStore((state) => state.analysisProgress);
+  const setAnalysisProgress = useAppStore((state) => state.setAnalysisProgress);
+  const customPrompt = useAppStore((state) => state.customPrompt);
+  const setCustomPrompt = useAppStore((state) => state.setCustomPrompt);
+  const showHistoryModal = useAppStore((state) => state.showHistoryModal);
+  const setShowHistoryModal = useAppStore((state) => state.setShowHistoryModal);
+
+  // ✅ UPDATED: Local state - reduced since using store
   const [sessionData, setSessionData] = useState(null);
   const [availablePrompts, setAvailablePrompts] = useState({});
-  const [analysisResults, setAnalysisResults] = useState({});
   const [loadingPrompts, setLoadingPrompts] = useState(new Set());
-  const [customPrompt, setCustomPrompt] = useState('');
   
   // Persistent analysis progress tracking
-  const [analysisProgress, setAnalysisProgress] = useState({});
   const [backgroundPolling, setBackgroundPolling] = useState(new Set());
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
 
   // Refs for background polling
   const pollingIntervals = useRef(new Map());
 
-  // Predefined analysis types
+  // Predefined analysis types - NO CHANGES
   const analysisTypes = [
     {
       key: 'summary',
@@ -86,7 +96,7 @@ const AnalysisPage = () => {
     }
   ];
 
-  // Background polling for analysis results
+  // Background polling for analysis results - NO CHANGES
   const startBackgroundPolling = (analysisKey, sessionId) => {
     if (pollingIntervals.current.has(analysisKey)) return;
 
@@ -106,13 +116,13 @@ const AnalysisPage = () => {
           return;
         }
 
-        setAnalysisProgress(prev => ({
-          ...prev,
+        setAnalysisProgress({
+          ...analysisProgress,
           [analysisKey]: {
-            ...prev[analysisKey],
+            ...analysisProgress[analysisKey],
             lastChecked: new Date().toISOString()
           }
-        }));
+        });
 
       } catch (error) {
         console.error(`Background polling error for ${analysisKey}:`, error);
@@ -135,7 +145,7 @@ const AnalysisPage = () => {
     }, 600000);
   };
 
-  // Cleanup intervals on unmount
+  // Cleanup intervals on unmount - NO CHANGES
   useEffect(() => {
     return () => {
       pollingIntervals.current.forEach((interval) => {
@@ -145,19 +155,26 @@ const AnalysisPage = () => {
     };
   }, []);
 
-  // Load available prompts on mount
+  // Load available prompts on mount - NO CHANGES
   useEffect(() => {
     if (isLLMAvailable) {
       loadPrompts();
     }
   }, [isLLMAvailable]);
 
-  // Load session data when session is selected
+  // ✅ UPDATED: Auto-load session data when store has session
   useEffect(() => {
-    if (selectedSession) {
-      loadSessionData(selectedSession);
+    if (currentSessionId && results) {
+      // Use existing results from store
+      setSessionData(results);
+    } else if (currentSessionId && !results) {
+      // Fetch session data if not in store
+      loadSessionData(currentSessionId);
+    } else {
+      // No session available
+      setSessionData(null);
     }
-  }, [selectedSession]);
+  }, [currentSessionId, results]);
 
   const loadPrompts = async () => {
     try {
@@ -183,25 +200,26 @@ const AnalysisPage = () => {
     }
   };
 
+  // ✅ UPDATED: Use currentSessionId from store
   const runAnalysis = async (promptType, customPromptText = '') => {
-    if (!selectedSession || !sessionData) {
-      toast.error('Please select a session first');
+    if (!currentSessionId || !sessionData) {
+      toast.error('Don\'t have a session to analyze');
       return;
     }
 
-    const analysisKey = `${selectedSession}_${promptType}`;
+    const analysisKey = `${currentSessionId}_${promptType}`;
     setLoadingPrompts(prev => new Set(prev).add(promptType));
     
-    setAnalysisProgress(prev => ({
-      ...prev,
+    setAnalysisProgress({
+      ...analysisProgress,
       [analysisKey]: {
         status: 'processing',
-        sessionId: selectedSession,
+        sessionId: currentSessionId,
         promptType,
         startTime: new Date().toISOString(),
         title: promptType === 'custom' ? 'Custom Analysis' : analysisTypes.find(t => t.key === promptType)?.title
       }
-    }));
+    });
 
     try {
       const response = await backendApi.processWithLLM({
@@ -215,19 +233,19 @@ const AnalysisPage = () => {
       console.log('Response Data:', response.data);
       console.log('Response Text:', response.data?.response);
 
-      setAnalysisResults(prev => ({
-        ...prev,
+      setAnalysisResults({
+        ...analysisResults,
         [analysisKey]: response.data
-      }));
+      });
 
-      setAnalysisProgress(prev => ({
-        ...prev,
+      setAnalysisProgress({
+        ...analysisProgress,
         [analysisKey]: {
-          ...prev[analysisKey],
+          ...analysisProgress[analysisKey],
           status: 'completed',
           completedTime: new Date().toISOString()
         }
-      }));
+      });
 
       toast.success(`${promptType === 'custom' ? 'Custom analysis' : analysisTypes.find(t => t.key === promptType)?.title || 'Analysis'} completed!`);
 
@@ -235,20 +253,20 @@ const AnalysisPage = () => {
       console.error('Analysis failed:', error);
       toast.error(error.userMessage || 'Analysis failed');
       
-      setAnalysisProgress(prev => ({
-        ...prev,
+      setAnalysisProgress({
+        ...analysisProgress,
         [analysisKey]: {
-          ...prev[analysisKey],
+          ...analysisProgress[analysisKey],
           status: 'failed',
           error: error.userMessage || 'Analysis failed',
           failedTime: new Date().toISOString()
         }
-      }));
+      });
 
-      setAnalysisResults(prev => ({
-        ...prev,
+      setAnalysisResults({
+        ...analysisResults,
         [analysisKey]: { error: error.userMessage || 'Analysis failed' }
-      }));
+      });
     } finally {
       setLoadingPrompts(prev => {
         const newSet = new Set(prev);
@@ -266,6 +284,7 @@ const AnalysisPage = () => {
     runAnalysis('custom', customPrompt);
   };
 
+  // ✅ UPDATED: Use currentSessionId from store
   const downloadAnalysis = (keyOrPromptType, progressData = null) => {
     let analysisKey, result, title;
     
@@ -274,7 +293,7 @@ const AnalysisPage = () => {
       result = analysisResults[analysisKey];
       title = progressData.title;
     } else {
-      analysisKey = `${selectedSession}_${keyOrPromptType}`;
+      analysisKey = `${currentSessionId}_${keyOrPromptType}`;
       result = analysisResults[analysisKey];
       const analysisType = analysisTypes.find(t => t.key === keyOrPromptType);
       title = keyOrPromptType === 'custom' ? 'Custom Analysis' : analysisType?.title || 'Analysis';
@@ -291,7 +310,7 @@ ${'='.repeat(50)}
 Analysis Type: ${title}
 Generated: ${new Date().toLocaleString()}
 Model: ${result.model || 'Unknown'}
-Session: ${progressData?.sessionId || selectedSession}
+Session: ${progressData?.sessionId || currentSessionId}
 
 ${'='.repeat(50)}
 
@@ -307,7 +326,7 @@ Transcript Length: ${result.transcript_length || 'N/A'} characters
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `analysis_${title.replace(/\s+/g, '_')}_${(progressData?.sessionId || selectedSession).slice(0, 8)}.txt`;
+    link.download = `analysis_${title.replace(/\s+/g, '_')}_${(progressData?.sessionId || currentSessionId).slice(0, 8)}.txt`;
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -316,16 +335,9 @@ Transcript Length: ${result.transcript_length || 'N/A'} characters
     toast.success('Analysis downloaded');
   };
 
-  const getSessionOptions = () => {
-    return Array.from(activeSessions.entries())
-      .filter(([_, sessionData]) => sessionData.status === 'completed')
-      .map(([sessionId, sessionData]) => ({
-        id: sessionId,
-        name: `Session ${sessionId.slice(0, 8)}...`,
-        status: sessionData.status
-      }));
-  };
+  // ✅ REMOVED: getSessionOptions function (no longer needed)
 
+  // ✅ UPDATED: Clear analysis using store setters
   const clearAnalysisHistory = () => {
     setAnalysisResults({});
     setAnalysisProgress({});
@@ -373,7 +385,7 @@ Transcript Length: ${result.transcript_length || 'N/A'} characters
   return (
     <div className="min-h-screen bg-gray-900 p-6 overflow-auto">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
+        {/* Header - NO CHANGES */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -402,14 +414,14 @@ Transcript Length: ${result.transcript_length || 'N/A'} characters
           </div>
         </div>
 
-        {/* Analysis Progress Banner */}
+        {/* Analysis Progress Banner - NO CHANGES */}
         <AnalysisProgressBanner 
           analysisProgress={analysisProgress}
           onViewProgress={() => setShowHistoryModal(true)}
           onClearProgress={clearAnalysisHistory}
         />
 
-        {/* Analysis History Modal */}
+        {/* Analysis History Modal - NO CHANGES */}
         <AnalysisHistoryModal 
           isOpen={showHistoryModal}
           onClose={() => setShowHistoryModal(false)}
@@ -418,108 +430,99 @@ Transcript Length: ${result.transcript_length || 'N/A'} characters
           onDownload={downloadAnalysis}
         />
 
-        {/* Session Selection */}
-        <div className="mb-8 bg-gray-800 rounded-xl border border-gray-700 p-6">
-          <h2 className="text-xl font-semibold text-white mb-4">Select Session to Analyze</h2>
-          <div className="flex items-center space-x-4">
-            <div className="flex-1">
-              <select
-                value={selectedSession}
-                onChange={(e) => setSelectedSession(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
-              >
-                <option value="">
-                  {getSessionOptions().length === 0 ? 'No completed sessions available' : 'Choose a session...'}
-                </option>
-                {getSessionOptions().map((session) => (
-                  <option key={session.id} value={session.id}>
-                    {session.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            
-            {sessionData && (
-              <div className="flex items-center space-x-4 text-sm text-gray-400">
-                <div className="flex items-center space-x-1">
-                  <Clock className="w-4 h-4" />
-                  <span>{Math.round(sessionData.results.metadata.total_duration)}s</span>
+        {/* ✅ UPDATED: Current Session Info (instead of session selection) */}
+        {currentSessionId && (
+          <div className="mb-8 bg-gray-800 rounded-xl border border-gray-700 p-6">
+            <h2 className="text-xl font-semibold text-white mb-4">Current Session</h2>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="px-3 py-2 bg-cyan-500/20 border border-cyan-500/30 rounded-lg">
+                  <span className="text-cyan-400 font-medium">Session {currentSessionId.slice(0, 8)}...</span>
                 </div>
-                <div className="flex items-center space-x-1">
-                  <Users className="w-4 h-4" />
-                  <span>{sessionData.results.metadata.num_speakers} speakers</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <FileText className="w-4 h-4" />
-                  <span>{sessionData.results.metadata.num_segments} segments</span>
-                </div>
+                
+                {sessionData && (
+                  <div className="flex items-center space-x-4 text-sm text-gray-400">
+                    <div className="flex items-center space-x-1">
+                      <Clock className="w-4 h-4" />
+                      <span>{Math.round(sessionData.results.metadata.total_duration)}s</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <Users className="w-4 h-4" />
+                      <span>{sessionData.results.metadata.num_speakers} speakers</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <FileText className="w-4 h-4" />
+                      <span>{sessionData.results.metadata.num_segments} segments</span>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </div>
-
-        {/* Analysis Options */}
-        {sessionData && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Predefined Analysis */}
-            <div className="space-y-6">
-              <h2 className="text-2xl font-semibold text-white">Quick Analysis</h2>
-              
-              <div className="grid gap-4">
-                {analysisTypes.map((analysis) => (
-                  <AnalysisCard
-                    key={analysis.key}
-                    analysis={analysis}
-                    selectedSession={selectedSession}
-                    analysisResults={analysisResults}
-                    analysisProgress={analysisProgress}
-                    loadingPrompts={loadingPrompts}
-                    onRunAnalysis={runAnalysis}
-                    onDownload={downloadAnalysis}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Custom Analysis */}
-            <div className="space-y-6">
-              <h2 className="text-2xl font-semibold text-white">Custom Analysis</h2>
-              
-              <CustomAnalysisPanel
-                customPrompt={customPrompt}
-                setCustomPrompt={setCustomPrompt}
-                onRunCustomAnalysis={runCustomAnalysis}
-                loadingPrompts={loadingPrompts}
-                selectedSession={selectedSession}
-                analysisResults={analysisResults}
-                analysisProgress={analysisProgress}
-                onDownload={downloadAnalysis}
-              />
-
-              <AnalysisTips />
-
-              {Object.keys(analysisProgress).length > 0 && (
-                <RecentAnalysisPanel
-                  analysisProgress={analysisProgress}
-                  analysisResults={analysisResults}
-                  onShowHistory={() => setShowHistoryModal(true)}
-                  onDownload={downloadAnalysis}
-                />
-              )}
             </div>
           </div>
         )}
 
-        {/* No Session Selected */}
-        {!sessionData && (
+        {/* ✅ UPDATED: Always show analysis options (enabled/disabled based on session) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Predefined Analysis */}
+          <div className="space-y-6">
+            <h2 className="text-2xl font-semibold text-white">Quick Analysis</h2>
+            
+            <div className="grid gap-4">
+              {analysisTypes.map((analysis) => (
+                <AnalysisCard
+                  key={analysis.key}
+                  analysis={analysis}
+                  selectedSession={currentSessionId}
+                  analysisResults={analysisResults}
+                  analysisProgress={analysisProgress}
+                  loadingPrompts={loadingPrompts}
+                  onRunAnalysis={runAnalysis}
+                  onDownload={downloadAnalysis}
+                  disabled={!sessionData} // ✅ Pass disabled prop
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Custom Analysis */}
+          <div className="space-y-6">
+            <h2 className="text-2xl font-semibold text-white">Custom Analysis</h2>
+            
+            <CustomAnalysisPanel
+              customPrompt={customPrompt}
+              setCustomPrompt={setCustomPrompt}
+              onRunCustomAnalysis={runCustomAnalysis}
+              loadingPrompts={loadingPrompts}
+              selectedSession={currentSessionId}
+              analysisResults={analysisResults}
+              analysisProgress={analysisProgress}
+              onDownload={downloadAnalysis}
+              disabled={!sessionData} // ✅ Pass disabled prop
+            />
+
+            <AnalysisTips />
+
+            {Object.keys(analysisProgress).length > 0 && (
+              <RecentAnalysisPanel
+                analysisProgress={analysisProgress}
+                analysisResults={analysisResults}
+                onShowHistory={() => setShowHistoryModal(true)}
+                onDownload={downloadAnalysis}
+              />
+            )}
+          </div>
+        </div>
+
+        {/* ✅ UPDATED: No Session Available message */}
+        {!currentSessionId && (
           <div className="text-center py-12">
             <div className="bg-gray-800 rounded-2xl p-8 max-w-md mx-auto border border-gray-700">
               <FileText className="w-16 h-16 text-gray-600 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">
-                Select a Session to Begin Analysis
+                No Session Available
               </h3>
               <p className="text-gray-400 mb-4">
-                Choose a completed transcription session from the dropdown above to start analyzing with AI.
+                Upload and process an audio file first to start AI analysis.
               </p>
               {Object.keys(analysisProgress).length > 0 && (
                 <div className="mt-4 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg text-blue-400 text-sm">
@@ -535,6 +538,21 @@ Transcript Length: ${result.transcript_length || 'N/A'} characters
                   </button>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* ✅ UPDATED: Session loading message */}
+        {currentSessionId && !sessionData && (
+          <div className="text-center py-12">
+            <div className="bg-gray-800 rounded-2xl p-8 max-w-md mx-auto border border-gray-700">
+              <FileText className="w-16 h-16 text-gray-600 mx-auto mb-4 animate-pulse" />
+              <h3 className="text-xl font-semibold text-white mb-2">
+                Loading Session Data...
+              </h3>
+              <p className="text-gray-400">
+                Preparing session {currentSessionId.slice(0, 8)}... for analysis
+              </p>
             </div>
           </div>
         )}
