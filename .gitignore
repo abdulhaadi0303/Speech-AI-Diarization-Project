@@ -38,6 +38,21 @@ venv/
 env/
 ENV/
 
+# Media files
+media/
+*.mp3
+*.wav
+*.mp4
+*.avi
+*.mov
+*.flac
+*.webm
+*.ogg
+*.jpg
+*.jpeg
+*.png
+*.gif
+
 # IDE & OS Files (common)
 .DS_Store
 .idea/
