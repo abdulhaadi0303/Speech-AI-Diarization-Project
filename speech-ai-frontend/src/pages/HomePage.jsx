@@ -47,7 +47,7 @@ const HomePage = () => {
     setSelectedFile(file);
   }, [setSelectedFile]);
 
-  // Handle start processing
+  // ✅ UPDATED: Handle start processing with 1 second delay + file info
   const handleStartProcessing = useCallback(async () => {
     if (!selectedFile || !isConnected) {
       toast.error('Please select a file and ensure backend is connected');
@@ -101,6 +101,23 @@ const HomePage = () => {
       });
       
       setIsProcessing(false);
+
+      // ✅ NEW: Navigate after 1 second delay with file info
+      setTimeout(() => {
+        navigate('/results', {
+          state: {
+            sessionId: sessionId,
+            structures: enabledStructures,
+            parameters: enabledParameters,
+            fromUpload: true,
+            fileInfo: {
+              name: selectedFile.name,
+              size: selectedFile.size,
+              type: selectedFile.type
+            }
+          }
+        });
+      }, 1000); // 1 second delay
       
     } catch (error) {
       console.error('Upload error:', error);
