@@ -1,21 +1,26 @@
-// src/Components/transcription/TranscriptPanel.jsx
+// src/Components/transcription/TranscriptPanel.jsx - Updated with Live Editor Integration
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   CheckCircle,
   Copy,
   Volume2,
-  Loader2
+  Loader2,
+  Edit3,
+  Eye,
+  ToggleLeft,
+  ToggleRight
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import LiveTranscriptEditor from './LiveTranscriptEditor';
 
 const TranscriptPanel = ({ results, hasSession }) => {
   const [copied, setCopied] = useState(false);
   const [selectedSpeaker, setSelectedSpeaker] = useState('all');
+  const [viewMode, setViewMode] = useState('editor'); // 'editor' or 'original'
 
   const segments = results?.results?.segments || [];
   const speakerStats = results?.results?.speaker_stats || {};
-  const metadata = results?.results?.metadata || {};
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -99,13 +104,42 @@ const TranscriptPanel = ({ results, hasSession }) => {
     }
   };
 
+  // ✅ Main render - Live Editor by default, with toggle to original view
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 pb-16 h-full flex flex-col">
       {/* Header Section */}
-      <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
+      <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-100 flex-shrink-0">
         <h2 className="text-2xl font-bold text-gray-900">Transcript</h2>
+        
         <div className="flex items-center space-x-3">
-          {(Object.keys(speakerStats).length > 0 || !hasSession) && (
+          {/* View Mode Toggle */}
+          <div className="flex items-center space-x-2 bg-gray-100 p-1 rounded-lg">
+            <button
+              onClick={() => setViewMode('editor')}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                viewMode === 'editor'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Edit3 className="w-4 h-4 inline mr-1" />
+              Live Editor
+            </button>
+            <button
+              onClick={() => setViewMode('original')}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                viewMode === 'original'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Eye className="w-4 h-4 inline mr-1" />
+              Original View
+            </button>
+          </div>
+
+          {/* Speaker Filter - Only for original view */}
+          {viewMode === 'original' && (Object.keys(speakerStats).length > 0 || !hasSession) && (
             <select
               value={selectedSpeaker}
               onChange={(e) => setSelectedSpeaker(e.target.value)}
@@ -124,115 +158,133 @@ const TranscriptPanel = ({ results, hasSession }) => {
               )}
             </select>
           )}
-          <button
-            onClick={handleCopyTranscript}
-            className="p-2.5 bg-gray-50 hover:bg-gray-100 rounded-lg transition-all duration-200 hover:shadow-sm border border-gray-200"
-            title="Copy transcript"
-          >
-            {copied ? (
-              <CheckCircle className="w-4 h-4 text-green-600" />
-            ) : (
-              <Copy className="w-4 h-4 text-gray-600" />
-            )}
-          </button>
+
+          {/* Copy button - Only for original view */}
+          {viewMode === 'original' && (
+            <button
+              onClick={handleCopyTranscript}
+              className="p-2.5 bg-gray-50 hover:bg-gray-100 rounded-lg transition-all duration-200 hover:shadow-sm border border-gray-200"
+              title="Copy transcript"
+            >
+              {copied ? (
+                <CheckCircle className="w-4 h-4 text-green-600" />
+              ) : (
+                <Copy className="w-4 h-4 text-gray-600" />
+              )}
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Status Button */}
-      <div className="mb-6">
-        <div className="w-full bg-gradient-to-r from-cyan-400 to-cyan-500 text-white py-3 px-4 rounded-xl font-semibold text-center shadow-sm">
-          {hasSession ? 'Active Transcript Here' : 'Sample Transcript (Demo)'}
+      {/* ✅ Conditional Rendering: Live Editor or Original View */}
+      {viewMode === 'editor' ? (
+        // Live Editor Mode
+        <div className="flex-1 overflow-hidden">
+          <LiveTranscriptEditor 
+            results={results}
+            hasSession={hasSession}
+          />
         </div>
-      </div>
-      
-      {/* Transcript Content - Full Height by Default */}
-      <div className="space-y-4 overflow-y-auto pb-8 flex-1">
-        {filteredSegments.length > 0 ? (
-          filteredSegments.map((segment, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.02, duration: 0.3 }}
-              className="bg-gray-50 rounded-xl p-5 hover:bg-gray-100 transition-all duration-200 border border-gray-100 hover:shadow-sm w-full"
-            >
-              {/* Speaker Info Header - Stacked Layout */}
-              <div className="mb-4 w-full">
-                <div className="flex items-center space-x-3 mb-3">
-                  <div className={`px-3 py-1.5 rounded-lg text-xs font-semibold border-2 ${getSpeakerColor(segment.speaker)}`}>
-                    {segment.speaker}
-                  </div>
-                  <div className="text-xs font-mono text-gray-500 bg-gray-200 px-3 py-1.5 rounded-lg">
-                    {formatTime(segment.start)} - {formatTime(segment.end)}
-                  </div>
-                </div>
-                
-                {/* Full Width Text Content - No Flex Constraints */}
-                <div className="w-full block">
-                  <p className="text-gray-800 leading-relaxed text-base font-medium break-words">
-                    {segment.text}
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          ))
-        ) : (
-          <div className="text-center py-12 text-gray-500">
-            {hasSession ? (
-              results ? (
-                <div className="space-y-4">
-                  <Volume2 className="w-16 h-16 mx-auto mb-4 opacity-40" />
-                  <h3 className="text-lg font-medium text-gray-600">No transcript available yet</h3>
-                  <p className="text-sm text-gray-500">Transcript will appear here once processing is complete</p>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  <div className="flex items-center justify-center space-x-3">
-                    <Loader2 className="w-8 h-8 animate-spin text-cyan-500" />
-                    <span className="text-xl font-medium text-gray-700">Processing audio...</span>
-                  </div>
-                  
-                  <div className="space-y-3 text-sm text-gray-600">
-                    <p className="flex items-center justify-center space-x-2">
-                      <span>🎯</span> <span>Analyzing audio file</span>
-                    </p>
-                    <p className="flex items-center justify-center space-x-2">
-                      <span>🗣️</span> <span>Identifying speakers</span>
-                    </p>
-                    <p className="flex items-center justify-center space-x-2">
-                      <span>📝</span> <span>Generating transcript</span>
-                    </p>
-                  </div>
-                  
-                  <div className="bg-gray-50 rounded-xl p-6 mt-8 border border-gray-200 max-w-md mx-auto">
-                    <h4 className="font-medium text-gray-700 mb-4">Processing Status</h4>
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                        <span className="text-sm text-gray-600">Audio preprocessing complete</span>
+      ) : (
+        // Original Static View Mode
+        <>
+          {/* Status Button */}
+          <div className="mb-6 flex-shrink-0">
+            <div className="w-full bg-gradient-to-r from-cyan-400 to-cyan-500 text-white py-3 px-4 rounded-xl font-semibold text-center shadow-sm">
+              {hasSession ? 'Active Transcript Here' : 'Sample Transcript (Demo)'}
+            </div>
+          </div>
+          
+          {/* Transcript Content - Full Height by Default */}
+          <div className="space-y-4 overflow-y-auto pb-8 flex-1">
+            {filteredSegments.length > 0 ? (
+              filteredSegments.map((segment, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.02, duration: 0.3 }}
+                  className="bg-gray-50 rounded-xl p-5 hover:bg-gray-100 transition-all duration-200 border border-gray-100 hover:shadow-sm w-full"
+                >
+                  {/* Speaker Info Header - Stacked Layout */}
+                  <div className="mb-4 w-full">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <div className={`px-3 py-1.5 rounded-lg text-xs font-semibold border-2 ${getSpeakerColor(segment.speaker)}`}>
+                        {segment.speaker}
                       </div>
-                      <div className="flex items-center space-x-3">
-                        <Loader2 className="w-3 h-3 animate-spin text-cyan-500" />
-                        <span className="text-sm text-gray-600">Running speech recognition...</span>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
-                        <span className="text-sm text-gray-400">Speaker diarization pending</span>
+                      <div className="text-xs font-mono text-gray-500 bg-gray-200 px-3 py-1.5 rounded-lg">
+                        {formatTime(segment.start)} - {formatTime(segment.end)}
                       </div>
                     </div>
+                    
+                    {/* Full Width Text Content - No Flex Constraints */}
+                    <div className="w-full block">
+                      <p className="text-gray-800 leading-relaxed text-base font-medium break-words">
+                        {segment.text}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              )
+                </motion.div>
+              ))
             ) : (
-              <div className="space-y-4">
-                <Volume2 className="w-16 h-16 mx-auto mb-4 opacity-40" />
-                <h3 className="text-lg font-medium text-gray-600">Ready for audio processing</h3>
-                <p className="text-sm text-gray-500">Start processing an audio file to see transcript results</p>
+              <div className="text-center py-12 text-gray-500">
+                {hasSession ? (
+                  results ? (
+                    <div className="space-y-4">
+                      <Volume2 className="w-16 h-16 mx-auto mb-4 opacity-40" />
+                      <h3 className="text-lg font-medium text-gray-600">No transcript available yet</h3>
+                      <p className="text-sm text-gray-500">Transcript will appear here once processing is complete</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-center space-x-3">
+                        <Loader2 className="w-8 h-8 animate-spin text-cyan-500" />
+                        <span className="text-xl font-medium text-gray-700">Processing audio...</span>
+                      </div>
+                      
+                      <div className="space-y-3 text-sm text-gray-600">
+                        <p className="flex items-center justify-center space-x-2">
+                          <span>🎯</span> <span>Analyzing audio file</span>
+                        </p>
+                        <p className="flex items-center justify-center space-x-2">
+                          <span>🗣️</span> <span>Identifying speakers</span>
+                        </p>
+                        <p className="flex items-center justify-center space-x-2">
+                          <span>📝</span> <span>Generating transcript</span>
+                        </p>
+                      </div>
+                      
+                      <div className="bg-gray-50 rounded-xl p-6 mt-8 border border-gray-200 max-w-md mx-auto">
+                        <h4 className="font-medium text-gray-700 mb-4">Processing Status</h4>
+                        <div className="space-y-4">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                            <span className="text-sm text-gray-600">Audio preprocessing complete</span>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <Loader2 className="w-3 h-3 animate-spin text-cyan-500" />
+                            <span className="text-sm text-gray-600">Running speech recognition...</span>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
+                            <span className="text-sm text-gray-400">Speaker diarization pending</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                ) : (
+                  <div className="space-y-4">
+                    <Volume2 className="w-16 h-16 mx-auto mb-4 opacity-40" />
+                    <h3 className="text-lg font-medium text-gray-600">Ready for audio processing</h3>
+                    <p className="text-sm text-gray-500">Start processing an audio file to see transcript results</p>
+                  </div>
+                )}
               </div>
             )}
           </div>
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
 };

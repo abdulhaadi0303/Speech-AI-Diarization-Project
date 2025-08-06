@@ -1,4 +1,4 @@
-// src/Components/transcription/ProcessingStatusSection.jsx - Enhanced ProcessingStatus Sub-Component
+// ProcessingStatusSection.jsx - Fixed for Multiple Progress Instance Prevention
 import React, { useRef, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -12,102 +12,136 @@ import {
 } from 'lucide-react';
 import useAppStore from '../../stores/appStore';
 
-// ✅ ENHANCED: ProcessingStatus Sub-Component with File Size Based Progress
-const ProcessingStatus = ({ status, onReset }) => {
-  const smoothProgressRef = useRef(null);
-  const processingStartTimeRef = useRef(null);
-  const estimatedDurationRef = useRef(20); // Default 20 seconds
-  const hasStartedProgressRef = useRef(false);
+// ✅ FIXED: Global progress tracking to prevent multiple instances
+let globalProgressInterval = null;
+let globalProgressActive = false;
 
-  // ✅ FIXED: Start file-size-based progress estimation
-  const startFileSizeBasedProgress = useCallback(() => {
-    if (smoothProgressRef.current || hasStartedProgressRef.current) {
-      console.log('⚠️ Progress estimation already started, skipping...');
-      return; // Already started
+// ✅ ENHANCED: ProcessingStatus with Global Progress Management
+const ProcessingStatus = ({ status, onReset }) => {
+  const processingStartTimeRef = useRef(null);
+  const estimatedDurationRef = useRef(20);
+  const componentMountedRef = useRef(true);
+
+  // ✅ FIXED: Single global progress estimation function
+  const startGlobalProgressEstimation = useCallback(() => {
+    if (globalProgressActive || globalProgressInterval) {
+      console.log('⚠️ Global progress already active, skipping...');
+      return;
     }
 
-    // Calculate estimated duration from file info
+    if (!status || status.status === 'completed' || status.status === 'failed') {
+      console.log('⚠️ No valid processing status, skipping progress...');
+      return;
+    }
+
+    // Calculate estimated duration
     if (status?.fileInfo?.size) {
       const fileSizeMB = status.fileInfo.size / (1024 * 1024);
-      estimatedDurationRef.current = Math.max(5, Math.round(fileSizeMB * 1.5)); // 1.5 seconds per MB, min 5 seconds
-      
-      console.log(`📁 File: ${status.fileInfo.name}`);
-      console.log(`📊 Size: ${fileSizeMB.toFixed(1)}MB`);
+      estimatedDurationRef.current = Math.max(10, Math.round(fileSizeMB * 2));
+      console.log(`📁 File: ${status.fileInfo.name} (${fileSizeMB.toFixed(1)}MB)`);
       console.log(`⏱️ Estimated duration: ${estimatedDurationRef.current}s`);
     } else {
-      console.log('⚠️ No file info available, using default duration');
+      estimatedDurationRef.current = 25;
+      console.log('⚠️ No file info, using 25s default');
     }
 
     processingStartTimeRef.current = Date.now();
-    hasStartedProgressRef.current = true;
+    globalProgressActive = true;
 
-    console.log('🎯 Starting file-size-based progress estimation (1.5 sec/MB)');
+    console.log('🎯 Starting GLOBAL progress estimation');
 
-    smoothProgressRef.current = setInterval(() => {
+    globalProgressInterval = setInterval(() => {
+      if (!componentMountedRef.current) {
+        console.log('📴 Component unmounted, stopping global progress');
+        stopGlobalProgressEstimation();
+        return;
+      }
+
       const currentStatus = useAppStore.getState().processingStatus;
       
-      if (currentStatus?.status === 'processing' && currentStatus.progress < 90) {
-        const now = Date.now();
-        const elapsed = (now - processingStartTimeRef.current) / 1000; // seconds
-        const estimatedDuration = estimatedDurationRef.current;
+      if (!currentStatus || currentStatus.status === 'completed' || currentStatus.status === 'failed') {
+        console.log('🏁 Processing completed/failed, stopping global progress');
+        stopGlobalProgressEstimation();
+        return;
+      }
+
+      if (currentStatus.progress >= 90) {
+        // Don't increment beyond 90% until backend confirms completion
+        return;
+      }
+
+      const now = Date.now();
+      const elapsed = (now - processingStartTimeRef.current) / 1000;
+      const estimatedDuration = estimatedDurationRef.current;
+      
+      const progressRatio = elapsed / estimatedDuration;
+      const targetProgress = Math.min(5 + (progressRatio * 85), 90);
+      
+      const currentProgress = currentStatus.progress || 5;
+      
+      if (currentProgress < targetProgress) {
+        const increment = Math.max(0.2, (targetProgress - currentProgress) * 0.05);
+        const newProgress = Math.min(currentProgress + increment, 90);
         
-        // Calculate target progress based on elapsed time
-        const progressRatio = elapsed / estimatedDuration;
-        const targetProgress = Math.min(5 + (progressRatio * 85), 90); // 5% to 90%
+        let message = 'Processing audio...';
+        if (newProgress < 15) message = 'Initializing audio processing...';
+        else if (newProgress < 30) message = 'Loading and analyzing audio file...';
+        else if (newProgress < 50) message = 'Speech recognition in progress...';
+        else if (newProgress < 70) message = 'Speaker diarization in progress...';
+        else if (newProgress < 85) message = 'Finalizing AI processing...';
+        else message = 'Almost complete...';
         
-        const currentProgress = currentStatus.progress || 5;
+        useAppStore.getState().setProcessingStatus({
+          ...currentStatus,
+          progress: Math.round(newProgress * 10) / 10,
+          message: message,
+          status: 'processing'
+        });
         
-        // Smooth increment towards target
-        if (currentProgress < targetProgress) {
-          const increment = Math.max(0.2, (targetProgress - currentProgress) * 0.05); // Faster increment
-          const newProgress = Math.min(currentProgress + increment, 90);
-          
-          // ✅ Dynamic messages based on progress
-          let message = 'Processing audio...';
-          if (newProgress < 20) message = 'Starting audio processing...';
-          else if (newProgress < 40) message = 'Loading and analyzing audio file...';
-          else if (newProgress < 60) message = 'Speech recognition in progress...';
-          else if (newProgress < 80) message = 'Speaker diarization in progress...';
-          else if (newProgress < 90) message = 'Finalizing AI processing...';
-          
-          useAppStore.getState().setProcessingStatus({
-            ...currentStatus,
-            progress: Math.round(newProgress * 10) / 10, // Round to 1 decimal place
-            message: message
-          });
-          
-          // ✅ Log progress updates
-          if (Math.floor(newProgress) % 10 === 0 && Math.floor(newProgress) !== Math.floor(currentProgress)) {
-            console.log(`📈 Progress: ${Math.floor(newProgress)}% (${elapsed.toFixed(1)}s elapsed)`);
-          }
-        }
-      } else if (currentStatus?.status === 'completed') {
-        // ✅ Stop progress estimation on completion
-        console.log('✅ Stopping progress estimation - processing completed');
-        if (smoothProgressRef.current) {
-          clearInterval(smoothProgressRef.current);
-          smoothProgressRef.current = null;
+        // Log progress milestones
+        if (Math.floor(newProgress) % 20 === 0 && Math.floor(newProgress) !== Math.floor(currentProgress)) {
+          console.log(`📈 Global Progress: ${Math.floor(newProgress)}% (${elapsed.toFixed(1)}s)`);
         }
       }
-    }, 200); // Update every 200ms for smoother animation
-  }, [status?.fileInfo]);
+    }, 200);
+  }, [status]);
 
-  // ✅ FIXED: Start progress estimation when processing begins
-  useEffect(() => {
-    if (status?.status === 'processing' && status?.fileInfo && !hasStartedProgressRef.current) {
-      console.log('🚀 Starting progress estimation with file info:', status.fileInfo);
-      startFileSizeBasedProgress();
+  // ✅ FIXED: Stop global progress estimation
+  const stopGlobalProgressEstimation = () => {
+    if (globalProgressInterval) {
+      clearInterval(globalProgressInterval);
+      globalProgressInterval = null;
     }
+    globalProgressActive = false;
+    console.log('🛑 Global progress estimation stopped');
+  };
+
+  // ✅ FIXED: Start progress when component mounts with processing status
+  useEffect(() => {
+    componentMountedRef.current = true;
     
-    // ✅ Cleanup when component unmounts or status changes
+    if (status && status.status === 'processing' && !globalProgressActive) {
+      // Small delay to ensure state is settled
+      const timer = setTimeout(() => {
+        if (componentMountedRef.current) {
+          startGlobalProgressEstimation();
+        }
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [status?.status, startGlobalProgressEstimation]);
+
+  // ✅ FIXED: Cleanup on unmount
+  useEffect(() => {
     return () => {
-      if (smoothProgressRef.current) {
-        clearInterval(smoothProgressRef.current);
-        smoothProgressRef.current = null;
-        hasStartedProgressRef.current = false; // Reset for next session
+      componentMountedRef.current = false;
+      // Only stop if this was the component that started it
+      if (globalProgressActive && status?.status === 'processing') {
+        stopGlobalProgressEstimation();
       }
     };
-  }, [status?.status, status?.fileInfo, startFileSizeBasedProgress]);
+  }, []);
 
   const getStatusIcon = () => {
     switch (status?.status) {
@@ -141,43 +175,39 @@ const ProcessingStatus = ({ status, onReset }) => {
         {getStatusIcon()}
         <div>
           <h3 className="text-xl font-semibold text-gray-900">
-            {status?.status === 'processing' && 'Processing Audio...'}
+            {(!status || status?.status === 'processing') && 'Processing Audio...'}
             {status?.status === 'completed' && 'Processing Complete!'}
             {status?.status === 'failed' && 'Processing Failed'}
-            {!status && 'Ready for Processing'}
           </h3>
           <p className="text-gray-600">
-            {status?.status === 'processing' && (status?.message || 'Your audio is being analyzed and transcribed...')}
+            {(!status || status?.status === 'processing') && (status?.message || 'Your audio is being analyzed and transcribed...')}
             {status?.status === 'completed' && 'Your results are ready to view!'}
-            {status?.status === 'failed' && 'Something went wrong during processing.'}
-            {!status && 'Upload an audio file and start processing to see results here.'}
+            {status?.status === 'failed' && (status?.message || 'Something went wrong during processing.')}
           </p>
         </div>
       </div>
 
-      {/* ✅ ENHANCED: Show progress bar during processing with smooth animations */}
-      {status?.status === 'processing' && status?.progress !== undefined && (
+      {/* ✅ FIXED: Show progress bar for processing status only */}
+      {(!status || status?.status === 'processing') && (
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Progress</span>
-            <span className="font-medium text-gray-900">{Math.round(status.progress)}%</span>
+            <span className="font-medium text-gray-900">{Math.round(status?.progress || 5)}%</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
             <div 
-              className="bg-gradient-to-r from-cyan-400 to-cyan-500 h-3 rounded-full transition-all duration-300 ease-out relative"
-              style={{ width: `${Math.max(0, Math.min(100, status.progress))}%` }}
+              className="bg-gradient-to-r from-cyan-400 to-cyan-500 h-3 rounded-full transition-all duration-500 ease-out relative"
+              style={{ width: `${Math.max(5, Math.min(100, status?.progress || 5))}%` }}
             >
-              {/* ✅ Shimmer effect for active processing */}
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
             </div>
           </div>
           
-          {/* ✅ Processing steps indicator */}
           <div className="flex justify-between text-xs text-gray-500 mt-2">
-            <span className={status.progress >= 10 ? 'text-cyan-600 font-medium' : ''}>Upload</span>
-            <span className={status.progress >= 30 ? 'text-cyan-600 font-medium' : ''}>Analysis</span>
-            <span className={status.progress >= 60 ? 'text-cyan-600 font-medium' : ''}>Diarization</span>
-            <span className={status.progress >= 90 ? 'text-cyan-600 font-medium' : ''}>Complete</span>
+            <span className={(status?.progress || 5) >= 10 ? 'text-cyan-600 font-medium' : ''}>Upload</span>
+            <span className={(status?.progress || 5) >= 30 ? 'text-cyan-600 font-medium' : ''}>Analysis</span>
+            <span className={(status?.progress || 5) >= 60 ? 'text-cyan-600 font-medium' : ''}>Diarization</span>
+            <span className={(status?.progress || 5) >= 90 ? 'text-cyan-600 font-medium' : ''}>Complete</span>
           </div>
         </div>
       )}
@@ -260,7 +290,7 @@ const StatsSummary = ({ metadata, speakerStats, hasData }) => {
   );
 };
 
-// Main ProcessingStatusSection Component (unchanged)
+// Main ProcessingStatusSection Component
 const ProcessingStatusSection = ({ 
   hasSession, 
   processingStatus, 
@@ -271,7 +301,7 @@ const ProcessingStatusSection = ({
 }) => {
   return (
     <div>
-      {/* Processing Status - Show when there's a session and not completed */}
+      {/* ✅ FIXED: Show processing status when needed */}
       {hasSession && processingStatus && processingStatus.status !== 'completed' && (
         <ProcessingStatus 
           status={processingStatus}

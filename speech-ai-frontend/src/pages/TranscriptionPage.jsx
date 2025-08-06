@@ -1,4 +1,4 @@
-// src/pages/TranscriptionPage.jsx - Pass File Info to Sub-Component
+// src/pages/TranscriptionPage.jsx - Fixed Error Prevention & Refresh Handling
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
@@ -31,7 +31,7 @@ import TranscriptionPageHeader from '../Components/transcription/TranscriptionPa
 import ProcessingStatusSection from '../Components/transcription/ProcessingStatusSection';
 import TranscriptPanel from '../Components/transcription/TranscriptPanel';
 
-// ✅ MAIN COMPONENT - Pass File Info to Sub-Component
+// ✅ FIXED: Main Component with Error Prevention & Refresh Handling
 const TranscriptionPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -50,91 +50,203 @@ const TranscriptionPage = () => {
   const parameters = useAppStore((state) => state.parameters);
 
   const statusPollingRef = useRef(null);
+  const initializedRef = useRef(false);
 
-  // ✅ UPDATED: Get session data and pass file info to processing status
+  // ✅ FIXED: Handle session initialization with refresh detection
   useEffect(() => {
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+
     const stateData = location.state;
+    
+    // ✅ Check if we have results already (page refresh case)
+    if (currentSessionId && results && !stateData) {
+      console.log('🔄 Page refresh detected - session already completed');
+      // Don't restart processing, just display existing results
+      if (processingStatus?.status !== 'completed') {
+        setProcessingStatus({
+          status: 'completed',
+          progress: 100,
+          message: 'Processing completed successfully!'
+        });
+      }
+      return;
+    }
+
+    // ✅ Handle new session from navigation
     if (stateData?.sessionId) {
-      // New session from navigation
+      console.log('📥 Receiving new session:', stateData.sessionId);
+      console.log('📄 With file info:', stateData.fileInfo);
+      
+      // Update session ID
       setCurrentSessionId(stateData.sessionId);
       
-      // ✅ UPDATED: Pass file info to processing status for estimation
-      setProcessingStatus({ 
-        status: 'processing', 
-        progress: 5, 
-        message: 'Starting audio processing...',
-        fileInfo: stateData.fileInfo // ✅ Pass file info to sub-component
-      });
+      // ✅ FIXED: Only initialize processing status if not already processing
+      const currentStatus = useAppStore.getState().processingStatus;
+      if (!currentStatus || currentStatus.status !== 'processing' || 
+          currentStatus.sessionId !== stateData.sessionId) {
+        setProcessingStatus({ 
+          status: 'processing', 
+          progress: 5, 
+          message: 'Starting audio processing...',
+          fileInfo: stateData.fileInfo,
+          sessionId: stateData.sessionId // Track which session this status belongs to
+        });
+        console.log('🎯 Initialized processing status for session:', stateData.sessionId);
+      } else {
+        console.log('✅ Processing status already exists for this session');
+      }
     }
-    // If no new session but we have persisted session, keep using it
-    // If no session at all, show demo content
-  }, [location.state, setCurrentSessionId, setProcessingStatus]);
+  }, [location.state, setCurrentSessionId, setProcessingStatus, currentSessionId, results, processingStatus]);
 
-  // ✅ Start polling when session ID is available (from store or navigation)
+  // ✅ FIXED: Start polling with better session validation
   useEffect(() => {
     const sessionToUse = currentSessionId;
-    if (sessionToUse && (!processingStatus || processingStatus.status !== 'completed')) {
-      startStatusPolling(sessionToUse);
+    
+    // Don't start polling if:
+    // 1. No session ID
+    // 2. Already completed (and we have results)
+    // 3. It's a temporary session ID
+    // 4. Already polling
+    if (!sessionToUse || 
+        (processingStatus?.status === 'completed' && results) ||
+        sessionToUse.startsWith('temp_') ||
+        statusPollingRef.current) {
+      return;
     }
-  }, [currentSessionId, processingStatus]);
 
-  // ✅ UPDATED: Poll for completion only (let sub-component handle progress estimation)
+    console.log('🔄 Starting status polling for session:', sessionToUse);
+    startStatusPolling(sessionToUse);
+  }, [currentSessionId, processingStatus?.status, results]);
+
+  // ✅ FIXED: Polling with better error handling
   const startStatusPolling = useCallback((sessionId) => {
     if (statusPollingRef.current) {
       clearInterval(statusPollingRef.current);
     }
+
+    console.log('🔄 Starting status polling for:', sessionId);
+    let consecutiveErrors = 0;
+    const MAX_ERRORS = 3;
 
     statusPollingRef.current = setInterval(async () => {
       try {
         const response = await backendApi.getProcessingStatus(sessionId);
         const status = response.data;
         
+        // Reset error counter on successful request
+        consecutiveErrors = 0;
+        
+        console.log('📊 Backend status:', status.status, status.progress || 'no progress');
+        
         updateSessionStatus(sessionId, status);
 
         if (status.status === 'completed') {
-          // ✅ Set completion status (sub-component will handle 90% → 100%)
+          console.log('✅ Backend processing completed');
+          
+          // Set completion status
+          const currentStatus = useAppStore.getState().processingStatus;
+          const finalProgress = Math.max(100, currentStatus?.progress || 0);
+          
           setProcessingStatus({
             status: 'completed',
-            progress: 100,
-            message: 'Processing completed successfully!'
+            progress: finalProgress,
+            message: 'Processing completed successfully!',
+            sessionId: sessionId
           });
           
-          // Fetch results and persist to store
-          const resultsResponse = await backendApi.getResults(sessionId);
-          setResults(resultsResponse.data); // ✅ Persist to store
+          // Fetch results
+          try {
+            const resultsResponse = await backendApi.getResults(sessionId);
+            setResults(resultsResponse.data);
+            toast.success('Transcription completed!');
+          } catch (resultError) {
+            console.error('Failed to fetch results:', resultError);
+            // Don't show error toast if the main processing completed
+          }
           
           clearInterval(statusPollingRef.current);
-          toast.success('Transcription completed!');
+          statusPollingRef.current = null;
           
         } else if (status.status === 'failed') {
+          console.log('❌ Backend processing failed');
           clearInterval(statusPollingRef.current);
-          setProcessingStatus(status);
+          statusPollingRef.current = null;
+          setProcessingStatus({
+            status: 'failed',
+            message: status.message || 'Processing failed',
+            progress: 0,
+            sessionId: sessionId
+          });
           toast.error(status.message || 'Processing failed');
+          
+        } else if (status.status === 'processing') {
+          // Update progress from backend if it's higher
+          const currentStatus = useAppStore.getState().processingStatus;
+          if (!currentStatus || status.progress > (currentStatus.progress || 0)) {
+            setProcessingStatus({
+              ...currentStatus,
+              status: 'processing',
+              progress: Math.max(status.progress || 5, currentStatus?.progress || 5),
+              message: status.message || currentStatus?.message || 'Processing audio...',
+              sessionId: sessionId
+            });
+            console.log('📈 Updated progress from backend:', status.progress);
+          }
         }
         
-        // Don't update progress from backend during processing - let sub-component handle it
-        
       } catch (error) {
-        console.error('Status polling error:', error);
-        clearInterval(statusPollingRef.current);
-        setProcessingStatus({ status: 'failed', message: 'Connection error' });
+        consecutiveErrors++;
+        console.error(`Status polling error (${consecutiveErrors}/${MAX_ERRORS}):`, error);
+        
+        // ✅ FIXED: Better error handling - don't show user errors for temporary network issues
+        if (error.response?.status === 404) {
+          // Session not found - only stop polling after multiple failures to avoid false positives
+          if (consecutiveErrors >= MAX_ERRORS) {
+            console.log('❌ Session not found after multiple attempts, stopping polling');
+            clearInterval(statusPollingRef.current);
+            statusPollingRef.current = null;
+            setProcessingStatus({ 
+              status: 'failed', 
+              message: 'Session not found on server',
+              progress: 0,
+              sessionId: sessionId
+            });
+            // Only show error if this is a real session (not temp)
+            if (!sessionId.startsWith('temp_')) {
+              toast.error('Session not found on server');
+            }
+          }
+        } else if (consecutiveErrors >= MAX_ERRORS) {
+          // Network error - stop polling after multiple failures
+          console.log('❌ Multiple network errors, stopping polling');
+          clearInterval(statusPollingRef.current);
+          statusPollingRef.current = null;
+          // Don't update status or show error - might be temporary network issue
+        }
       }
-    }, 2000); // Poll every 2 seconds
+    }, 3000); // Poll every 3 seconds (slightly slower to reduce load)
   }, [setProcessingStatus, setResults, updateSessionStatus]);
 
   // ✅ Handle session reset
   const handleReset = useCallback(() => {
     if (statusPollingRef.current) {
       clearInterval(statusPollingRef.current);
+      statusPollingRef.current = null;
     }
+    // Clear all session state
+    setCurrentSessionId(null);
+    setProcessingStatus(null);
+    setResults(null);
     navigate('/');
-  }, [navigate]);
+  }, [navigate, setCurrentSessionId, setProcessingStatus, setResults]);
 
   // ✅ Cleanup on unmount
   useEffect(() => {
     return () => {
       if (statusPollingRef.current) {
         clearInterval(statusPollingRef.current);
+        statusPollingRef.current = null;
       }
     };
   }, []);
@@ -166,7 +278,7 @@ const TranscriptionPage = () => {
           hasSession={hasSession}
         />
 
-        {/* Component 2: Processing Status and Stats - Now receives file info */}
+        {/* Component 2: Processing Status and Stats */}
         <ProcessingStatusSection 
           hasSession={hasSession}
           processingStatus={processingStatus}
