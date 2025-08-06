@@ -39,6 +39,7 @@ const HomePage = () => {
   // Processing state for display
   const currentSessionId = useAppStore((state) => state.currentSessionId);
   const processingStatus = useAppStore((state) => state.processingStatus);
+  const setProcessingStatus = useAppStore((state) => state.setProcessingStatus);
 
   const processingSessions = getProcessingSessions();
 
@@ -47,7 +48,7 @@ const HomePage = () => {
     setSelectedFile(file);
   }, [setSelectedFile]);
 
-  // ✅ UPDATED: Handle start processing with 1 second delay + file info
+  // ✅ FIXED: Handle start processing with immediate redirect and progress setup
   const handleStartProcessing = useCallback(async () => {
     if (!selectedFile || !isConnected) {
       toast.error('Please select a file and ensure backend is connected');
@@ -70,61 +71,87 @@ const HomePage = () => {
       setIsProcessing(true);
       toast.loading('Starting transcription...', { id: 'upload' });
 
-      const response = await backendApi.uploadAudio(formData);
-      const sessionData = response.data;
-      const sessionId = sessionData.session_id;
+      // ✅ NEW: Set up processing status immediately with file info
+      const tempSessionId = `temp_${Date.now()}`; // Temporary ID until we get real one
+      setCurrentSession(tempSessionId);
       
-      setCurrentSession(sessionId);
-      
-      addSession(sessionId, {
-        status: 'processing',
-        progress: 0,
-        structures: enabledStructures,
-        parameters: enabledParameters,
-        filename: selectedFile.name,
-        startTime: new Date()
+      // ✅ FIXED: Initialize processing status immediately with file info
+      setProcessingStatus({ 
+        status: 'processing', 
+        progress: 5, 
+        message: 'Starting audio processing...',
+        fileInfo: {
+          name: selectedFile.name,
+          size: selectedFile.size,
+          type: selectedFile.type
+        }
       });
 
-      registerNavigationCallback(sessionId, (completedSessionId) => {
-        navigate('/results', { 
-          state: { 
-            sessionId: completedSessionId,
-            structures: enabledStructures,
-            parameters: enabledParameters 
-          } 
-        });
+      // ✅ FIXED: Navigate immediately to results page
+      navigate('/results', {
+        state: {
+          sessionId: tempSessionId, // Use temp ID initially
+          structures: enabledStructures,
+          parameters: enabledParameters,
+          fromUpload: true,
+          fileInfo: {
+            name: selectedFile.name,
+            size: selectedFile.size,
+            type: selectedFile.type
+          }
+        }
       });
 
-      toast.success('Processing started! You can navigate away - we\'ll notify you when complete.', { 
-        id: 'upload',
-        duration: 5000 
-      });
-      
-      setIsProcessing(false);
-
-      // ✅ NEW: Navigate after 1 second delay with file info
-      setTimeout(() => {
-        navigate('/results', {
-          state: {
-            sessionId: sessionId,
+      // ✅ NEW: Start upload in background after navigation
+      setTimeout(async () => {
+        try {
+          const response = await backendApi.uploadAudio(formData);
+          const sessionData = response.data;
+          const realSessionId = sessionData.session_id;
+          
+          // ✅ Update to real session ID
+          setCurrentSession(realSessionId);
+          useAppStore.getState().setCurrentSessionId(realSessionId);
+          
+          addSession(realSessionId, {
+            status: 'processing',
+            progress: 10,
             structures: enabledStructures,
             parameters: enabledParameters,
-            fromUpload: true,
-            fileInfo: {
-              name: selectedFile.name,
-              size: selectedFile.size,
-              type: selectedFile.type
-            }
-          }
-        });
-      }, 1000); // 1 second delay
+            filename: selectedFile.name,
+            startTime: new Date()
+          });
+
+          registerNavigationCallback(realSessionId, (completedSessionId) => {
+            // Already on results page, no need to navigate
+            console.log('Processing completed for session:', completedSessionId);
+          });
+
+          toast.success('Upload successful! Processing in progress...', { 
+            id: 'upload',
+            duration: 3000 
+          });
+          
+        } catch (error) {
+          console.error('Upload error:', error);
+          toast.error(error.userMessage || 'Upload failed', { id: 'upload' });
+          
+          // ✅ Update status to failed
+          setProcessingStatus({
+            status: 'failed',
+            message: error.userMessage || 'Upload failed'
+          });
+        } finally {
+          setIsProcessing(false);
+        }
+      }, 100); // Small delay to ensure navigation completes first
       
     } catch (error) {
-      console.error('Upload error:', error);
-      toast.error(error.userMessage || 'Upload failed', { id: 'upload' });
+      console.error('Processing start error:', error);
+      toast.error('Failed to start processing', { id: 'upload' });
       setIsProcessing(false);
     }
-  }, [selectedFile, isConnected, language, speakers, structures, parameters, addSession, registerNavigationCallback, navigate, setIsProcessing, setCurrentSession]);
+  }, [selectedFile, isConnected, language, speakers, structures, parameters, addSession, registerNavigationCallback, navigate, setIsProcessing, setCurrentSession, setProcessingStatus]);
 
   // Handle view session
   const handleViewSession = useCallback((sessionId) => {

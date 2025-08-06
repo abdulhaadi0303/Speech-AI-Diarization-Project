@@ -1,4 +1,4 @@
-// src/stores/appStore.js - Updated Store with Analysis State Persistence
+// src/stores/appStore.js - Enhanced Store with Editor State Management
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -26,7 +26,7 @@ const defaultParameters = [
 
 const useAppStore = create(
   persist(
-    (set) => ({
+    (set, get) => ({
       // HomePage state - with correct defaults
       selectedFile: null,
       setSelectedFile: (file) => set({ selectedFile: file }),
@@ -65,6 +65,73 @@ const useAppStore = create(
       expandedTranscript: false,
       setExpandedTranscript: (expanded) => set({ expandedTranscript: expanded }),
 
+      // ✅ NEW: Live Editor State Management
+      transcriptEditorContent: {},
+      setTranscriptEditorContent: (sessionId, content) => set((state) => ({
+        transcriptEditorContent: {
+          ...state.transcriptEditorContent,
+          [sessionId]: content
+        }
+      })),
+      
+      speakerMappings: {},
+      setSpeakerMappings: (sessionId, mappings) => set((state) => ({
+        speakerMappings: {
+          ...state.speakerMappings,
+          [sessionId]: mappings
+        }
+      })),
+      
+      editorHasUnsavedChanges: {},
+      setEditorHasUnsavedChanges: (sessionId, hasChanges) => set((state) => ({
+        editorHasUnsavedChanges: {
+          ...state.editorHasUnsavedChanges,
+          [sessionId]: hasChanges
+        }
+      })),
+
+      // ✅ Helper functions for editor state
+      getEditorState: (sessionId) => {
+        const state = get();
+        return {
+          content: state.transcriptEditorContent[sessionId] || '',
+          speakers: state.speakerMappings[sessionId] || {},
+          hasUnsavedChanges: state.editorHasUnsavedChanges[sessionId] || false
+        };
+      },
+
+      saveEditorState: (sessionId, editorData) => {
+        const { setTranscriptEditorContent, setSpeakerMappings, setEditorHasUnsavedChanges } = get();
+        
+        if (editorData.content !== undefined) {
+          setTranscriptEditorContent(sessionId, editorData.content);
+        }
+        if (editorData.speakers !== undefined) {
+          setSpeakerMappings(sessionId, editorData.speakers);
+        }
+        if (editorData.hasUnsavedChanges !== undefined) {
+          setEditorHasUnsavedChanges(sessionId, editorData.hasUnsavedChanges);
+        }
+      },
+
+      clearEditorState: (sessionId) => {
+        set((state) => {
+          const newTranscriptContent = { ...state.transcriptEditorContent };
+          const newSpeakerMappings = { ...state.speakerMappings };
+          const newUnsavedChanges = { ...state.editorHasUnsavedChanges };
+          
+          delete newTranscriptContent[sessionId];
+          delete newSpeakerMappings[sessionId];
+          delete newUnsavedChanges[sessionId];
+          
+          return {
+            transcriptEditorContent: newTranscriptContent,
+            speakerMappings: newSpeakerMappings,
+            editorHasUnsavedChanges: newUnsavedChanges
+          };
+        });
+      },
+
       // AnalysisPage state - UPDATED for persistence
       selectedAnalysisSession: '', // ✅ Kept for compatibility
       setSelectedAnalysisSession: (sessionId) => set({ selectedAnalysisSession: sessionId }),
@@ -100,39 +167,55 @@ const useAppStore = create(
       chatMessages: [],
       setChatMessages: (messages) => set({ chatMessages: messages }),
       
+      addChatMessage: (message) => set((state) => ({
+        chatMessages: [...state.chatMessages, message]
+      })),
+      
+      clearChatMessages: () => set({ chatMessages: [] }),
+      
       isLoading: false,
-      setIsLoading: (loading) => set({ isLoading: loading }),
+      setChatLoading: (loading) => set({ isLoading: loading }),
 
-      // "Add New" - Reset to working defaults (not blank)
-      resetAllState: () => set({
-        selectedFile: null, // ✅ Clear file
-        isProcessing: false,
-        currentSession: null,
-        language: '',
-        speakers: '',
-        structures: defaultStructures, // ✅ Reset to working defaults
-        parameters: defaultParameters, // ✅ Reset to working defaults
-        // Clear processing results
-        currentSessionId: null,
-        processingStatus: null,
-        results: null,
-        expandedSummary: false,
-        expandedTranscript: false,
-        // ✅ NEW: Clear analysis state on reset
-        selectedAnalysisSession: '',
-        sessionData: null,
-        customPrompt: '',
-        analysisResults: {},
-        analysisProgress: {},
-        loadingPrompts: [],
-        backgroundPolling: [],
-        showHistoryModal: false,
-        // Clear chat
-        selectedChatSession: '',
-        contextType: 'general',
-        chatMessages: [],
-        isLoading: false,
-      }),
+      // ✅ ENHANCED: "Add New" - Reset with Editor Cleanup
+      resetAllState: () => {
+        const currentSessionId = get().currentSessionId;
+        
+        // Clear editor state for current session
+        if (currentSessionId) {
+          get().clearEditorState(currentSessionId);
+        }
+        
+        set({
+          selectedFile: null, // ✅ Clear file
+          isProcessing: false,
+          currentSession: null,
+          language: '',
+          speakers: '',
+          structures: defaultStructures, // ✅ Reset to working defaults
+          parameters: defaultParameters, // ✅ Reset to working defaults
+          // Clear processing results
+          currentSessionId: null,
+          processingStatus: null,
+          results: null,
+          expandedSummary: false,
+          expandedTranscript: false,
+          // ✅ Clear analysis state on reset
+          selectedAnalysisSession: '',
+          sessionData: null,
+          customPrompt: '',
+          analysisResults: {},
+          analysisProgress: {},
+          loadingPrompts: [],
+          backgroundPolling: [],
+          showHistoryModal: false,
+          // Clear chat
+          selectedChatSession: '',
+          contextType: 'general',
+          chatMessages: [],
+          isLoading: false,
+          // ✅ Note: Editor state is cleared above with clearEditorState
+        });
+      },
     }),
     {
       name: 'speech-ai-app-state',

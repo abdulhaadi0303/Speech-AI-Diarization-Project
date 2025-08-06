@@ -1,7 +1,10 @@
-// src/App.jsx - Corrected App with Proper Import Paths
+// src/App.jsx - Updated with Editor Styles Import
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+
+// Import custom editor styles
+import './styles/EditorStyles.css';
 
 // Correct import paths based on your file structure - Fixed case sensitivity
 import { Header } from './Components/layout/Header';

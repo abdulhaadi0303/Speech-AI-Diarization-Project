@@ -1,4 +1,4 @@
-// src/pages/AnalysisPage.jsx - Main AI Analysis Interface with Store Integration
+// src/pages/AnalysisPage.jsx - Fixed to Prevent Temp Session Errors
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { useBackend } from '../contexts/BackendContext';
 import { backendApi } from '../services/api';
-import useAppStore from '../stores/appStore'; // ✅ Added store import
+import useAppStore from '../stores/appStore';
 import toast from 'react-hot-toast';
 
 // Import sub-components
@@ -25,9 +25,9 @@ import AnalysisTips from '../Components/analysis/AnalysisTips';
 import RecentAnalysisPanel from '../Components/analysis/RecentAnalysisPanel';
 
 const AnalysisPage = () => {
-  const { isConnected, isLLMAvailable } = useBackend(); // ✅ Removed activeSessions
+  const { isConnected, isLLMAvailable } = useBackend();
   
-  // ✅ NEW: Use store state instead of local state
+  // ✅ Use store state
   const currentSessionId = useAppStore((state) => state.currentSessionId);
   const results = useAppStore((state) => state.results);
   const analysisResults = useAppStore((state) => state.analysisResults);
@@ -39,7 +39,7 @@ const AnalysisPage = () => {
   const showHistoryModal = useAppStore((state) => state.showHistoryModal);
   const setShowHistoryModal = useAppStore((state) => state.setShowHistoryModal);
 
-  // ✅ UPDATED: Local state - reduced since using store
+  // ✅ Local state
   const [sessionData, setSessionData] = useState(null);
   const [availablePrompts, setAvailablePrompts] = useState({});
   const [loadingPrompts, setLoadingPrompts] = useState(new Set());
@@ -50,7 +50,7 @@ const AnalysisPage = () => {
   // Refs for background polling
   const pollingIntervals = useRef(new Map());
 
-  // Predefined analysis types - NO CHANGES
+  // Predefined analysis types (unchanged)
   const analysisTypes = [
     {
       key: 'summary',
@@ -96,7 +96,7 @@ const AnalysisPage = () => {
     }
   ];
 
-  // Background polling for analysis results - NO CHANGES
+  // Background polling for analysis results (unchanged)
   const startBackgroundPolling = (analysisKey, sessionId) => {
     if (pollingIntervals.current.has(analysisKey)) return;
 
@@ -145,7 +145,7 @@ const AnalysisPage = () => {
     }, 600000);
   };
 
-  // Cleanup intervals on unmount - NO CHANGES
+  // Cleanup intervals on unmount (unchanged)
   useEffect(() => {
     return () => {
       pollingIntervals.current.forEach((interval) => {
@@ -155,23 +155,23 @@ const AnalysisPage = () => {
     };
   }, []);
 
-  // Load available prompts on mount - NO CHANGES
+  // Load available prompts on mount (unchanged)
   useEffect(() => {
     if (isLLMAvailable) {
       loadPrompts();
     }
   }, [isLLMAvailable]);
 
-  // ✅ UPDATED: Auto-load session data when store has session
+  // ✅ FIXED: Auto-load session data with temp session filtering
   useEffect(() => {
-    if (currentSessionId && results) {
-      // Use existing results from store
+    if (currentSessionId && results && !currentSessionId.startsWith('temp_')) {
+      // Use existing results from store for real sessions only
       setSessionData(results);
-    } else if (currentSessionId && !results) {
-      // Fetch session data if not in store
+    } else if (currentSessionId && !results && !currentSessionId.startsWith('temp_')) {
+      // Fetch session data if not in store (real sessions only)
       loadSessionData(currentSessionId);
     } else {
-      // No session available
+      // No valid session available or temp session
       setSessionData(null);
     }
   }, [currentSessionId, results]);
@@ -190,20 +190,38 @@ const AnalysisPage = () => {
     }
   };
 
+  // ✅ FIXED: Only load session data for real sessions
   const loadSessionData = async (sessionId) => {
+    // Don't try to load data for temporary sessions
+    if (sessionId.startsWith('temp_')) {
+      console.log('🚫 Skipping session data load for temporary session:', sessionId);
+      return;
+    }
+
     try {
+      console.log('📊 Loading session data for:', sessionId);
       const response = await backendApi.getResults(sessionId);
       setSessionData(response.data);
     } catch (error) {
-      console.error('Failed to load session data:', error);
-      toast.error('Failed to load session data');
+      // ✅ FIXED: Only show error for non-404 errors or confirmed real sessions
+      if (error.response?.status !== 404) {
+        console.error('Failed to load session data:', error);
+        toast.error('Failed to load session data');
+      } else {
+        console.log('📭 Session data not yet available:', sessionId);
+      }
     }
   };
 
-  // ✅ UPDATED: Use currentSessionId from store
+  // ✅ FIXED: Validate session before running analysis
   const runAnalysis = async (promptType, customPromptText = '') => {
-    if (!currentSessionId || !sessionData) {
-      toast.error('Don\'t have a session to analyze');
+    // ✅ Check for valid session and data
+    if (!currentSessionId || currentSessionId.startsWith('temp_') || !sessionData) {
+      if (currentSessionId?.startsWith('temp_')) {
+        toast.error('Please wait for processing to complete before running analysis');
+      } else {
+        toast.error('No completed session available for analysis');
+      }
       return;
     }
 
@@ -284,7 +302,7 @@ const AnalysisPage = () => {
     runAnalysis('custom', customPrompt);
   };
 
-  // ✅ UPDATED: Use currentSessionId from store
+  // ✅ FIXED: Download with session validation
   const downloadAnalysis = (keyOrPromptType, progressData = null) => {
     let analysisKey, result, title;
     
@@ -293,6 +311,12 @@ const AnalysisPage = () => {
       result = analysisResults[analysisKey];
       title = progressData.title;
     } else {
+      // ✅ Validate session before download
+      if (!currentSessionId || currentSessionId.startsWith('temp_')) {
+        toast.error('No valid session available for download');
+        return;
+      }
+      
       analysisKey = `${currentSessionId}_${keyOrPromptType}`;
       result = analysisResults[analysisKey];
       const analysisType = analysisTypes.find(t => t.key === keyOrPromptType);
@@ -335,9 +359,7 @@ Transcript Length: ${result.transcript_length || 'N/A'} characters
     toast.success('Analysis downloaded');
   };
 
-  // ✅ REMOVED: getSessionOptions function (no longer needed)
-
-  // ✅ UPDATED: Clear analysis using store setters
+  // ✅ Clear analysis using store setters
   const clearAnalysisHistory = () => {
     setAnalysisResults({});
     setAnalysisProgress({});
@@ -382,10 +404,13 @@ Transcript Length: ${result.transcript_length || 'N/A'} characters
     );
   }
 
+  // ✅ FIXED: Better session validation
+  const hasValidSession = currentSessionId && !currentSessionId.startsWith('temp_') && sessionData;
+
   return (
     <div className="min-h-screen bg-gray-900 p-6 overflow-auto">
       <div className="max-w-7xl mx-auto">
-        {/* Header - NO CHANGES */}
+        {/* Header (unchanged) */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -414,14 +439,14 @@ Transcript Length: ${result.transcript_length || 'N/A'} characters
           </div>
         </div>
 
-        {/* Analysis Progress Banner - NO CHANGES */}
+        {/* Analysis Progress Banner (unchanged) */}
         <AnalysisProgressBanner 
           analysisProgress={analysisProgress}
           onViewProgress={() => setShowHistoryModal(true)}
           onClearProgress={clearAnalysisHistory}
         />
 
-        {/* Analysis History Modal - NO CHANGES */}
+        {/* Analysis History Modal (unchanged) */}
         <AnalysisHistoryModal 
           isOpen={showHistoryModal}
           onClose={() => setShowHistoryModal(false)}
@@ -430,8 +455,8 @@ Transcript Length: ${result.transcript_length || 'N/A'} characters
           onDownload={downloadAnalysis}
         />
 
-        {/* ✅ UPDATED: Current Session Info (instead of session selection) */}
-        {currentSessionId && (
+        {/* ✅ FIXED: Current Session Info with better validation */}
+        {hasValidSession && (
           <div className="mb-8 bg-gray-800 rounded-xl border border-gray-700 p-6">
             <h2 className="text-xl font-semibold text-white mb-4">Current Session</h2>
             <div className="flex items-center justify-between">
@@ -461,7 +486,7 @@ Transcript Length: ${result.transcript_length || 'N/A'} characters
           </div>
         )}
 
-        {/* ✅ UPDATED: Always show analysis options (enabled/disabled based on session) */}
+        {/* ✅ FIXED: Analysis options with proper session validation */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Predefined Analysis */}
           <div className="space-y-6">
@@ -478,7 +503,7 @@ Transcript Length: ${result.transcript_length || 'N/A'} characters
                   loadingPrompts={loadingPrompts}
                   onRunAnalysis={runAnalysis}
                   onDownload={downloadAnalysis}
-                  disabled={!sessionData} // ✅ Pass disabled prop
+                  disabled={!hasValidSession}
                 />
               ))}
             </div>
@@ -497,7 +522,7 @@ Transcript Length: ${result.transcript_length || 'N/A'} characters
               analysisResults={analysisResults}
               analysisProgress={analysisProgress}
               onDownload={downloadAnalysis}
-              disabled={!sessionData} // ✅ Pass disabled prop
+              disabled={!hasValidSession}
             />
 
             <AnalysisTips />
@@ -513,17 +538,39 @@ Transcript Length: ${result.transcript_length || 'N/A'} characters
           </div>
         </div>
 
-        {/* ✅ UPDATED: No Session Available message */}
-        {!currentSessionId && (
+        {/* ✅ FIXED: Better session status messages */}
+        {!hasValidSession && (
           <div className="text-center py-12">
             <div className="bg-gray-800 rounded-2xl p-8 max-w-md mx-auto border border-gray-700">
               <FileText className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-white mb-2">
-                No Session Available
-              </h3>
-              <p className="text-gray-400 mb-4">
-                Upload and process an audio file first to start AI analysis.
-              </p>
+              {currentSessionId?.startsWith('temp_') ? (
+                <>
+                  <h3 className="text-xl font-semibold text-white mb-2">
+                    Processing in Progress
+                  </h3>
+                  <p className="text-gray-400 mb-4">
+                    Please wait for audio processing to complete before running AI analysis.
+                  </p>
+                </>
+              ) : !currentSessionId ? (
+                <>
+                  <h3 className="text-xl font-semibold text-white mb-2">
+                    No Session Available
+                  </h3>
+                  <p className="text-gray-400 mb-4">
+                    Upload and process an audio file first to start AI analysis.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h3 className="text-xl font-semibold text-white mb-2">
+                    Session Data Loading...
+                  </h3>
+                  <p className="text-gray-400 mb-4">
+                    Preparing session data for analysis.
+                  </p>
+                </>
+              )}
               {Object.keys(analysisProgress).length > 0 && (
                 <div className="mt-4 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg text-blue-400 text-sm">
                   <div className="flex items-center justify-center space-x-2 mb-2">
@@ -538,21 +585,6 @@ Transcript Length: ${result.transcript_length || 'N/A'} characters
                   </button>
                 </div>
               )}
-            </div>
-          </div>
-        )}
-
-        {/* ✅ UPDATED: Session loading message */}
-        {currentSessionId && !sessionData && (
-          <div className="text-center py-12">
-            <div className="bg-gray-800 rounded-2xl p-8 max-w-md mx-auto border border-gray-700">
-              <FileText className="w-16 h-16 text-gray-600 mx-auto mb-4 animate-pulse" />
-              <h3 className="text-xl font-semibold text-white mb-2">
-                Loading Session Data...
-              </h3>
-              <p className="text-gray-400">
-                Preparing session {currentSessionId.slice(0, 8)}... for analysis
-              </p>
             </div>
           </div>
         )}
