@@ -92,7 +92,7 @@ const AudioUploader = ({ onFileUpload, selectedFile, isProcessing, currentSessio
 
       {!selectedFile ? (
         <div
-          className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
+          className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer ${
             dragActive 
               ? 'border-cyan-400 bg-cyan-50' 
               : 'border-gray-300 hover:border-cyan-400 hover:bg-gray-50'
@@ -103,8 +103,8 @@ const AudioUploader = ({ onFileUpload, selectedFile, isProcessing, currentSessio
           onDrop={handleDrop}
           onClick={!isProcessing ? handleBrowseClick : undefined}
         >
-          <div className="flex flex-col items-center space-y-3">
-            <Upload className={`w-12 h-12 ${
+          <div className="flex flex-col items-center space-y-2">
+            <Upload className={`w-10 h-10 ${
               dragActive ? 'text-cyan-500' : 'text-gray-400'
             }`} />
             <div>

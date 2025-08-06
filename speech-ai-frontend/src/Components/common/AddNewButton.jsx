@@ -1,4 +1,4 @@
-// src/components/common/AddNewButton.jsx - Simple Reset Button
+// src/Components/common/AddNewButton.jsx
 import React from 'react';
 import { RotateCcw } from 'lucide-react';
 import useAppStore from '../../stores/appStore';
@@ -22,11 +22,11 @@ const AddNewButton = () => {
   return (
     <button
       onClick={handleAddNew}
-      className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-lg font-medium transition-all duration-200 hover:scale-105"
+      className="w-full py-3 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2 bg-gray-500 hover:bg-gray-700 text-white border border-gray-400 hover:border-gray-400"
       title="Clear all state and start fresh"
     >
-      <RotateCcw className="w-4 h-4" />
-      <span>Add New</span>
+      <RotateCcw className="w-5 h-5" />
+      <span>Add New Session</span>
     </button>
   );
 };
