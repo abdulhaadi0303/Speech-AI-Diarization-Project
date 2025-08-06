@@ -1,4 +1,4 @@
-// src/pages/TranscriptionPage.jsx - Refactored with 4 Components
+// src/pages/TranscriptionPage.jsx - Pass File Info to Sub-Component
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
@@ -31,7 +31,7 @@ import TranscriptionPageHeader from '../Components/transcription/TranscriptionPa
 import ProcessingStatusSection from '../Components/transcription/ProcessingStatusSection';
 import TranscriptPanel from '../Components/transcription/TranscriptPanel';
 
-// ✅ MAIN COMPONENT - Refactored with 4 Components
+// ✅ MAIN COMPONENT - Pass File Info to Sub-Component
 const TranscriptionPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -51,13 +51,20 @@ const TranscriptionPage = () => {
 
   const statusPollingRef = useRef(null);
 
-  // ✅ Get session data from navigation state OR use persisted store data
+  // ✅ UPDATED: Get session data and pass file info to processing status
   useEffect(() => {
     const stateData = location.state;
     if (stateData?.sessionId) {
       // New session from navigation
       setCurrentSessionId(stateData.sessionId);
-      setProcessingStatus({ status: 'processing', progress: 0, message: 'Initializing transcription...' });
+      
+      // ✅ UPDATED: Pass file info to processing status for estimation
+      setProcessingStatus({ 
+        status: 'processing', 
+        progress: 5, 
+        message: 'Starting audio processing...',
+        fileInfo: stateData.fileInfo // ✅ Pass file info to sub-component
+      });
     }
     // If no new session but we have persisted session, keep using it
     // If no session at all, show demo content
@@ -71,7 +78,7 @@ const TranscriptionPage = () => {
     }
   }, [currentSessionId, processingStatus]);
 
-  // ✅ Poll processing status and persist to store
+  // ✅ UPDATED: Poll for completion only (let sub-component handle progress estimation)
   const startStatusPolling = useCallback((sessionId) => {
     if (statusPollingRef.current) {
       clearInterval(statusPollingRef.current);
@@ -82,10 +89,16 @@ const TranscriptionPage = () => {
         const response = await backendApi.getProcessingStatus(sessionId);
         const status = response.data;
         
-        setProcessingStatus(status); // ✅ Persist to store
         updateSessionStatus(sessionId, status);
 
         if (status.status === 'completed') {
+          // ✅ Set completion status (sub-component will handle 90% → 100%)
+          setProcessingStatus({
+            status: 'completed',
+            progress: 100,
+            message: 'Processing completed successfully!'
+          });
+          
           // Fetch results and persist to store
           const resultsResponse = await backendApi.getResults(sessionId);
           setResults(resultsResponse.data); // ✅ Persist to store
@@ -95,8 +108,11 @@ const TranscriptionPage = () => {
           
         } else if (status.status === 'failed') {
           clearInterval(statusPollingRef.current);
+          setProcessingStatus(status);
           toast.error(status.message || 'Processing failed');
         }
+        
+        // Don't update progress from backend during processing - let sub-component handle it
         
       } catch (error) {
         console.error('Status polling error:', error);
@@ -150,7 +166,7 @@ const TranscriptionPage = () => {
           hasSession={hasSession}
         />
 
-        {/* Component 2: Processing Status and Stats */}
+        {/* Component 2: Processing Status and Stats - Now receives file info */}
         <ProcessingStatusSection 
           hasSession={hasSession}
           processingStatus={processingStatus}
