@@ -1,6 +1,6 @@
-// src/components/home/AudioVisualizationSection.jsx
 import React from 'react';
 import { Loader2 } from 'lucide-react';
+import AddNewButton from '../common/AddNewButton';
 
 const AudioVisualizationSection = ({ 
   isProcessing, 
@@ -94,25 +94,33 @@ const AudioVisualizationSection = ({
         </div>
       </div>
 
-      {/* Start Processing Button */}
-      <button
-        onClick={handleStartProcessing}
-        disabled={!canProcess || isProcessing}
-        className={`w-full py-3 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2 ${
-          canProcess && !isProcessing
-            ? 'bg-cyan-400 text-white hover:bg-cyan-500'
-            : 'bg-gray-400 text-gray-200 cursor-not-allowed'
-        }`}
-      >
-        {isProcessing ? (
-          <>
-            <Loader2 className="w-5 h-5 animate-spin" />
-            <span>Processing...</span>
-          </>
-        ) : (
-          <span>Start Processing File</span>
-        )}
-      </button>
+      {/* Buttons Section */}
+      <div className="space-y-3">
+        {/* Start Processing Button */}
+        <button
+          onClick={handleStartProcessing}
+          disabled={!canProcess || isProcessing}
+          className={`w-full py-3 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2 ${
+            canProcess && !isProcessing
+              ? 'bg-cyan-400 text-white hover:bg-cyan-500'
+              : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+          }`}
+        >
+          {isProcessing ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span>Processing...</span>
+            </>
+          ) : (
+            <span>Start Processing File</span>
+          )}
+        </button>
+
+        {/* Add New Button - Same style */}
+        <div className="w-full">
+          <AddNewButton />
+        </div>
+      </div>
     </div>
   );
 };

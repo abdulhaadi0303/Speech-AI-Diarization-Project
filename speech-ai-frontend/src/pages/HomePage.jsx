@@ -133,9 +133,9 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen bg-gray-900 overflow-auto">
-      <div className="p-6 max-w-4xl mx-auto">
+      <div className="p-6 max-w-5xl mx-auto"> {/* Made wider: max-w-4xl -> max-w-5xl */}
         
-        {/* Page Header with Title and Add New Button */}
+        {/* Page Header with Title */}
         <PageHeader />
 
         {/* Processing Banner - Shows active sessions */}
@@ -145,7 +145,7 @@ const HomePage = () => {
         />
 
         {/* Main Content */}
-        <div className="max-w-2xl mx-auto space-y-6">
+        <div className="max-w-3xl mx-auto space-y-6"> {/* Made wider: max-w-2xl -> max-w-3xl */}
           
           {/* Audio Uploader Section */}
           <motion.div 
@@ -162,7 +162,7 @@ const HomePage = () => {
             />
           </motion.div>
           
-          {/* Processing Settings Section - Use AudioVisualizationSection directly */}
+          {/* Processing Settings Section */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
