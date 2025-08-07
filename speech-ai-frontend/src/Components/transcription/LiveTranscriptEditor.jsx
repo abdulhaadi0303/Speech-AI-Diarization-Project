@@ -1,5 +1,5 @@
-// src/Components/transcription/LiveTranscriptEditor.jsx - Fixed Global Speaker Mapping
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+// src/Components/transcription/LiveTranscriptEditor.jsx - UPDATED with Enhanced Download
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
@@ -12,58 +12,79 @@ import {
   Edit3,
   Copy,
   CheckCircle,
-  User
+  User,
+  AlertCircle,
+  FileText,
+  File,
+  ChevronDown
 } from 'lucide-react';
 import useAppStore from '../../stores/appStore';
 import toast from 'react-hot-toast';
 
 const LiveTranscriptEditor = ({ results, hasSession }) => {
-  const [editorContent, setEditorContent] = useState('');
-  const [speakerMappings, setSpeakerMappings] = useState({});
+  // 🔧 CORE STATE
+  const [originalContent, setOriginalContent] = useState('');
+  const [currentMappings, setCurrentMappings] = useState({});
   const [showSpeakerPanel, setShowSpeakerPanel] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [editingMode, setEditingMode] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false); // 🆕 Download menu state
   
+  // 🔧 REFS
   const quillRef = useRef(null);
+  const isProgrammaticUpdateRef = useRef(false);
+  const updateTimeoutRef = useRef(null);
+  const lastMappingsRef = useRef('{}');
+  const initTimeoutRef = useRef(null);
   const currentSessionId = useAppStore((state) => state.currentSessionId);
   
-  // Storage keys for persistence
+  // Storage keys
   const getStorageKeys = () => ({
     content: `transcript_content_${currentSessionId}`,
     speakers: `speaker_mappings_${currentSessionId}`,
     hasEdits: `has_edits_${currentSessionId}`
   });
 
-  // ✅ Initialize editor content from results or localStorage
+  // ✅ Initialize content and mappings
   useEffect(() => {
     if (!currentSessionId) return;
 
     const storageKeys = getStorageKeys();
-    
-    // Try to load from localStorage first
     const savedContent = localStorage.getItem(storageKeys.content);
     const savedSpeakers = localStorage.getItem(storageKeys.speakers);
     const hasEdits = localStorage.getItem(storageKeys.hasEdits) === 'true';
 
     if (savedContent && hasEdits) {
-      // Load saved edits
-      console.log('📂 Loading saved transcript edits from localStorage');
-      setEditorContent(savedContent);
-      setSpeakerMappings(savedSpeakers ? JSON.parse(savedSpeakers) : {});
+      console.log('📂 Loading saved transcript edits');
+      const speakers = savedSpeakers ? JSON.parse(savedSpeakers) : {};
+      setOriginalContent(savedContent);
+      setCurrentMappings(speakers);
+      lastMappingsRef.current = JSON.stringify(speakers);
+      
+      initTimeoutRef.current = setTimeout(() => {
+        setIsInitialized(true);
+      }, 500);
+      
       setHasUnsavedChanges(false);
       toast.success('Restored previous edits');
     } else if (results?.results?.segments) {
-      // Initialize from fresh results
       console.log('🆕 Initializing transcript from results');
       const { content, speakers } = convertResultsToEditorFormat(results.results.segments);
-      setEditorContent(content);
-      setSpeakerMappings(speakers);
+      setOriginalContent(content);
+      setCurrentMappings(speakers);
+      lastMappingsRef.current = JSON.stringify(speakers);
+      
+      initTimeoutRef.current = setTimeout(() => {
+        setIsInitialized(true);
+      }, 500);
+      
       setHasUnsavedChanges(false);
     }
   }, [currentSessionId, results]);
 
-  // ✅ Convert results to editor-friendly HTML format
+  // ✅ Convert results to editor format
   const convertResultsToEditorFormat = (segments) => {
     if (!segments || segments.length === 0) {
       return { content: '<p>No transcript available</p>', speakers: {} };
@@ -72,18 +93,16 @@ const LiveTranscriptEditor = ({ results, hasSession }) => {
     const speakers = {};
     let htmlContent = '';
 
-    segments.forEach((segment, index) => {
+    segments.forEach((segment) => {
       const speaker = segment.speaker;
       const text = segment.text || '';
       const start = segment.start || 0;
       const end = segment.end || 0;
 
-      // Track speakers for mapping
       if (!speakers[speaker]) {
-        speakers[speaker] = speaker; // Default mapping is speaker ID to itself
+        speakers[speaker] = speaker;
       }
 
-      // Format time
       const formatTime = (seconds) => {
         const mins = Math.floor(seconds / 60);
         const secs = Math.floor(seconds % 60);
@@ -91,105 +110,405 @@ const LiveTranscriptEditor = ({ results, hasSession }) => {
       };
 
       const timeStamp = `[${formatTime(start)} - ${formatTime(end)}]`;
-      
-      // Create HTML segment with data attributes for speaker tracking
-      htmlContent += `<div class="transcript-segment" data-segment-id="${index}" data-speaker="${speaker}">
-        <span class="timestamp" style="color: #6b7280; font-size: 0.875rem; font-family: monospace;">${timeStamp}</span>
-        <strong class="speaker-name" data-speaker="${speaker}" style="color: #059669; margin-left: 8px;">${speaker}:</strong>
-        <span class="segment-text" style="margin-left: 8px;">${text}</span>
-      </div><br>`;
+      htmlContent += `<p><span style="color: #6b7280; font-size: 0.875rem; font-family: monospace;">${timeStamp}</span> <strong style="color: #059669;">${speaker}:</strong> ${text}</p>`;
     });
 
     return { content: htmlContent, speakers };
   };
 
-  // ✅ Handle editor content changes
-  const handleContentChange = useCallback((content) => {
-    setEditorContent(content);
+  // 🔧 GENERATE LIVE CONTENT
+  const generateLiveContent = useCallback(() => {
+    let liveContent = originalContent;
+    
+    Object.entries(currentMappings).forEach(([originalSpeaker, newName]) => {
+      if (newName && newName.trim() && newName !== originalSpeaker) {
+        const escapedOriginal = originalSpeaker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const pattern = new RegExp(
+          `(<strong[^>]*>)\\s*${escapedOriginal}\\s*(:)\\s*(</strong>)`,
+          'gi'
+        );
+        liveContent = liveContent.replace(pattern, `$1${newName.trim()}$2$3`);
+      }
+    });
+    
+    return liveContent;
+  }, [originalContent, currentMappings]);
+
+  // 🔧 UPDATE QUILL CONTENT - Bulletproof approach
+  const updateQuillContent = useCallback((newContent) => {
+    const editor = quillRef.current?.getEditor();
+    if (!editor) return;
+    
+    console.log('🖊️ Updating Quill content (bulletproof)');
+    
+    isProgrammaticUpdateRef.current = true;
+    
+    try {
+      const currentSelection = editor.getSelection();
+      
+      try {
+        const delta = editor.clipboard.convert(newContent);
+        editor.setContents(delta, 'silent');
+        console.log('✅ Used silent setContents method');
+      } catch (e) {
+        editor.setText('');
+        editor.clipboard.dangerouslyPasteHTML(0, newContent);
+        console.log('✅ Used fallback setText method');
+      }
+      
+      if (currentSelection) {
+        try {
+          const newLength = editor.getLength();
+          const safeIndex = Math.min(currentSelection.index, Math.max(0, newLength - 1));
+          editor.setSelection(safeIndex, 0);
+        } catch (e) {
+          // Ignore selection errors
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error updating Quill:', error);
+    }
+    
+    setTimeout(() => {
+      isProgrammaticUpdateRef.current = false;
+    }, 200);
+  }, []);
+
+  // 🔧 EFFECT: Initialize Quill content
+  useEffect(() => {
+    if (isInitialized && originalContent && quillRef.current?.getEditor()) {
+      console.log('🎬 Initializing Quill with original content (delayed)');
+      updateQuillContent(originalContent);
+    }
+  }, [isInitialized, originalContent, updateQuillContent]);
+
+  // 🔧 EFFECT: Update Quill when mappings change
+  useEffect(() => {
+    const mappingsString = JSON.stringify(currentMappings);
+    
+    if (mappingsString !== lastMappingsRef.current && isInitialized) {
+      lastMappingsRef.current = mappingsString;
+      
+      console.log('🔄 Mappings changed, updating Quill (bulletproof)');
+      
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
+      
+      updateTimeoutRef.current = setTimeout(() => {
+        const liveContent = generateLiveContent();
+        updateQuillContent(liveContent);
+      }, 150);
+    }
+  }, [currentMappings, isInitialized, generateLiveContent, updateQuillContent]);
+
+  // 🔧 HANDLE INPUT CHANGES - No focus loss
+  const handleInputChange = useCallback((originalSpeaker, newValue) => {
+    console.log(`⌨️ Input change: ${originalSpeaker} → "${newValue}"`);
+    
+    setValidationErrors(prev => {
+      if (!prev[originalSpeaker]) return prev;
+      const updated = { ...prev };
+      delete updated[originalSpeaker];
+      return updated;
+    });
+    
+    setCurrentMappings(prev => ({
+      ...prev,
+      [originalSpeaker]: newValue
+    }));
+    
     setHasUnsavedChanges(true);
   }, []);
 
-  // ✅ FIXED: Update speaker mapping and apply globally
-  const updateSpeakerMapping = useCallback((originalSpeaker, newName) => {
-    if (!newName.trim()) {
-      toast.error('Speaker name cannot be empty');
+  // ✅ Handle manual editor changes - WITH LOOP PREVENTION
+  const handleEditorChange = useCallback((content, delta, source, editor) => {
+    if (isProgrammaticUpdateRef.current) {
+      console.log('🚫 Ignoring programmatic change to prevent loop');
       return;
     }
+    
+    if (source === 'user') {
+      console.log('✏️ Manual editor change by user');
+      setOriginalContent(content);
+      setHasUnsavedChanges(true);
+    }
+  }, []);
 
-    const trimmedName = newName.trim();
-    
-    // Update the speaker mappings state
-    const updatedMappings = {
-      ...speakerMappings,
-      [originalSpeaker]: trimmedName
-    };
-    setSpeakerMappings(updatedMappings);
-
-    // ✅ FIXED: Apply global replacement in editor content using proper HTML manipulation
-    let updatedContent = editorContent;
-    
-    // Create a temporary DOM element to parse and modify the HTML
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = updatedContent;
-    
-    // Find all speaker elements with the original speaker name
-    const speakerElements = tempDiv.querySelectorAll(`.speaker-name[data-speaker="${originalSpeaker}"]`);
-    
-    // Update each speaker element
-    speakerElements.forEach(element => {
-      element.textContent = `${trimmedName}:`;
-      // Keep the data-speaker attribute for future updates
-      element.setAttribute('data-speaker', originalSpeaker);
-    });
-    
-    // Get the updated HTML content
-    updatedContent = tempDiv.innerHTML;
-    
-    // ✅ FIXED: Update the editor content and force re-render
-    setEditorContent(updatedContent);
-    
-    // ✅ FIXED: Update the Quill editor content directly
+  // 🔧 GET CURRENT CONTENT from Quill
+  const getCurrentContent = useCallback(() => {
     const editor = quillRef.current?.getEditor();
     if (editor) {
-      // Temporarily disable the onChange handler to prevent infinite loop
-      const currentSelection = editor.getSelection();
-      editor.clipboard.dangerouslyPasteHTML(0, updatedContent);
-      // Restore selection if it existed
-      if (currentSelection) {
-        editor.setSelection(currentSelection);
-      }
+      return editor.root.innerHTML;
     }
-    
-    setHasUnsavedChanges(true);
-    toast.success(`Updated all instances of ${originalSpeaker} to ${trimmedName}`);
-    
-    console.log(`🔄 Updated speaker ${originalSpeaker} to ${trimmedName} globally`);
-  }, [speakerMappings, editorContent]);
+    return generateLiveContent();
+  }, [generateLiveContent]);
 
-  // ✅ Save changes to localStorage
+  // 🆕 ENHANCED DOWNLOAD FUNCTIONS
+  
+  // Generate speaker statistics
+  const generateSpeakerStats = useCallback(() => {
+    const stats = {};
+    const segments = results?.results?.segments || [];
+    
+    segments.forEach(segment => {
+      const speakerName = currentMappings[segment.speaker] || segment.speaker;
+      if (!stats[speakerName]) {
+        stats[speakerName] = {
+          segments: 0,
+          totalDuration: 0,
+          wordCount: 0
+        };
+      }
+      stats[speakerName].segments++;
+      stats[speakerName].totalDuration += (segment.end - segment.start);
+      stats[speakerName].wordCount += (segment.text || '').split(' ').length;
+    });
+    
+    return stats;
+  }, [results, currentMappings]);
+
+  // Format time helper
+  const formatTime = (seconds) => {
+    const hours = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    
+    if (hours > 0) {
+      return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // 🆕 PROFESSIONAL TXT FORMAT
+  const downloadProfessionalTxt = useCallback(() => {
+    try {
+      const currentContent = getCurrentContent();
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = currentContent;
+      const segments = results?.results?.segments || [];
+      const speakerStats = generateSpeakerStats();
+      const metadata = results?.results?.metadata || {};
+      
+      // Header
+      let content = `TRANSCRIPT
+${'='.repeat(60)}
+
+Document Information:
+• Generated: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}
+• Session ID: ${currentSessionId?.slice(0, 8) || 'N/A'}
+• Total Duration: ${formatTime(metadata.total_duration || 0)}
+• Total Speakers: ${Object.keys(currentMappings).length}
+• Language: ${metadata.language || 'Auto-detected'}
+
+Speaker Summary:
+`;
+
+      // Speaker stats
+      Object.entries(speakerStats).forEach(([speaker, stats]) => {
+        const percentage = metadata.total_duration ? 
+          ((stats.totalDuration / metadata.total_duration) * 100).toFixed(1) : '0';
+        content += `• ${speaker}: ${stats.segments} segments, ${formatTime(stats.totalDuration)} (${percentage}%), ~${stats.wordCount} words\n`;
+      });
+
+      content += `\n${'='.repeat(60)}\nTRANSCRIPT CONTENT\n${'='.repeat(60)}\n\n`;
+
+      // Format transcript with proper speaker names
+      segments.forEach((segment, index) => {
+        const speakerName = currentMappings[segment.speaker] || segment.speaker;
+        const timestamp = `[${formatTime(segment.start)} - ${formatTime(segment.end)}]`;
+        
+        content += `${timestamp} ${speakerName}:\n${segment.text}\n\n`;
+      });
+
+      content += `${'='.repeat(60)}\nEnd of Transcript\nGenerated by AI Speech Diarization Platform\n`;
+
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `transcript_professional_${currentSessionId?.slice(0, 8) || 'session'}_${new Date().toISOString().slice(0, 10)}.txt`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      
+      toast.success('Professional transcript downloaded');
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('Failed to download transcript');
+    }
+  }, [getCurrentContent, results, currentMappings, currentSessionId, generateSpeakerStats]);
+
+  // 🆕 MEETING MINUTES FORMAT
+  const downloadMeetingMinutes = useCallback(() => {
+    try {
+      const segments = results?.results?.segments || [];
+      const speakerStats = generateSpeakerStats();
+      const metadata = results?.results?.metadata || {};
+      
+      let content = `MEETING MINUTES
+${'='.repeat(60)}
+
+Meeting Details:
+• Date: ${new Date().toLocaleDateString()}
+• Duration: ${formatTime(metadata.total_duration || 0)}
+• Participants: ${Object.keys(currentMappings).length}
+
+Attendees:
+`;
+
+      Object.keys(speakerStats).forEach(speaker => {
+        content += `• ${speaker}\n`;
+      });
+
+      content += `\nDiscussion:\n${'='.repeat(40)}\n\n`;
+
+      // Group segments by speaker for cleaner reading
+      let currentSpeaker = '';
+      let speakerContent = '';
+      
+      segments.forEach((segment, index) => {
+        const speakerName = currentMappings[segment.speaker] || segment.speaker;
+        
+        if (speakerName !== currentSpeaker) {
+          if (speakerContent) {
+            content += `${currentSpeaker}:\n${speakerContent}\n\n`;
+          }
+          currentSpeaker = speakerName;
+          speakerContent = segment.text;
+        } else {
+          speakerContent += ' ' + segment.text;
+        }
+      });
+      
+      // Add final speaker content
+      if (speakerContent) {
+        content += `${currentSpeaker}:\n${speakerContent}\n\n`;
+      }
+
+      content += `${'='.repeat(60)}\nAction Items: [To be filled]\nNext Meeting: [To be scheduled]\n`;
+
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `meeting_minutes_${new Date().toISOString().slice(0, 10)}.txt`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      
+      toast.success('Meeting minutes downloaded');
+    } catch (error) {
+      toast.error('Failed to download meeting minutes');
+    }
+  }, [results, currentMappings, generateSpeakerStats]);
+
+  // 🆕 CSV EXPORT FOR ANALYSIS
+  const downloadCSV = useCallback(() => {
+    try {
+      const segments = results?.results?.segments || [];
+      
+      let csvContent = 'Start Time,End Time,Duration,Speaker (Original),Speaker (Mapped),Text,Word Count\n';
+      
+      segments.forEach(segment => {
+        const speakerName = currentMappings[segment.speaker] || segment.speaker;
+        const duration = segment.end - segment.start;
+        const wordCount = (segment.text || '').split(' ').length;
+        
+        // Escape CSV fields
+        const escapedText = (segment.text || '').replace(/"/g, '""');
+        
+        csvContent += `${segment.start},${segment.end},${duration.toFixed(2)},"${segment.speaker}","${speakerName}","${escapedText}",${wordCount}\n`;
+      });
+
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `transcript_data_${currentSessionId?.slice(0, 8) || 'session'}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      
+      toast.success('CSV data downloaded');
+    } catch (error) {
+      toast.error('Failed to download CSV');
+    }
+  }, [results, currentMappings, currentSessionId]);
+
+  // Original simple download (keeping for compatibility)
+  const downloadTranscript = useCallback(() => {
+    try {
+      const currentContent = getCurrentContent();
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = currentContent;
+      const plainText = tempDiv.textContent || tempDiv.innerText || '';
+      
+      const blob = new Blob([plainText], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `transcript_simple_${currentSessionId?.slice(0, 8) || 'session'}_${new Date().toISOString().slice(0, 10)}.txt`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      
+      toast.success('Simple transcript downloaded');
+    } catch (error) {
+      toast.error('Failed to download transcript');
+    }
+  }, [getCurrentContent, currentSessionId]);
+
+  // 🔧 SAVE CHANGES
   const saveChanges = useCallback(() => {
     if (!currentSessionId) {
       toast.error('No active session to save');
       return;
     }
 
+    const errors = {};
+    const emptyFields = [];
+    
+    Object.entries(currentMappings).forEach(([speaker, value]) => {
+      if (!value || !value.trim()) {
+        errors[speaker] = 'Speaker name cannot be empty';
+        emptyFields.push(speaker);
+      }
+    });
+
+    if (emptyFields.length > 0) {
+      setValidationErrors(errors);
+      toast.error(`Please provide names for: ${emptyFields.join(', ')}`);
+      return;
+    }
+
+    setValidationErrors({});
+    
     const storageKeys = getStorageKeys();
+    const currentContent = getCurrentContent();
     
     try {
-      localStorage.setItem(storageKeys.content, editorContent);
-      localStorage.setItem(storageKeys.speakers, JSON.stringify(speakerMappings));
+      localStorage.setItem(storageKeys.content, currentContent);
+      localStorage.setItem(storageKeys.speakers, JSON.stringify(currentMappings));
       localStorage.setItem(storageKeys.hasEdits, 'true');
       
+      setOriginalContent(currentContent);
+      lastMappingsRef.current = JSON.stringify(currentMappings);
       setHasUnsavedChanges(false);
+      
       toast.success('Changes saved successfully');
-      console.log('💾 Saved transcript changes to localStorage');
+      console.log('💾 Saved changes');
     } catch (error) {
-      console.error('Failed to save changes:', error);
+      console.error('Save failed:', error);
       toast.error('Failed to save changes');
     }
-  }, [currentSessionId, editorContent, speakerMappings]);
+  }, [currentSessionId, currentMappings, getCurrentContent]);
 
-  // ✅ Reset to original transcript
+  // ✅ Reset to original
   const resetToOriginal = useCallback(() => {
     if (!results?.results?.segments) {
       toast.error('No original transcript available');
@@ -197,95 +516,80 @@ const LiveTranscriptEditor = ({ results, hasSession }) => {
     }
 
     const confirmed = window.confirm(
-      'This will discard all your edits and restore the original transcript. Are you sure?'
+      'This will discard all edits and restore the original transcript. Continue?'
     );
 
     if (confirmed) {
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
+      if (initTimeoutRef.current) {
+        clearTimeout(initTimeoutRef.current);
+      }
+      
       const { content, speakers } = convertResultsToEditorFormat(results.results.segments);
-      setEditorContent(content);
-      setSpeakerMappings(speakers);
+      
+      setOriginalContent(content);
+      setCurrentMappings(speakers);
+      setValidationErrors({});
       setHasUnsavedChanges(false);
+      setIsInitialized(false);
+      lastMappingsRef.current = JSON.stringify(speakers);
 
-      // Clear localStorage
       const storageKeys = getStorageKeys();
       localStorage.removeItem(storageKeys.content);
       localStorage.removeItem(storageKeys.speakers);
       localStorage.removeItem(storageKeys.hasEdits);
 
-      // ✅ Update the Quill editor content
-      const editor = quillRef.current?.getEditor();
-      if (editor) {
-        editor.clipboard.dangerouslyPasteHTML(0, content);
-      }
+      setTimeout(() => {
+        setIsInitialized(true);
+      }, 300);
 
       toast.success('Restored original transcript');
     }
   }, [results]);
 
-  // ✅ Copy transcript as plain text
+  // ✅ Copy function
   const copyAsPlainText = useCallback(async () => {
     try {
-      // Convert HTML content to plain text
+      const currentContent = getCurrentContent();
       const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = editorContent;
+      tempDiv.innerHTML = currentContent;
       const plainText = tempDiv.textContent || tempDiv.innerText || '';
       
       await navigator.clipboard.writeText(plainText);
       setCopied(true);
-      toast.success('Copied transcript to clipboard');
+      toast.success('Copied to clipboard');
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      toast.error('Failed to copy transcript');
+      toast.error('Failed to copy');
     }
-  }, [editorContent]);
+  }, [getCurrentContent]);
 
-  // ✅ Download transcript
-  const downloadTranscript = useCallback(() => {
-    try {
-      // Convert to plain text for download
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = editorContent;
-      const plainText = tempDiv.textContent || tempDiv.innerText || '';
-      
-      const blob = new Blob([plainText], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `transcript_edited_${currentSessionId?.slice(0, 8) || 'session'}_${new Date().toISOString().slice(0, 10)}.txt`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-      
-      toast.success('Transcript downloaded');
-    } catch (error) {
-      toast.error('Failed to download transcript');
-    }
-  }, [editorContent, currentSessionId]);
-
-  // ✅ Auto-save every 30 seconds if there are changes
+  // ✅ Cleanup
   useEffect(() => {
-    if (!hasUnsavedChanges) return;
+    return () => {
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
+      if (initTimeoutRef.current) {
+        clearTimeout(initTimeoutRef.current);
+      }
+    };
+  }, []);
 
-    const autoSaveInterval = setInterval(() => {
-      saveChanges();
-    }, 30000); // Auto-save every 30 seconds
-
-    return () => clearInterval(autoSaveInterval);
-  }, [hasUnsavedChanges, saveChanges]);
-
-  // ✅ Quill modules and formats
-  const modules = {
+  // ✅ Quill configuration
+  const modules = useMemo(() => ({
     toolbar: [
       ['bold', 'italic', 'underline'],
       [{ 'color': [] }, { 'background': [] }],
       ['clean']
     ],
-  };
+  }), []);
 
-  const formats = [
+  const formats = useMemo(() => [
     'bold', 'italic', 'underline', 'color', 'background'
-  ];
+  ], []);
 
   if (!hasSession) {
     return (
@@ -302,75 +606,148 @@ const LiveTranscriptEditor = ({ results, hasSession }) => {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
-        <div className="flex items-center space-x-3">
-          <Edit3 className="w-5 h-5 text-blue-500" />
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">Live Transcript Editor</h3>
-            {hasUnsavedChanges && (
-              <p className="text-sm text-orange-600">Unsaved changes</p>
-            )}
+      <div className="p-6 border-b border-gray-200 flex-shrink-0">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-gray-900">Live Transcript Editor</h2>
+          
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => setShowSpeakerPanel(!showSpeakerPanel)}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                showSpeakerPanel 
+                  ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              <span>Speaker Mapping</span>
+            </button>
+            
+            <button
+              onClick={copyAsPlainText}
+              className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors"
+            >
+              {copied ? <CheckCircle className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
+              <span>Copy</span>
+            </button>
+            
+            {/* 🆕 ENHANCED DOWNLOAD DROPDOWN */}
+            <div className="relative">
+              <button
+                onClick={() => setShowDownloadMenu(!showDownloadMenu)}
+                className="flex items-center space-x-2 px-4 py-2 bg-green-100 text-green-700 hover:bg-green-200 rounded-lg text-sm font-medium transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                <span>Download</span>
+                <ChevronDown className="w-3 h-3" />
+              </button>
+              
+              {showDownloadMenu && (
+                <div className="absolute right-0 top-full mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                  <div className="p-2">
+                    <div className="text-xs text-gray-500 font-medium mb-2 px-2">Professional Formats</div>
+                    
+                    <button
+                      onClick={() => {
+                        downloadProfessionalTxt();
+                        setShowDownloadMenu(false);
+                      }}
+                      className="w-full flex items-center space-x-3 px-3 py-2 text-left hover:bg-gray-50 rounded-md transition-colors"
+                    >
+                      <FileText className="w-4 h-4 text-blue-600" />
+                      <div>
+                        <div className="font-medium text-sm">Professional Transcript</div>
+                        <div className="text-xs text-gray-500">Formatted with metadata & stats</div>
+                      </div>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        downloadMeetingMinutes();
+                        setShowDownloadMenu(false);
+                      }}
+                      className="w-full flex items-center space-x-3 px-3 py-2 text-left hover:bg-gray-50 rounded-md transition-colors"
+                    >
+                      <File className="w-4 h-4 text-green-600" />
+                      <div>
+                        <div className="font-medium text-sm">Meeting Minutes</div>
+                        <div className="text-xs text-gray-500">Business-ready format</div>
+                      </div>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        downloadCSV();
+                        setShowDownloadMenu(false);
+                      }}
+                      className="w-full flex items-center space-x-3 px-3 py-2 text-left hover:bg-gray-50 rounded-md transition-colors"
+                    >
+                      <FileText className="w-4 h-4 text-purple-600" />
+                      <div>
+                        <div className="font-medium text-sm">Data Export (CSV)</div>
+                        <div className="text-xs text-gray-500">For analysis & spreadsheets</div>
+                      </div>
+                    </button>
+                    
+                    <div className="border-t border-gray-100 my-2"></div>
+                    <div className="text-xs text-gray-500 font-medium mb-2 px-2">Basic Format</div>
+                    
+                    <button
+                      onClick={() => {
+                        downloadTranscript();
+                        setShowDownloadMenu(false);
+                      }}
+                      className="w-full flex items-center space-x-3 px-3 py-2 text-left hover:bg-gray-50 rounded-md transition-colors"
+                    >
+                      <FileText className="w-4 h-4 text-gray-600" />
+                      <div>
+                        <div className="font-medium text-sm">Simple Text</div>
+                        <div className="text-xs text-gray-500">Plain transcript only</div>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <button
+              onClick={resetToOriginal}
+              className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span>Reset</span>
+            </button>
+            
+            <button
+              onClick={saveChanges}
+              disabled={!hasUnsavedChanges}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                hasUnsavedChanges 
+                  ? 'bg-blue-500 text-white hover:bg-blue-600'
+                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              }`}
+            >
+              <Save className="w-4 h-4 mr-2" />
+              Save
+            </button>
           </div>
         </div>
-        
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => setShowSpeakerPanel(!showSpeakerPanel)}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-            title="Manage speakers"
-          >
-            <Users className="w-4 h-4" />
-          </button>
-          
-          <button
-            onClick={copyAsPlainText}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-            title="Copy transcript"
-          >
-            {copied ? (
-              <CheckCircle className="w-4 h-4 text-green-600" />
-            ) : (
-              <Copy className="w-4 h-4" />
-            )}
-          </button>
-          
-          <button
-            onClick={downloadTranscript}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-            title="Download transcript"
-          >
-            <Download className="w-4 h-4" />
-          </button>
-          
-          <button
-            onClick={resetToOriginal}
-            className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-            title="Reset to original"
-          >
-            <RotateCcw className="w-4 h-4" />
-          </button>
-          
-          <button
-            onClick={saveChanges}
-            disabled={!hasUnsavedChanges}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              hasUnsavedChanges
-                ? 'bg-blue-500 text-white hover:bg-blue-600'
-                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-            }`}
-          >
-            <Save className="w-4 h-4 inline mr-2" />
-            Save
-          </button>
-        </div>
       </div>
+
+      {/* Close dropdown when clicking outside */}
+      {showDownloadMenu && (
+        <div 
+          className="fixed inset-0 z-40" 
+          onClick={() => setShowDownloadMenu(false)}
+        />
+      )}
 
       <div className="flex flex-1 overflow-hidden">
         {/* Speaker Panel */}
         {showSpeakerPanel && (
           <motion.div
             initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 300, opacity: 1 }}
+            animate={{ width: 320, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
             className="bg-gray-50 border-r border-gray-200 flex-shrink-0 overflow-y-auto"
           >
@@ -380,26 +757,65 @@ const LiveTranscriptEditor = ({ results, hasSession }) => {
                 Speaker Names
               </h4>
               
-              <div className="space-y-3">
-                {Object.entries(speakerMappings).map(([originalSpeaker, currentName]) => (
+              <div className="space-y-4">
+                {Object.entries(currentMappings).map(([originalSpeaker, currentValue]) => (
                   <div key={originalSpeaker} className="space-y-2">
                     <label className="text-sm font-medium text-gray-700">
                       {originalSpeaker}
                     </label>
-                    <input
-                      type="text"
-                      value={currentName}
-                      onChange={(e) => updateSpeakerMapping(originalSpeaker, e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                      placeholder="Enter speaker name..."
-                    />
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={currentValue || ''}
+                        onChange={(e) => handleInputChange(originalSpeaker, e.target.value)}
+                        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 text-sm transition-colors ${
+                          validationErrors[originalSpeaker]
+                            ? 'border-red-300 focus:ring-red-500 bg-red-50'
+                            : 'border-gray-300 focus:ring-blue-500'
+                        }`}
+                        placeholder="Enter speaker name..."
+                      />
+                      {validationErrors[originalSpeaker] && (
+                        <div className="absolute right-2 top-2">
+                          <AlertCircle className="w-4 h-4 text-red-500" />
+                        </div>
+                      )}
+                    </div>
+                    {validationErrors[originalSpeaker] && (
+                      <p className="text-xs text-red-600 flex items-center">
+                        <AlertCircle className="w-3 h-3 mr-1" />
+                        {validationErrors[originalSpeaker]}
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>
               
-              <div className="mt-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="mt-6 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-xs text-green-700 font-medium">
+                  ✅ <strong>ENHANCED DOWNLOADS!</strong>
+                </p>
+                <p className="text-xs text-green-600 mt-1">
+                  • Professional formats • Meeting minutes • CSV data • Speaker stats
+                </p>
+              </div>
+
+              {Object.keys(validationErrors).length > 0 && (
+                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-xs text-red-700 font-medium mb-1">
+                    ❌ Fix before saving:
+                  </p>
+                  <ul className="text-xs text-red-600 space-y-1">
+                    {Object.entries(validationErrors).map(([speaker, error]) => (
+                      <li key={speaker}>• {speaker}: {error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-xs text-blue-700">
-                  💡 Changes to speaker names are applied globally across the entire transcript.
+                  🔧 <strong>Status:</strong> {Object.keys(currentMappings).length} speakers • Initialized: {isInitialized ? '✅' : '⏳'}
                 </p>
               </div>
             </div>
@@ -412,8 +828,7 @@ const LiveTranscriptEditor = ({ results, hasSession }) => {
             <ReactQuill
               ref={quillRef}
               theme="snow"
-              value={editorContent}
-              onChange={handleContentChange}
+              onChange={handleEditorChange}
               modules={modules}
               formats={formats}
               style={{
@@ -428,19 +843,26 @@ const LiveTranscriptEditor = ({ results, hasSession }) => {
           {/* Status Bar */}
           <div className="px-4 py-2 bg-gray-50 border-t border-gray-200 flex items-center justify-between text-sm text-gray-600 flex-shrink-0">
             <div className="flex items-center space-x-4">
-              <span>Speakers: {Object.keys(speakerMappings).length}</span>
+              <span>Speakers: {Object.keys(currentMappings).length}</span>
               <span>•</span>
-              <span>Auto-save: {hasUnsavedChanges ? 'Pending' : 'Saved'}</span>
+              <span>{hasUnsavedChanges ? 'Live Editing Mode' : 'Saved'}</span>
+              {Object.keys(validationErrors).length > 0 && (
+                <>
+                  <span>•</span>
+                  <span className="text-red-600 flex items-center">
+                    <AlertCircle className="w-3 h-3 mr-1" />
+                    {Object.keys(validationErrors).length} error{Object.keys(validationErrors).length !== 1 ? 's' : ''}
+                  </span>
+                </>
+              )}
             </div>
             
-            <div className="flex items-center space-x-2">
-              {hasUnsavedChanges && (
-                <span className="text-orange-600">• Unsaved changes</span>
-              )}
-              <span className="text-gray-400">
-                Session: {currentSessionId?.slice(0, 8)}...
-              </span>
-            </div>
+            {hasUnsavedChanges && (
+              <div className="flex items-center space-x-2 text-green-600">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span>Live editing</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
