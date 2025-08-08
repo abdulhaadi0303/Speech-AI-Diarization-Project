@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { motion } from 'framer-motion';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import '../../styles/SmoothScrollEditor.css'; // 🆕 Import smooth scroll styles
 import { 
   Users, 
   Save, 
@@ -47,7 +48,7 @@ const LiveTranscriptEditor = ({ results, hasSession }) => {
     hasEdits: `has_edits_${currentSessionId}`
   });
 
-  // ✅ Initialize content and mappings
+  // ✅ Initialize content and mappings - NO POPUPS
   useEffect(() => {
     if (!currentSessionId) return;
 
@@ -68,7 +69,7 @@ const LiveTranscriptEditor = ({ results, hasSession }) => {
       }, 500);
       
       setHasUnsavedChanges(false);
-      toast.success('Restored previous edits');
+      // Removed: toast.success('Restored previous edits');
     } else if (results?.results?.segments) {
       console.log('🆕 Initializing transcript from results');
       const { content, speakers } = convertResultsToEditorFormat(results.results.segments);
@@ -116,23 +117,39 @@ const LiveTranscriptEditor = ({ results, hasSession }) => {
     return { content: htmlContent, speakers };
   };
 
-  // 🔧 GENERATE LIVE CONTENT
+  // 🔧 GENERATE LIVE CONTENT - FIXED: Always work from raw segments data
   const generateLiveContent = useCallback(() => {
-    let liveContent = originalContent;
-    
-    Object.entries(currentMappings).forEach(([originalSpeaker, newName]) => {
-      if (newName && newName.trim() && newName !== originalSpeaker) {
-        const escapedOriginal = originalSpeaker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const pattern = new RegExp(
-          `(<strong[^>]*>)\\s*${escapedOriginal}\\s*(:)\\s*(</strong>)`,
-          'gi'
-        );
-        liveContent = liveContent.replace(pattern, `$1${newName.trim()}$2$3`);
-      }
+    // 🔧 CRITICAL FIX: Always generate from original segments, not from saved HTML
+    // This ensures mapping always works regardless of save state
+    if (!results?.results?.segments) {
+      return originalContent; // Fallback to saved content if no segments
+    }
+
+    const segments = results.results.segments;
+    let htmlContent = '';
+
+    segments.forEach((segment) => {
+      const originalSpeaker = segment.speaker;
+      const mappedSpeaker = currentMappings[originalSpeaker] || originalSpeaker;
+      const text = segment.text || '';
+      const start = segment.start || 0;
+      const end = segment.end || 0;
+
+      const formatTime = (seconds) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      };
+
+      const timeStamp = `[${formatTime(start)} - ${formatTime(end)}]`;
+      
+      // Always use current mapping, regardless of what's saved
+      htmlContent += `<p><span style="color: #6b7280; font-size: 0.875rem; font-family: monospace;">${timeStamp}</span> <strong style="color: #059669;">${mappedSpeaker}:</strong> ${text}</p>`;
     });
-    
-    return liveContent;
-  }, [originalContent, currentMappings]);
+
+    console.log(`🎨 Generated live content from segments with current mappings`);
+    return htmlContent;
+  }, [results, currentMappings]); // Removed originalContent dependency
 
   // 🔧 UPDATE QUILL CONTENT - Bulletproof approach
   const updateQuillContent = useCallback((newContent) => {
@@ -280,7 +297,7 @@ const LiveTranscriptEditor = ({ results, hasSession }) => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // 🆕 PROFESSIONAL TXT FORMAT
+  // 🆕 PROFESSIONAL TXT FORMAT - NO POPUP
   const downloadProfessionalTxt = useCallback(() => {
     try {
       const currentContent = getCurrentContent();
@@ -333,14 +350,15 @@ Speaker Summary:
       link.remove();
       URL.revokeObjectURL(url);
       
-      toast.success('Professional transcript downloaded');
+      // Removed: toast.success('Professional transcript downloaded');
     } catch (error) {
       console.error('Download error:', error);
+      // Keep only error toast for critical failures
       toast.error('Failed to download transcript');
     }
   }, [getCurrentContent, results, currentMappings, currentSessionId, generateSpeakerStats]);
 
-  // 🆕 MEETING MINUTES FORMAT
+  // 🆕 MEETING MINUTES FORMAT - NO POPUP
   const downloadMeetingMinutes = useCallback(() => {
     try {
       const segments = results?.results?.segments || [];
@@ -399,13 +417,13 @@ Attendees:
       link.remove();
       URL.revokeObjectURL(url);
       
-      toast.success('Meeting minutes downloaded');
+      // Removed: toast.success('Meeting minutes downloaded');
     } catch (error) {
       toast.error('Failed to download meeting minutes');
     }
   }, [results, currentMappings, generateSpeakerStats]);
 
-  // 🆕 CSV EXPORT FOR ANALYSIS
+  // 🆕 CSV EXPORT FOR ANALYSIS - NO POPUP
   const downloadCSV = useCallback(() => {
     try {
       const segments = results?.results?.segments || [];
@@ -433,13 +451,13 @@ Attendees:
       link.remove();
       URL.revokeObjectURL(url);
       
-      toast.success('CSV data downloaded');
+      // Removed: toast.success('CSV data downloaded');
     } catch (error) {
       toast.error('Failed to download CSV');
     }
   }, [results, currentMappings, currentSessionId]);
 
-  // Original simple download (keeping for compatibility)
+  // Original simple download - NO POPUP
   const downloadTranscript = useCallback(() => {
     try {
       const currentContent = getCurrentContent();
@@ -457,13 +475,13 @@ Attendees:
       link.remove();
       URL.revokeObjectURL(url);
       
-      toast.success('Simple transcript downloaded');
+      // Removed: toast.success('Simple transcript downloaded');
     } catch (error) {
       toast.error('Failed to download transcript');
     }
   }, [getCurrentContent, currentSessionId]);
 
-  // 🔧 SAVE CHANGES
+  // 🔧 SAVE CHANGES - NO POPUP ON SUCCESS
   const saveChanges = useCallback(() => {
     if (!currentSessionId) {
       toast.error('No active session to save');
@@ -489,26 +507,26 @@ Attendees:
     setValidationErrors({});
     
     const storageKeys = getStorageKeys();
-    const currentContent = getCurrentContent();
+    const currentContent = generateLiveContent(); // Get current mapped content
     
     try {
       localStorage.setItem(storageKeys.content, currentContent);
       localStorage.setItem(storageKeys.speakers, JSON.stringify(currentMappings));
       localStorage.setItem(storageKeys.hasEdits, 'true');
       
-      setOriginalContent(currentContent);
+      // Update tracking reference
       lastMappingsRef.current = JSON.stringify(currentMappings);
       setHasUnsavedChanges(false);
       
-      toast.success('Changes saved successfully');
-      console.log('💾 Saved changes');
+      // Removed: toast.success('Changes saved successfully - speaker mapping remains active');
+      console.log('💾 Saved changes - speaker mapping functionality preserved');
     } catch (error) {
       console.error('Save failed:', error);
       toast.error('Failed to save changes');
     }
-  }, [currentSessionId, currentMappings, getCurrentContent]);
+  }, [currentSessionId, currentMappings, generateLiveContent]);
 
-  // ✅ Reset to original
+  // ✅ Reset to original - NO POPUP ON SUCCESS
   const resetToOriginal = useCallback(() => {
     if (!results?.results?.segments) {
       toast.error('No original transcript available');
@@ -545,11 +563,11 @@ Attendees:
         setIsInitialized(true);
       }, 300);
 
-      toast.success('Restored original transcript');
+      // Removed: toast.success('Restored original transcript');
     }
   }, [results]);
 
-  // ✅ Copy function
+  // ✅ Copy function - NO POPUP ON SUCCESS
   const copyAsPlainText = useCallback(async () => {
     try {
       const currentContent = getCurrentContent();
@@ -559,7 +577,7 @@ Attendees:
       
       await navigator.clipboard.writeText(plainText);
       setCopied(true);
-      toast.success('Copied to clipboard');
+      // Removed: toast.success('Copied to clipboard');
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       toast.error('Failed to copy');
@@ -590,6 +608,39 @@ Attendees:
   const formats = useMemo(() => [
     'bold', 'italic', 'underline', 'color', 'background'
   ], []);
+
+  // 🆕 SMOOTH SCROLL: Fixed scrolling implementation - NO AUTO SCROLL TEST
+  useEffect(() => {
+    if (quillRef.current && isInitialized) {
+      const editor = quillRef.current.getEditor();
+      if (editor) {
+        const quillContainer = quillRef.current.getEditor().container;
+        const editorElement = quillContainer.querySelector('.ql-editor');
+        
+        if (editorElement) {
+          // 🔧 CRITICAL FIX: Ensure proper height and overflow
+          editorElement.style.height = 'auto';
+          editorElement.style.minHeight = '500px';
+          editorElement.style.maxHeight = 'none';
+          editorElement.style.overflowY = 'auto';
+          editorElement.style.overflowX = 'hidden';
+          editorElement.style.scrollBehavior = 'smooth';
+          editorElement.style.padding = '20px';
+          
+          // Force container to allow scrolling
+          const container = quillContainer.querySelector('.ql-container');
+          if (container) {
+            container.style.height = '100%';
+            container.style.display = 'flex';
+            container.style.flexDirection = 'column';
+          }
+          
+          // 🔧 REMOVED: Auto scroll test that was causing the strange behavior
+          console.log('✨ Smooth scrolling setup completed (no auto-test)');
+        }
+      }
+    }
+  }, [isInitialized]);
 
   if (!hasSession) {
     return (
@@ -742,56 +793,57 @@ Attendees:
         />
       )}
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* Speaker Panel */}
-        {showSpeakerPanel && (
-          <motion.div
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 320, opacity: 1 }}
-            exit={{ width: 0, opacity: 0 }}
-            className="bg-gray-50 border-r border-gray-200 flex-shrink-0 overflow-y-auto"
-          >
-            <div className="p-4">
-              <h4 className="font-medium text-gray-900 mb-4 flex items-center">
-                <User className="w-4 h-4 mr-2" />
-                Speaker Names
-              </h4>
-              
-              <div className="space-y-4">
-                {Object.entries(currentMappings).map(([originalSpeaker, currentValue]) => (
-                  <div key={originalSpeaker} className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      {originalSpeaker}
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={currentValue || ''}
-                        onChange={(e) => handleInputChange(originalSpeaker, e.target.value)}
-                        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 text-sm transition-colors ${
-                          validationErrors[originalSpeaker]
-                            ? 'border-red-300 focus:ring-red-500 bg-red-50'
-                            : 'border-gray-300 focus:ring-blue-500'
-                        }`}
-                        placeholder="Enter speaker name..."
-                      />
-                      {validationErrors[originalSpeaker] && (
-                        <div className="absolute right-2 top-2">
-                          <AlertCircle className="w-4 h-4 text-red-500" />
-                        </div>
-                      )}
-                    </div>
+      {/* 🔧 MOVED: Speaker Panel - Now appears on TOP of editor */}
+      {showSpeakerPanel && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: 'auto', opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          className="bg-gray-50 border-b border-gray-200 overflow-hidden"
+        >
+          <div className="p-4 max-h-64 overflow-y-auto">
+            <h4 className="font-medium text-gray-900 mb-4 flex items-center">
+              <User className="w-4 h-4 mr-2" />
+              Speaker Names
+            </h4>
+            
+            {/* 🔧 RESPONSIVE GRID: Horizontal layout for speaker inputs */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-4">
+              {Object.entries(currentMappings).map(([originalSpeaker, currentValue]) => (
+                <div key={originalSpeaker} className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">
+                    {originalSpeaker}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={currentValue || ''}
+                      onChange={(e) => handleInputChange(originalSpeaker, e.target.value)}
+                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 text-sm transition-colors ${
+                        validationErrors[originalSpeaker]
+                          ? 'border-red-300 focus:ring-red-500 bg-red-50'
+                          : 'border-gray-300 focus:ring-blue-500'
+                      }`}
+                      placeholder="Enter speaker name..."
+                    />
                     {validationErrors[originalSpeaker] && (
-                      <p className="text-xs text-red-600 flex items-center">
-                        <AlertCircle className="w-3 h-3 mr-1" />
-                        {validationErrors[originalSpeaker]}
-                      </p>
+                      <div className="absolute right-2 top-2">
+                        <AlertCircle className="w-4 h-4 text-red-500" />
+                      </div>
                     )}
                   </div>
-                ))}
-              </div>
-              
-              <div className="mt-6 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  {validationErrors[originalSpeaker] && (
+                    <p className="text-xs text-red-600 flex items-center">
+                      <AlertCircle className="w-3 h-3 mr-1" />
+                      {validationErrors[originalSpeaker]}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+            
+            <div className="flex flex-wrap gap-4">
+              <div className="flex-1 min-w-64 p-3 bg-green-50 border border-green-200 rounded-lg">
                 <p className="text-xs text-green-700 font-medium">
                   ✅ <strong>ENHANCED DOWNLOADS!</strong>
                 </p>
@@ -801,7 +853,7 @@ Attendees:
               </div>
 
               {Object.keys(validationErrors).length > 0 && (
-                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex-1 min-w-64 p-3 bg-red-50 border border-red-200 rounded-lg">
                   <p className="text-xs text-red-700 font-medium mb-1">
                     ❌ Fix before saving:
                   </p>
@@ -813,57 +865,58 @@ Attendees:
                 </div>
               )}
 
-              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex-1 min-w-64 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-xs text-blue-700">
                   🔧 <strong>Status:</strong> {Object.keys(currentMappings).length} speakers • Initialized: {isInitialized ? '✅' : '⏳'}
                 </p>
               </div>
             </div>
-          </motion.div>
-        )}
-
-        {/* Editor */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 p-4">
-            <ReactQuill
-              ref={quillRef}
-              theme="snow"
-              onChange={handleEditorChange}
-              modules={modules}
-              formats={formats}
-              style={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column'
-              }}
-              className="h-full"
-            />
           </div>
-          
-          {/* Status Bar */}
-          <div className="px-4 py-2 bg-gray-50 border-t border-gray-200 flex items-center justify-between text-sm text-gray-600 flex-shrink-0">
-            <div className="flex items-center space-x-4">
-              <span>Speakers: {Object.keys(currentMappings).length}</span>
-              <span>•</span>
-              <span>{hasUnsavedChanges ? 'Live Editing Mode' : 'Saved'}</span>
-              {Object.keys(validationErrors).length > 0 && (
-                <>
-                  <span>•</span>
-                  <span className="text-red-600 flex items-center">
-                    <AlertCircle className="w-3 h-3 mr-1" />
-                    {Object.keys(validationErrors).length} error{Object.keys(validationErrors).length !== 1 ? 's' : ''}
-                  </span>
-                </>
-              )}
-            </div>
-            
-            {hasUnsavedChanges && (
-              <div className="flex items-center space-x-2 text-green-600">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span>Live editing</span>
-              </div>
+        </motion.div>
+      )}
+
+      {/* 🔧 UPDATED: Editor - Now takes full width */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 p-4 overflow-hidden">
+          <ReactQuill
+            ref={quillRef}
+            theme="snow"
+            onChange={handleEditorChange}
+            modules={modules}
+            formats={formats}
+            style={{
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden'
+            }}
+            className="h-full smooth-scroll-editor"
+          />
+        </div>
+        
+        {/* Status Bar */}
+        <div className="px-4 py-2 bg-gray-50 border-t border-gray-200 flex items-center justify-between text-sm text-gray-600 flex-shrink-0">
+          <div className="flex items-center space-x-4">
+            <span>Speakers: {Object.keys(currentMappings).length}</span>
+            <span>•</span>
+            <span>{hasUnsavedChanges ? 'Live Editing Mode' : 'Saved'}</span>
+            {Object.keys(validationErrors).length > 0 && (
+              <>
+                <span>•</span>
+                <span className="text-red-600 flex items-center">
+                  <AlertCircle className="w-3 h-3 mr-1" />
+                  {Object.keys(validationErrors).length} error{Object.keys(validationErrors).length !== 1 ? 's' : ''}
+                </span>
+              </>
             )}
           </div>
+          
+          {hasUnsavedChanges && (
+            <div className="flex items-center space-x-2 text-green-600">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span>Live editing</span>
+            </div>
+          )}
         </div>
       </div>
     </div>
