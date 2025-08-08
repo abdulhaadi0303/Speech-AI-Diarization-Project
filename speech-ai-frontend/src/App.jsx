@@ -15,6 +15,7 @@ import SettingsPage from './pages/SettingsPage'; // Use the page version
 import AnalysisPage from './pages/AnalysisPage'; // New AI Analysis page
 import { BackendProvider } from './contexts/BackendContext';
 import ErrorBoundary from './Components/common/ErrorBoundary';
+import AdminDashboard from './pages/AdminPanel.jsx';
 
 const App = () => {
   const [showSidebar, setShowSidebar] = useState(true);
@@ -79,6 +80,8 @@ const App = () => {
                   
                   {/* AnalysisPage - New AI Analysis page */}
                   <Route path="/analysis" element={<AnalysisPage />} />
+
+                  <Route path="/admin" element={<AdminDashboard />} />
                 </Routes>
               </main>
             </div>

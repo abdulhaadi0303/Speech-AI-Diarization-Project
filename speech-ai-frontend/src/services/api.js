@@ -1,7 +1,7 @@
-// src/services/api.js - API Service Layer
+// src/services/api.js - Updated API Service with Prompt Management
 import axios from 'axios';
 
-// Backend configuration - will be set during build or runtime
+// Backend configuration
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8888';
 
 // Create axios instance with default config
@@ -71,10 +71,45 @@ export const backendApi = {
   getResults: (sessionId) => api.get(`/api/results/${sessionId}`),
   cleanupSession: (sessionId) => api.delete(`/api/session/${sessionId}`),
   
-  // LLM features
+  // Legacy LLM features (for backward compatibility)
   getLLMPrompts: () => api.get('/api/llm-prompts'),
   processWithLLM: (data) => api.post('/api/llm-process', data),
   chatWithLLM: (data) => api.post('/api/chat', data),
+  
+  // NEW: Database-driven prompt management
+  prompts: {
+    // Get all prompts with optional filtering
+    getAll: (params = {}) => {
+      const queryParams = new URLSearchParams();
+      if (params.category) queryParams.append('category', params.category);
+      if (params.active_only !== undefined) queryParams.append('active_only', params.active_only);
+      return api.get(`/api/prompts?${queryParams.toString()}`);
+    },
+    
+    // Get available categories
+    getCategories: () => api.get('/api/prompts/categories'),
+    
+    // Get specific prompt by key
+    getByKey: (key) => api.get(`/api/prompts/${key}`),
+    
+    // Create new prompt
+    create: (promptData) => api.post('/api/prompts', promptData),
+    
+    // Update existing prompt
+    update: (promptId, promptData) => api.put(`/api/prompts/${promptId}`, promptData),
+    
+    // Delete prompt
+    delete: (promptId) => api.delete(`/api/prompts/${promptId}`),
+    
+    // Toggle prompt active/inactive status
+    toggle: (promptKey) => api.post(`/api/prompts/${promptKey}/toggle`),
+    
+    // Increment usage count for analytics
+    incrementUsage: (promptKey) => api.post(`/api/prompts/${promptKey}/increment-usage`),
+    
+    // Get usage analytics
+    getAnalytics: () => api.get('/api/prompts/analytics/usage')
+  },
   
   // File downloads
   downloadFile: (sessionId, filename) => {
@@ -82,6 +117,12 @@ export const backendApi = {
       responseType: 'blob',
     });
   },
+  
+  // Utility methods
+  get: (url, config) => api.get(url, config),
+  post: (url, data, config) => api.post(url, data, config),
+  put: (url, data, config) => api.put(url, data, config),
+  delete: (url, config) => api.delete(url, config),
 };
 
 export default api;
