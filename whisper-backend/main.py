@@ -1,4 +1,4 @@
-# main.py - Enhanced FastAPI Backend with Ollama LLM Integration (Fixed)
+# main.py - Enhanced FastAPI Backend with Ollama LLM Integration and Database Support
 
 import os
 import json
@@ -31,11 +31,25 @@ except ImportError as e:
     SpeechBrainEngine = None
     BasicAudioPreprocessor = None
 
+# Import database components
+try:
+    from database.models import db_manager, AnalysisPrompt
+    from api.prompt_routes import router as prompt_router
+    DATABASE_AVAILABLE = True
+    print("✅ Database components loaded successfully")
+except ImportError as e:
+    print(f"⚠️ Warning: Could not import database components: {e}")
+    print("   Database functionality will be disabled")
+    DATABASE_AVAILABLE = False
+    db_manager = None
+    AnalysisPrompt = None
+    prompt_router = None
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)  # Fixed: __name__ instead of name
+logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Speech Diarization API with LLM", version="2.0.0")
+app = FastAPI(title="Speech Diarization API with LLM", version="2.1.0")
 
 # Pydantic models for request/response
 class LLMProcessRequest(BaseModel):
@@ -58,7 +72,6 @@ class LLMResponse(BaseModel):
 
 # Ollama Configuration
 OLLAMA_BASE_URL = "http://localhost:11434"
-# DEFAULT_MODEL = "llama3.2:3b"
 DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "llama3:latest") 
 MAX_CHUNK_SIZE = 8000  # Characters per chunk for long transcripts
 
@@ -69,7 +82,7 @@ executor = ThreadPoolExecutor(max_workers=4)
 active_sessions = {}
 processing_status = {}
 
-# Predefined LLM prompts
+# Predefined LLM prompts (fallback when database is not available)
 LLM_PROMPTS = {
     "summary": {
         "name": "📋 Conversation Summary",
@@ -205,11 +218,16 @@ tailscale_manager = TailscaleManager()
 # Enable CORS for distributed deployment
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Fixed: was empty string
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],  # Fixed: was empty string
+    allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include database router if available
+if DATABASE_AVAILABLE and prompt_router:
+    app.include_router(prompt_router)
+    print("✅ Database routes included")
 
 # Initialize components
 try:
@@ -351,10 +369,50 @@ Please provide a consolidated analysis that combines insights from all parts. Re
     except Exception:
         return combined_results
 
+def get_prompts_from_database():
+    """Get prompts from database or fallback to hardcoded ones"""
+    if not DATABASE_AVAILABLE or not db_manager:
+        return LLM_PROMPTS
+    
+    try:
+        session = db_manager.get_session()
+        try:
+            prompts = session.query(AnalysisPrompt).filter(AnalysisPrompt.is_active == True).all()
+            
+            db_prompts = {}
+            for prompt in prompts:
+                db_prompts[prompt.key] = {
+                    "name": prompt.name,
+                    "description": prompt.description,
+                    "prompt": prompt.prompt_template,
+                    "max_tokens": prompt.max_tokens,
+                    "usage_count": prompt.usage_count
+                }
+            
+            # If database has prompts, use them; otherwise fallback to hardcoded
+            return db_prompts if db_prompts else LLM_PROMPTS
+            
+        finally:
+            session.close()
+    except Exception as e:
+        logger.error(f"Database error when fetching prompts: {e}")
+        return LLM_PROMPTS
+
 # API Endpoints
 @app.on_event("startup")
 async def startup_event():
-    """Display connection information on startup"""
+    """Display connection information on startup and initialize database"""
+    print("🚀 Starting Enhanced Speech Diarization API...")
+    
+    # Initialize database if available
+    if DATABASE_AVAILABLE and db_manager:
+        try:
+            db_manager.create_tables()
+            db_manager.init_default_prompts()
+            print("✅ Database initialized successfully")
+        except Exception as e:
+            print(f"⚠️ Database initialization failed: {e}")
+    
     tailscale_ip = tailscale_manager.get_tailscale_ip()
     is_connected = tailscale_manager.is_connected()
     ollama_status = await check_ollama_status()
@@ -374,6 +432,13 @@ async def startup_event():
     
     print(f"📚 API Documentation: http://localhost:8888/docs")
     print(f"🎯 Health Check: http://localhost:8888/health")
+    
+    # Database status
+    if DATABASE_AVAILABLE:
+        print("🗄️ Database: Connected (SQLite)")
+        print("📝 Prompt Management: Available")
+    else:
+        print("⚠️ Database: Not available (using fallback prompts)")
     
     # Ollama status
     if ollama_status["status"] == "connected":
@@ -398,6 +463,10 @@ async def health_check():
         "status": "healthy",
         "message": "Enhanced backend server running",
         "timestamp": datetime.now().isoformat(),
+        "database": {
+            "available": DATABASE_AVAILABLE,
+            "status": "connected" if DATABASE_AVAILABLE else "fallback_mode"
+        },
         "tailscale": {
             "connected": is_connected,
             "ip": tailscale_ip,
@@ -413,13 +482,16 @@ async def health_check():
 
 @app.get("/api/llm-prompts")
 async def get_llm_prompts():
-    """Get available LLM prompts"""
+    """Get available LLM prompts (from database or fallback)"""
+    prompts = get_prompts_from_database()
+    
     return {
-        "predefined_prompts": LLM_PROMPTS,
+        "predefined_prompts": prompts,
         "model_info": {
             "current_model": DEFAULT_MODEL,
             "max_chunk_size": MAX_CHUNK_SIZE
-        }
+        },
+        "source": "database" if DATABASE_AVAILABLE and prompts != LLM_PROMPTS else "fallback"
     }
 
 @app.post("/api/upload-audio")
@@ -447,7 +519,7 @@ async def upload_audio(
     print(f"Language: {language}, Preprocessing: {apply_preprocessing}, Speakers: {num_speakers}")
     
     # Save uploaded file
-    temp_file_path = Path("uploads") / f"temp_{session_id}_{file.filename}"  # Fixed variable name
+    temp_file_path = Path("uploads") / f"temp_{session_id}_{file.filename}"
     
     try:
         with open(temp_file_path, "wb") as buffer:
@@ -521,12 +593,12 @@ async def process_audio_background(
         base_name = Path(filename).stem
         
         # Save JSON results
-        json_path = output_dir / f"{base_name}_{session_id}_results.json"  # Fixed variable name
+        json_path = output_dir / f"{base_name}_{session_id}_results.json"
         with open(json_path, 'w', encoding='utf-8') as f:
             json.dump(results, f, indent=2, ensure_ascii=False, default=str)
         
         # Save transcript as TXT
-        txt_path = output_dir / f"{base_name}_{session_id}_transcript.txt"  # Fixed variable name
+        txt_path = output_dir / f"{base_name}_{session_id}_transcript.txt"
         with open(txt_path, 'w', encoding='utf-8') as f:
             for segment in results['segments']:
                 start_min, start_sec = divmod(segment['start'], 60)
@@ -583,8 +655,8 @@ async def get_results(session_id: str):
     return active_sessions[session_id]
 
 @app.post("/api/llm-process")
-async def process_with_llm_endpoint(request: LLMProcessRequest):
-    """Process transcript with LLM"""
+async def process_with_llm_db(request: LLMProcessRequest):
+    """Process transcript with LLM using database prompts"""
     ollama_status = await check_ollama_status()
     
     if ollama_status["status"] != "connected":
@@ -599,6 +671,10 @@ async def process_with_llm_endpoint(request: LLMProcessRequest):
             detail=f"Model {DEFAULT_MODEL} not available. Please pull the model."
         )
     
+    session = None
+    if DATABASE_AVAILABLE and db_manager:
+        session = db_manager.get_session()
+    
     try:
         # Extract transcript text
         transcript_text = ""
@@ -610,7 +686,9 @@ async def process_with_llm_endpoint(request: LLMProcessRequest):
         if not transcript_text.strip():
             raise HTTPException(status_code=400, detail="No transcript data found")
         
-        # Determine prompt
+        # Determine prompt and max_tokens
+        max_tokens = request.max_tokens
+        
         if request.prompt_type == "custom":
             if not request.custom_prompt:
                 raise HTTPException(status_code=400, detail="Custom prompt is required")
@@ -618,9 +696,34 @@ async def process_with_llm_endpoint(request: LLMProcessRequest):
             if "{transcript}" not in prompt_template:
                 prompt_template += "\n\nTranscript:\n{transcript}"
         else:
-            if request.prompt_type not in LLM_PROMPTS:
-                raise HTTPException(status_code=400, detail="Invalid prompt type")
-            prompt_template = LLM_PROMPTS[request.prompt_type]["prompt"]
+            # Try to get prompt from database first
+            prompt_template = None
+            
+            if DATABASE_AVAILABLE and session and AnalysisPrompt:
+                try:
+                    prompt = session.query(AnalysisPrompt).filter(
+                        AnalysisPrompt.key == request.prompt_type,
+                        AnalysisPrompt.is_active == True
+                    ).first()
+                    
+                    if prompt:
+                        prompt_template = prompt.prompt_template
+                        max_tokens = prompt.max_tokens
+                        
+                        # Increment usage count
+                        prompt.usage_count += 1
+                        session.commit()
+                        logger.info(f"Using database prompt: {request.prompt_type}")
+                    
+                except Exception as e:
+                    logger.error(f"Database prompt lookup failed: {e}")
+            
+            # Fallback to hardcoded prompts
+            if not prompt_template:
+                if request.prompt_type not in LLM_PROMPTS:
+                    raise HTTPException(status_code=400, detail="Invalid prompt type")
+                prompt_template = LLM_PROMPTS[request.prompt_type]["prompt"]
+                logger.info(f"Using fallback prompt: {request.prompt_type}")
         
         # Process with chunking if needed
         chunks = chunk_transcript(transcript_text)
@@ -643,6 +746,9 @@ async def process_with_llm_endpoint(request: LLMProcessRequest):
     except Exception as e:
         logger.error(f"LLM processing error: {e}")
         raise HTTPException(status_code=500, detail=f"LLM processing failed: {str(e)}")
+    finally:
+        if session:
+            session.close()
 
 @app.post("/api/chat")
 async def chat_with_llm(message: ChatMessage):
