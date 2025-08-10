@@ -1,289 +1,183 @@
-// src/Components/transcription/TranscriptPanel.jsx - Updated with Live Editor Integration
+// src/Components/transcription/TranscriptPanel.jsx - FIXED: Original view as default + pass view state
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { 
-  CheckCircle,
-  Copy,
-  Volume2,
-  Loader2,
-  Edit3,
-  Eye,
-  ToggleLeft,
-  ToggleRight
-} from 'lucide-react';
-import toast from 'react-hot-toast';
+import { Maximize2, Minimize2, FileText, Eye, Edit3 } from 'lucide-react';
 import LiveTranscriptEditor from './LiveTranscriptEditor';
 
-const TranscriptPanel = ({ results, hasSession }) => {
-  const [copied, setCopied] = useState(false);
-  const [selectedSpeaker, setSelectedSpeaker] = useState('all');
-  const [viewMode, setViewMode] = useState('editor'); // 'editor' or 'original'
+const TranscriptPanel = ({ 
+  results, 
+  isExpanded, 
+  onToggleExpand, 
+  hasSession,
+  editorRef,
+  onViewChange // NEW: Callback to notify parent of view changes
+}) => {
+  // ✅ CHANGED: Default to original view (false = original view, true = editor view)
+  const [showEditor, setShowEditor] = useState(false);
 
-  const segments = results?.results?.segments || [];
-  const speakerStats = results?.results?.speaker_stats || {};
+  // ✅ NEW: Notify parent when view changes
+  const handleViewChange = (isEditor) => {
+    setShowEditor(isEditor);
+    if (onViewChange) {
+      onViewChange(isEditor ? 'editor' : 'original');
+    }
+  };
 
+  // Helper function to format time
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${String(secs).padStart(2, '0')}`;
   };
 
-  const getSpeakerColor = (speaker) => {
-    const colors = [
-      'bg-blue-50 text-blue-700 border-blue-200',
-      'bg-green-50 text-green-700 border-green-200',
-      'bg-purple-50 text-purple-700 border-purple-200',
-      'bg-orange-50 text-orange-700 border-orange-200',
-      'bg-pink-50 text-pink-700 border-pink-200',
-      'bg-indigo-50 text-indigo-700 border-indigo-200'
-    ];
-    const speakers = Object.keys(speakerStats);
-    const index = speakers.indexOf(speaker);
-    return colors[index % colors.length] || colors[0];
-  };
+  if (!hasSession && !results) {
+    return (
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 h-full flex flex-col items-center justify-center p-8">
+        <FileText className="w-16 h-16 text-gray-400 mb-4" />
+        <h3 className="text-xl font-semibold text-gray-600 mb-2">No Transcript Available</h3>
+        <p className="text-gray-500 text-center">
+          Upload and process an audio file to see the transcript here.
+        </p>
+      </div>
+    );
+  }
 
-  const getDummyTranscript = () => [
-    {
-      start: 0,
-      end: 15,
-      speaker: 'SPEAKER_00',
-      text: 'Good morning! Thank you for joining us today. I\'d like to start by getting some background information about yourself.'
-    },
-    {
-      start: 16,
-      end: 45,
-      speaker: 'SPEAKER_01',
-      text: 'Thank you for having me. I\'m excited to share my experiences and discuss the topics we have planned for today\'s session.'
-    },
-    {
-      start: 46,
-      end: 75,
-      speaker: 'SPEAKER_00',
-      text: 'Excellent. Let\'s begin with your professional background. Can you tell me about your current role and how you arrived at this position?'
-    },
-    {
-      start: 76,
-      end: 120,
-      speaker: 'SPEAKER_01',
-      text: 'I currently work as a senior analyst at a technology consulting firm. My journey here has been quite interesting - I started in finance, then transitioned to technology, and eventually found my passion in the intersection of business and data analytics.'
-    },
-    {
-      start: 121,
-      end: 150,
-      speaker: 'SPEAKER_00',
-      text: 'That\'s a fascinating career path. What motivated you to make that transition from finance to technology?'
-    },
-    {
-      start: 151,
-      end: 200,
-      speaker: 'SPEAKER_01',
-      text: 'The main driver was seeing how technology was transforming business operations. I realized that understanding both the financial and technical aspects would give me a unique perspective that could add significant value to organizations.'
-    }
-  ];
-
-  const filteredSegments = hasSession ? (
-    selectedSpeaker === 'all' ? segments : segments.filter(seg => seg.speaker === selectedSpeaker)
-  ) : (
-    selectedSpeaker === 'all' ? getDummyTranscript() : getDummyTranscript().filter(seg => seg.speaker === selectedSpeaker)
-  );
-
-  const handleCopyTranscript = async () => {
-    try {
-      const transcriptText = filteredSegments.length > 0 
-        ? filteredSegments.map(segment => 
-            `[${formatTime(segment.start)} - ${formatTime(segment.end)}] ${segment.speaker}: ${segment.text}`
-          ).join('\n\n')
-        : 'Transcript is being processed...';
-      
-      await navigator.clipboard.writeText(transcriptText);
-      setCopied(true);
-      toast.success('Transcript copied to clipboard!');
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      toast.error('Failed to copy transcript');
-    }
-  };
-
-  // ✅ Main render - Live Editor by default, with toggle to original view
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 pb-16 h-full flex flex-col">
-      {/* Header Section */}
-      <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-100 flex-shrink-0">
-        <h2 className="text-2xl font-bold text-gray-900">Transcript</h2>
-        
-        <div className="flex items-center space-x-3">
-          {/* View Mode Toggle */}
-          <div className="flex items-center space-x-2 bg-gray-100 p-1 rounded-lg">
-            <button
-              onClick={() => setViewMode('editor')}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                viewMode === 'editor'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <Edit3 className="w-4 h-4 inline mr-1" />
-              Live Editor
-            </button>
-            <button
-              onClick={() => setViewMode('original')}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                viewMode === 'original'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <Eye className="w-4 h-4 inline mr-1" />
-              Original View
-            </button>
-          </div>
-
-          {/* Speaker Filter - Only for original view */}
-          {viewMode === 'original' && (Object.keys(speakerStats).length > 0 || !hasSession) && (
-            <select
-              value={selectedSpeaker}
-              onChange={(e) => setSelectedSpeaker(e.target.value)}
-              className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 shadow-sm"
-            >
-              <option value="all">All Speakers</option>
-              {hasSession ? (
-                Object.keys(speakerStats).map(speaker => (
-                  <option key={speaker} value={speaker}>{speaker}</option>
-                ))
-              ) : (
-                <>
-                  <option value="SPEAKER_00">SPEAKER_00</option>
-                  <option value="SPEAKER_01">SPEAKER_01</option>
-                </>
-              )}
-            </select>
-          )}
-
-          {/* Copy button - Only for original view */}
-          {viewMode === 'original' && (
-            <button
-              onClick={handleCopyTranscript}
-              className="p-2.5 bg-gray-50 hover:bg-gray-100 rounded-lg transition-all duration-200 hover:shadow-sm border border-gray-200"
-              title="Copy transcript"
-            >
-              {copied ? (
-                <CheckCircle className="w-4 h-4 text-green-600" />
-              ) : (
-                <Copy className="w-4 h-4 text-gray-600" />
-              )}
-            </button>
+    <div className={`bg-white rounded-2xl shadow-sm border border-gray-200 transition-all duration-300 ${
+      isExpanded ? 'fixed inset-4 z-50' : 'h-full'
+    }`}>
+      {/* ✅ RESTORED: Header with view toggle and expand/collapse button */}
+      <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <h3 className="text-lg font-semibold text-gray-900">Live Transcript</h3>
+          
+          {/* ✅ RESTORED: View Toggle Buttons */}
+          {results && (
+            <div className="flex bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => handleViewChange(false)}
+                className={`flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  !showEditor 
+                    ? 'bg-white text-gray-900 shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <Eye className="w-4 h-4" />
+                <span>Original</span>
+              </button>
+              <button
+                onClick={() => handleViewChange(true)}
+                className={`flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  showEditor 
+                    ? 'bg-white text-gray-900 shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <Edit3 className="w-4 h-4" />
+                <span>Editor</span>
+              </button>
+            </div>
           )}
         </div>
+
+        <button
+          onClick={onToggleExpand}
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          title={isExpanded ? "Minimize" : "Expand"}
+        >
+          {isExpanded ? (
+            <Minimize2 className="w-5 h-5 text-gray-600" />
+          ) : (
+            <Maximize2 className="w-5 h-5 text-gray-600" />
+          )}
+        </button>
       </div>
 
-      {/* ✅ Conditional Rendering: Live Editor or Original View */}
-      {viewMode === 'editor' ? (
-        // Live Editor Mode
-        <div className="flex-1 overflow-hidden">
-          <LiveTranscriptEditor 
-            results={results}
-            hasSession={hasSession}
-          />
-        </div>
-      ) : (
-        // Original Static View Mode
-        <>
-          {/* Status Button */}
-          <div className="mb-6 flex-shrink-0">
-            <div className="w-full bg-gradient-to-r from-cyan-400 to-cyan-500 text-white py-3 px-4 rounded-xl font-semibold text-center shadow-sm">
-              {hasSession ? 'Active Transcript Here' : 'Sample Transcript (Demo)'}
-            </div>
+      {/* ✅ RESTORED: Content with proper layout and scroll behavior */}
+      <div className="flex-1 overflow-hidden flex flex-col">
+        {showEditor ? (
+          // ✅ FIXED: Editor View with increased height to fit outer box
+          <div className="flex-1 overflow-hidden h-full">
+            <LiveTranscriptEditor 
+              ref={editorRef}
+              results={results} 
+              hasSession={hasSession} 
+            />
           </div>
-          
-          {/* Transcript Content - Full Height by Default */}
-          <div className="space-y-4 overflow-y-auto pb-8 flex-1">
-            {filteredSegments.length > 0 ? (
-              filteredSegments.map((segment, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.02, duration: 0.3 }}
-                  className="bg-gray-50 rounded-xl p-5 hover:bg-gray-100 transition-all duration-200 border border-gray-100 hover:shadow-sm w-full"
-                >
-                  {/* Speaker Info Header - Stacked Layout */}
-                  <div className="mb-4 w-full">
-                    <div className="flex items-center space-x-3 mb-3">
-                      <div className={`px-3 py-1.5 rounded-lg text-xs font-semibold border-2 ${getSpeakerColor(segment.speaker)}`}>
-                        {segment.speaker}
-                      </div>
-                      <div className="text-xs font-mono text-gray-500 bg-gray-200 px-3 py-1.5 rounded-lg">
-                        {formatTime(segment.start)} - {formatTime(segment.end)}
-                      </div>
-                    </div>
-                    
-                    {/* Full Width Text Content - No Flex Constraints */}
-                    <div className="w-full block">
-                      <p className="text-gray-800 leading-relaxed text-base font-medium break-words">
-                        {segment.text}
-                      </p>
-                    </div>
-                  </div>
-                </motion.div>
-              ))
-            ) : (
-              <div className="text-center py-12 text-gray-500">
-                {hasSession ? (
-                  results ? (
-                    <div className="space-y-4">
-                      <Volume2 className="w-16 h-16 mx-auto mb-4 opacity-40" />
-                      <h3 className="text-lg font-medium text-gray-600">No transcript available yet</h3>
-                      <p className="text-sm text-gray-500">Transcript will appear here once processing is complete</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-6">
-                      <div className="flex items-center justify-center space-x-3">
-                        <Loader2 className="w-8 h-8 animate-spin text-cyan-500" />
-                        <span className="text-xl font-medium text-gray-700">Processing audio...</span>
-                      </div>
-                      
-                      <div className="space-y-3 text-sm text-gray-600">
-                        <p className="flex items-center justify-center space-x-2">
-                          <span>🎯</span> <span>Analyzing audio file</span>
-                        </p>
-                        <p className="flex items-center justify-center space-x-2">
-                          <span>🗣️</span> <span>Identifying speakers</span>
-                        </p>
-                        <p className="flex items-center justify-center space-x-2">
-                          <span>📝</span> <span>Generating transcript</span>
-                        </p>
-                      </div>
-                      
-                      <div className="bg-gray-50 rounded-xl p-6 mt-8 border border-gray-200 max-w-md mx-auto">
-                        <h4 className="font-medium text-gray-700 mb-4">Processing Status</h4>
-                        <div className="space-y-4">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                            <span className="text-sm text-gray-600">Audio preprocessing complete</span>
-                          </div>
-                          <div className="flex items-center space-x-3">
-                            <Loader2 className="w-3 h-3 animate-spin text-cyan-500" />
-                            <span className="text-sm text-gray-600">Running speech recognition...</span>
-                          </div>
-                          <div className="flex items-center space-x-3">
-                            <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
-                            <span className="text-sm text-gray-400">Speaker diarization pending</span>
-                          </div>
+        ) : (
+          // ✅ FIXED: Original Transcript View with increased height to fit outer box
+          <div className="flex-1 overflow-hidden flex flex-col h-full">
+            {results?.results?.segments ? (
+              <div 
+                className="flex-1 overflow-y-auto overflow-x-hidden p-6 space-y-4" 
+                style={{ 
+                  scrollBehavior: 'smooth',
+                  maxHeight: 'calc(160vh - 600px)', // Increased to match outer box
+                  height: '100%',
+                  minHeight: '800px' // Increased minimum height
+                }}
+              >
+                {results.results.segments.map((segment, index) => (
+                  <div 
+                    key={index} 
+                    className="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:bg-gray-100 transition-colors w-full"
+                    style={{ 
+                      maxWidth: '100%',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    <div className="flex items-start space-x-4 w-full">
+                      <div className="flex-shrink-0">
+                        <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap">
+                          {formatTime(segment.start)} - {formatTime(segment.end)}
                         </div>
                       </div>
+                      <div className="flex-1 min-w-0 overflow-hidden">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <span className="font-semibold text-green-700 text-sm">
+                            {segment.speaker}
+                          </span>
+                        </div>
+                        <p className="text-gray-900 leading-relaxed break-words overflow-wrap-anywhere">
+                          {segment.text}
+                        </p>
+                      </div>
                     </div>
-                  )
-                ) : (
-                  <div className="space-y-4">
-                    <Volume2 className="w-16 h-16 mx-auto mb-4 opacity-40" />
-                    <h3 className="text-lg font-medium text-gray-600">Ready for audio processing</h3>
-                    <p className="text-sm text-gray-500">Start processing an audio file to see transcript results</p>
                   </div>
-                )}
+                ))}
+              </div>
+            ) : (
+              <div className="flex-1 flex items-center justify-center p-8 overflow-hidden h-full">
+                <div className="text-center">
+                  <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                  <h4 className="text-lg font-medium text-gray-600 mb-2">No Transcript Data</h4>
+                  <p className="text-gray-500">
+                    The transcript will appear here once processing is complete.
+                  </p>
+                </div>
               </div>
             )}
           </div>
-        </>
+        )}
+      </div>
+
+      {/* ✅ RESTORED: Status bar for original view */}
+      {!showEditor && results?.results?.segments && (
+        <div className="px-6 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between text-sm text-gray-600">
+          <div className="flex items-center space-x-4">
+            <span>{results.results.segments.length} segments</span>
+            <span>•</span>
+            <span>{new Set(results.results.segments.map(s => s.speaker)).size} speakers</span>
+            {results.results.metadata?.total_duration && (
+              <>
+                <span>•</span>
+                <span>{formatTime(results.results.metadata.total_duration)} total</span>
+              </>
+            )}
+          </div>
+          <div className="text-xs text-gray-500">
+            Original transcript view
+          </div>
+        </div>
       )}
     </div>
   );
