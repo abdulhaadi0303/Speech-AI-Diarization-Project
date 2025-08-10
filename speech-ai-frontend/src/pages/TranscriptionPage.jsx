@@ -1,4 +1,4 @@
-// src/pages/TranscriptionPage.jsx - Fixed Error Prevention & Refresh Handling
+// src/pages/TranscriptionPage.jsx - Updated to track current view state
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
@@ -37,6 +37,12 @@ const TranscriptionPage = () => {
   const navigate = useNavigate();
   const { isConnected, updateSessionStatus } = useBackend();
   
+  // ✅ ADDED: Ref for LiveTranscriptEditor to enable header downloads
+  const editorRef = useRef(null);
+  
+  // ✅ NEW: Track current view state
+  const [currentView, setCurrentView] = useState('original'); // 'original' or 'editor'
+  
   // ✅ Use Zustand store for persistent state
   const currentSessionId = useAppStore((state) => state.currentSessionId);
   const setCurrentSessionId = useAppStore((state) => state.setCurrentSessionId);
@@ -51,6 +57,11 @@ const TranscriptionPage = () => {
 
   const statusPollingRef = useRef(null);
   const initializedRef = useRef(false);
+
+  // ✅ NEW: Handle view changes from TranscriptPanel
+  const handleViewChange = useCallback((view) => {
+    setCurrentView(view);
+  }, []);
 
   // ✅ FIXED: Handle session initialization with refresh detection
   useEffect(() => {
@@ -269,13 +280,15 @@ const TranscriptionPage = () => {
     <div className="min-h-screen bg-gray-800 overflow-auto">
       <div className="p-6 max-w-7xl mx-auto">
         
-        {/* Component 1: Header Section */}
+        {/* Component 1: Header Section - ✅ UPDATED: Pass editorRef and currentView */}
         <TranscriptionPageHeader 
           currentSessionId={currentSessionId}
           results={results}
           structures={structures}
           parameters={parameters}
           hasSession={hasSession}
+          editorRef={editorRef}
+          currentView={currentView}
         />
 
         {/* Component 2: Processing Status and Stats */}
@@ -288,14 +301,22 @@ const TranscriptionPage = () => {
           speakerStats={results?.results?.speaker_stats}
         />
 
-        {/* Component 3: Centered Transcript Panel */}
-        <div className="flex justify-center h-[calc(200vh-600px)]">
-          <div className="border-4 border-cyan-400 rounded-3xl p-2 w-full max-w-5xl" style={{ maxWidth: 'calc(64rem + 100px)' }}>
+        {/* Component 3: Centered Transcript Panel - ✅ FIXED: 1.6x height increase */}
+        <div className="flex justify-center" style={{ height: 'calc(160vh - 480px)', minHeight: '960px' }}>
+          <div 
+            className="border-4 border-cyan-400 rounded-3xl p-2 w-full max-w-5xl overflow-hidden" 
+            style={{ 
+              maxWidth: 'calc(64rem + 100px)',
+              height: '100%'
+            }}
+          >
             <TranscriptPanel 
               results={results}
               isExpanded={expandedTranscript}
               onToggleExpand={() => setExpandedTranscript(!expandedTranscript)}
               hasSession={hasSession}
+              editorRef={editorRef}
+              onViewChange={handleViewChange}
             />
           </div>
         </div>

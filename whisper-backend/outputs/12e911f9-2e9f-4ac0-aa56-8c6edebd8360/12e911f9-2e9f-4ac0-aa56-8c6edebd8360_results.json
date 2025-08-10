@@ -1,0 +1,3751 @@
+{
+  "segments": [
+    {
+      "start": 0.4199999999999987,
+      "end": 1.74,
+      "duration": 1.3200000000000012,
+      "text": "Jessica, have I come in a bad time?",
+      "speaker": "SPEAKER_00",
+      "words": [
+        {
+          "word": " Jessica,",
+          "start": 0.4199999999999987,
+          "end": 0.82,
+          "probability": 0.8716175556182861
+        },
+        {
+          "word": " have",
+          "start": 1.04,
+          "end": 1.06,
+          "probability": 0.23633617162704468
+        },
+        {
+          "word": " I",
+          "start": 1.06,
+          "end": 1.12,
+          "probability": 0.9210238456726074
+        },
+        {
+          "word": " come",
+          "start": 1.12,
+          "end": 1.28,
+          "probability": 0.9811559915542603
+        },
+        {
+          "word": " in",
+          "start": 1.28,
+          "end": 1.36,
+          "probability": 0.8705545663833618
+        },
+        {
+          "word": " a",
+          "start": 1.36,
+          "end": 1.4,
+          "probability": 0.6518694162368774
+        },
+        {
+          "word": " bad",
+          "start": 1.4,
+          "end": 1.54,
+          "probability": 0.9920355677604675
+        },
+        {
+          "word": " time?",
+          "start": 1.54,
+          "end": 1.74,
+          "probability": 0.992156982421875
+        }
+      ]
+    },
+    {
+      "start": 3.9799999999999978,
+      "end": 5.64,
+      "duration": 1.660000000000002,
+      "text": "Gerald, this is Harvey Specter.",
+      "speaker": "SPEAKER_01",
+      "words": [
+        {
+          "word": " Gerald,",
+          "start": 3.9799999999999978,
+          "end": 4.379999999999999,
+          "probability": 0.9718214273452759
+        },
+        {
+          "word": " this",
+          "start": 4.379999999999999,
+          "end": 4.78,
+          "probability": 0.9906861186027527
+        },
+        {
+          "word": " is",
+          "start": 4.78,
+          "end": 4.96,
+          "probability": 0.9984978437423706
+        },
+        {
+          "word": " Harvey",
+          "start": 4.96,
+          "end": 5.16,
+          "probability": 0.742357075214386
+        },
+        {
+          "word": " Specter.",
+          "start": 5.16,
+          "end": 5.64,
+          "probability": 0.569548025727272
+        }
+      ]
+    },
+    {
+      "start": 7.06,
+      "end": 7.96,
+      "duration": 0.9000000000000004,
+      "text": "He's our best closer.",
+      "speaker": "SPEAKER_01",
+      "words": [
+        {
+          "word": " He's",
+          "start": 7.06,
+          "end": 7.46,
+          "probability": 0.9729479253292084
+        },
+        {
+          "word": " our",
+          "start": 7.46,
+          "end": 7.52,
+          "probability": 0.9941569566726685
+        },
+        {
+          "word": " best",
+          "start": 7.52,
+          "end": 7.7,
+          "probability": 0.9970160722732544
+        },
+        {
+          "word": " closer.",
+          "start": 7.7,
+          "end": 7.96,
+          "probability": 0.531511664390564
+        }
+      ]
+    },
+    {
+      "start": 8.58,
+      "end": 12.3,
+      "duration": 3.7200000000000006,
+      "text": "Says here that Cooper won't be staying on his honorary vice president.",
+      "speaker": "SPEAKER_00",
+      "words": [
+        {
+          "word": " Says",
+          "start": 8.58,
+          "end": 8.8,
+          "probability": 0.8710711598396301
+        },
+        {
+          "word": " here",
+          "start": 8.8,
+          "end": 9.04,
+          "probability": 0.9722079634666443
+        },
+        {
+          "word": " that",
+          "start": 9.04,
+          "end": 9.24,
+          "probability": 0.9761533737182617
+        },
+        {
+          "word": " Cooper",
+          "start": 9.24,
+          "end": 9.54,
+          "probability": 0.9560304880142212
+        },
+        {
+          "word": " won't",
+          "start": 9.54,
+          "end": 10.1,
+          "probability": 0.9956404566764832
+        },
+        {
+          "word": " be",
+          "start": 10.1,
+          "end": 10.22,
+          "probability": 0.9979833364486694
+        },
+        {
+          "word": " staying",
+          "start": 10.22,
+          "end": 10.44,
+          "probability": 0.9818476438522339
+        },
+        {
+          "word": " on",
+          "start": 10.44,
+          "end": 10.62,
+          "probability": 0.9913137555122375
+        },
+        {
+          "word": " his",
+          "start": 10.62,
+          "end": 10.82,
+          "probability": 0.32407185435295105
+        },
+        {
+          "word": " honorary",
+          "start": 10.82,
+          "end": 11.24,
+          "probability": 0.9253429770469666
+        },
+        {
+          "word": " vice",
+          "start": 11.24,
+          "end": 11.76,
+          "probability": 0.7542800307273865
+        },
+        {
+          "word": " president.",
+          "start": 11.76,
+          "end": 12.3,
+          "probability": 0.9890975952148438
+        }
+      ]
+    },
+    {
+      "start": 12.8,
+      "end": 13.82,
+      "duration": 1.0199999999999996,
+      "text": "That's right, I don't want him around.",
+      "speaker": "SPEAKER_03",
+      "words": [
+        {
+          "word": " That's",
+          "start": 12.8,
+          "end": 13.0,
+          "probability": 0.9457244873046875
+        },
+        {
+          "word": " right,",
+          "start": 13.0,
+          "end": 13.12,
+          "probability": 0.9954193830490112
+        },
+        {
+          "word": " I",
+          "start": 13.22,
+          "end": 13.28,
+          "probability": 0.8486912846565247
+        },
+        {
+          "word": " don't",
+          "start": 13.28,
+          "end": 13.34,
+          "probability": 0.9487788677215576
+        },
+        {
+          "word": " want",
+          "start": 13.34,
+          "end": 13.48,
+          "probability": 0.841019868850708
+        },
+        {
+          "word": " him",
+          "start": 13.48,
+          "end": 13.56,
+          "probability": 0.9698400497436523
+        },
+        {
+          "word": " around.",
+          "start": 13.56,
+          "end": 13.82,
+          "probability": 0.9982362985610962
+        }
+      ]
+    },
+    {
+      "start": 14.62,
+      "end": 16.72,
+      "duration": 2.0999999999999996,
+      "text": "He wouldn't be around. It's an honorary position.",
+      "speaker": "SPEAKER_00",
+      "words": [
+        {
+          "word": " He",
+          "start": 14.62,
+          "end": 14.82,
+          "probability": 0.9779326915740967
+        },
+        {
+          "word": " wouldn't",
+          "start": 14.82,
+          "end": 15.04,
+          "probability": 0.9988768100738525
+        },
+        {
+          "word": " be",
+          "start": 15.04,
+          "end": 15.18,
+          "probability": 0.9987123012542725
+        },
+        {
+          "word": " around.",
+          "start": 15.18,
+          "end": 15.52,
+          "probability": 0.9982175230979919
+        },
+        {
+          "word": " It's",
+          "start": 15.76,
+          "end": 15.94,
+          "probability": 0.9299406409263611
+        },
+        {
+          "word": " an",
+          "start": 15.94,
+          "end": 16.02,
+          "probability": 0.9908859729766846
+        },
+        {
+          "word": " honorary",
+          "start": 16.02,
+          "end": 16.28,
+          "probability": 0.9931839108467102
+        },
+        {
+          "word": " position.",
+          "start": 16.28,
+          "end": 16.72,
+          "probability": 0.9920623302459717
+        }
+      ]
+    },
+    {
+      "start": 17.22,
+      "end": 17.78,
+      "duration": 0.5600000000000023,
+      "text": "I'll give a shit.",
+      "speaker": "SPEAKER_03",
+      "words": [
+        {
+          "word": " I'll",
+          "start": 17.22,
+          "end": 17.3,
+          "probability": 0.6955925226211548
+        },
+        {
+          "word": " give",
+          "start": 17.3,
+          "end": 17.48,
+          "probability": 0.9944357872009277
+        },
+        {
+          "word": " a",
+          "start": 17.48,
+          "end": 17.62,
+          "probability": 0.8974313139915466
+        },
+        {
+          "word": " shit.",
+          "start": 17.62,
+          "end": 17.78,
+          "probability": 0.821938157081604
+        }
+      ]
+    },
+    {
+      "start": 19.0,
+      "end": 24.02,
+      "duration": 5.02,
+      "text": "Well, I think you do, because that's just changed since I left, which means it's you who's been dealing in bad faith.",
+      "speaker": "SPEAKER_00",
+      "words": [
+        {
+          "word": " Well,",
+          "start": 19.0,
+          "end": 19.28,
+          "probability": 0.9729796051979065
+        },
+        {
+          "word": " I",
+          "start": 19.3,
+          "end": 19.36,
+          "probability": 0.9992455244064331
+        },
+        {
+          "word": " think",
+          "start": 19.36,
+          "end": 19.5,
+          "probability": 0.9990329742431641
+        },
+        {
+          "word": " you",
+          "start": 19.5,
+          "end": 19.66,
+          "probability": 0.9952996969223022
+        },
+        {
+          "word": " do,",
+          "start": 19.66,
+          "end": 19.8,
+          "probability": 0.9962819218635559
+        },
+        {
+          "word": " because",
+          "start": 19.92,
+          "end": 20.12,
+          "probability": 0.9964672327041626
+        },
+        {
+          "word": " that's",
+          "start": 20.12,
+          "end": 20.6,
+          "probability": 0.984419047832489
+        },
+        {
+          "word": " just",
+          "start": 20.6,
+          "end": 20.66,
+          "probability": 0.2299126386642456
+        },
+        {
+          "word": " changed",
+          "start": 20.66,
+          "end": 20.98,
+          "probability": 0.8734509348869324
+        },
+        {
+          "word": " since",
+          "start": 20.98,
+          "end": 21.34,
+          "probability": 0.9729235172271729
+        },
+        {
+          "word": " I",
+          "start": 21.34,
+          "end": 21.42,
+          "probability": 0.9848814010620117
+        },
+        {
+          "word": " left,",
+          "start": 21.42,
+          "end": 21.68,
+          "probability": 0.9949547648429871
+        },
+        {
+          "word": " which",
+          "start": 21.84,
+          "end": 22.0,
+          "probability": 0.997141420841217
+        },
+        {
+          "word": " means",
+          "start": 22.0,
+          "end": 22.22,
+          "probability": 0.9985052347183228
+        },
+        {
+          "word": " it's",
+          "start": 22.22,
+          "end": 22.7,
+          "probability": 0.9751631319522858
+        },
+        {
+          "word": " you",
+          "start": 22.7,
+          "end": 22.88,
+          "probability": 0.9847895503044128
+        },
+        {
+          "word": " who's",
+          "start": 22.88,
+          "end": 23.14,
+          "probability": 0.9786175191402435
+        },
+        {
+          "word": " been",
+          "start": 23.14,
+          "end": 23.28,
+          "probability": 0.9927892088890076
+        },
+        {
+          "word": " dealing",
+          "start": 23.28,
+          "end": 23.48,
+          "probability": 0.9807940721511841
+        },
+        {
+          "word": " in",
+          "start": 23.48,
+          "end": 23.68,
+          "probability": 0.6613292694091797
+        },
+        {
+          "word": " bad",
+          "start": 23.68,
+          "end": 23.82,
+          "probability": 0.9964669942855835
+        },
+        {
+          "word": " faith.",
+          "start": 23.82,
+          "end": 24.02,
+          "probability": 0.8491856455802917
+        }
+      ]
+    },
+    {
+      "start": 24.4,
+      "end": 28.06,
+      "duration": 3.66,
+      "text": "Well, now that you've got a grasp on what's happening that goddamn interim,",
+      "speaker": "SPEAKER_03",
+      "words": [
+        {
+          "word": " Well,",
+          "start": 24.4,
+          "end": 24.54,
+          "probability": 0.9822747707366943
+        },
+        {
+          "word": " now",
+          "start": 24.66,
+          "end": 24.74,
+          "probability": 0.9987689852714539
+        },
+        {
+          "word": " that",
+          "start": 24.74,
+          "end": 24.9,
+          "probability": 0.9980598092079163
+        },
+        {
+          "word": " you've",
+          "start": 24.9,
+          "end": 25.16,
+          "probability": 0.9936391413211823
+        },
+        {
+          "word": " got",
+          "start": 25.16,
+          "end": 25.28,
+          "probability": 0.9790195822715759
+        },
+        {
+          "word": " a",
+          "start": 25.28,
+          "end": 25.4,
+          "probability": 0.8701407313346863
+        },
+        {
+          "word": " grasp",
+          "start": 25.4,
+          "end": 25.9,
+          "probability": 0.9946609139442444
+        },
+        {
+          "word": " on",
+          "start": 25.9,
+          "end": 26.16,
+          "probability": 0.9774507284164429
+        },
+        {
+          "word": " what's",
+          "start": 26.16,
+          "end": 26.42,
+          "probability": 0.9978399276733398
+        },
+        {
+          "word": " happening",
+          "start": 26.42,
+          "end": 26.78,
+          "probability": 0.9157255291938782
+        },
+        {
+          "word": " that",
+          "start": 26.78,
+          "end": 27.0,
+          "probability": 0.6988198757171631
+        },
+        {
+          "word": " goddamn",
+          "start": 27.0,
+          "end": 27.4,
+          "probability": 0.5584941506385803
+        },
+        {
+          "word": " interim,",
+          "start": 27.4,
+          "end": 28.06,
+          "probability": 0.9226382970809937
+        }
+      ]
+    },
+    {
+      "start": 28.06,
+      "end": 31.26,
+      "duration": 3.200000000000003,
+      "text": "what are you going to do about it? Because he's not getting that title.",
+      "speaker": "SPEAKER_03",
+      "words": [
+        {
+          "word": " what",
+          "start": 28.06,
+          "end": 28.64,
+          "probability": 0.048716865479946136
+        },
+        {
+          "word": " are",
+          "start": 28.64,
+          "end": 28.74,
+          "probability": 0.8513653874397278
+        },
+        {
+          "word": " you",
+          "start": 28.74,
+          "end": 28.76,
+          "probability": 0.9472775459289551
+        },
+        {
+          "word": " going",
+          "start": 28.76,
+          "end": 28.86,
+          "probability": 0.37424272298812866
+        },
+        {
+          "word": " to",
+          "start": 28.86,
+          "end": 28.92,
+          "probability": 0.9923822283744812
+        },
+        {
+          "word": " do",
+          "start": 28.92,
+          "end": 29.1,
+          "probability": 0.9919549822807312
+        },
+        {
+          "word": " about",
+          "start": 29.1,
+          "end": 29.36,
+          "probability": 0.9940518736839294
+        },
+        {
+          "word": " it?",
+          "start": 29.36,
+          "end": 29.62,
+          "probability": 0.9909465312957764
+        },
+        {
+          "word": " Because",
+          "start": 29.88,
+          "end": 30.16,
+          "probability": 0.9366523623466492
+        },
+        {
+          "word": " he's",
+          "start": 30.16,
+          "end": 30.34,
+          "probability": 0.9877561330795288
+        },
+        {
+          "word": " not",
+          "start": 30.34,
+          "end": 30.46,
+          "probability": 0.9984776377677917
+        },
+        {
+          "word": " getting",
+          "start": 30.46,
+          "end": 30.78,
+          "probability": 0.9789799451828003
+        },
+        {
+          "word": " that",
+          "start": 30.78,
+          "end": 30.9,
+          "probability": 0.9909287095069885
+        },
+        {
+          "word": " title.",
+          "start": 30.9,
+          "end": 31.26,
+          "probability": 0.997372031211853
+        }
+      ]
+    },
+    {
+      "start": 32.36,
+      "end": 34.74,
+      "duration": 2.3800000000000026,
+      "text": "Well, let me make sure I understand this, okay?",
+      "speaker": "SPEAKER_00",
+      "words": [
+        {
+          "word": " Well,",
+          "start": 32.36,
+          "end": 32.76,
+          "probability": 0.5739449262619019
+        },
+        {
+          "word": " let",
+          "start": 33.06,
+          "end": 33.24,
+          "probability": 0.9648792147636414
+        },
+        {
+          "word": " me",
+          "start": 33.24,
+          "end": 33.32,
+          "probability": 0.9954625964164734
+        },
+        {
+          "word": " make",
+          "start": 33.32,
+          "end": 33.5,
+          "probability": 0.993225634098053
+        },
+        {
+          "word": " sure",
+          "start": 33.5,
+          "end": 33.68,
+          "probability": 0.9991292357444763
+        },
+        {
+          "word": " I",
+          "start": 33.68,
+          "end": 33.8,
+          "probability": 0.9867031574249268
+        },
+        {
+          "word": " understand",
+          "start": 33.8,
+          "end": 34.2,
+          "probability": 0.9990518689155579
+        },
+        {
+          "word": " this,",
+          "start": 34.2,
+          "end": 34.44,
+          "probability": 0.9892877340316772
+        },
+        {
+          "word": " okay?",
+          "start": 34.56,
+          "end": 34.74,
+          "probability": 0.7151607871055603
+        }
+      ]
+    },
+    {
+      "start": 34.84,
+      "end": 37.4,
+      "duration": 2.559999999999995,
+      "text": "We negotiated a deal that gave you everything you wanted.",
+      "speaker": "SPEAKER_00",
+      "words": [
+        {
+          "word": " We",
+          "start": 34.84,
+          "end": 34.92,
+          "probability": 0.9916083216667175
+        },
+        {
+          "word": " negotiated",
+          "start": 34.92,
+          "end": 35.58,
+          "probability": 0.9938243627548218
+        },
+        {
+          "word": " a",
+          "start": 35.58,
+          "end": 35.88,
+          "probability": 0.9934670329093933
+        },
+        {
+          "word": " deal",
+          "start": 35.88,
+          "end": 36.1,
+          "probability": 0.999549925327301
+        },
+        {
+          "word": " that",
+          "start": 36.1,
+          "end": 36.28,
+          "probability": 0.9368624091148376
+        },
+        {
+          "word": " gave",
+          "start": 36.28,
+          "end": 36.4,
+          "probability": 0.9886112809181213
+        },
+        {
+          "word": " you",
+          "start": 36.4,
+          "end": 36.58,
+          "probability": 0.9979764819145203
+        },
+        {
+          "word": " everything",
+          "start": 36.58,
+          "end": 36.92,
+          "probability": 0.9979629516601562
+        },
+        {
+          "word": " you",
+          "start": 36.92,
+          "end": 37.12,
+          "probability": 0.9935362935066223
+        },
+        {
+          "word": " wanted.",
+          "start": 37.12,
+          "end": 37.4,
+          "probability": 0.7025552988052368
+        }
+      ]
+    },
+    {
+      "start": 37.56,
+      "end": 41.94,
+      "duration": 4.3799999999999955,
+      "text": "Mr. Cooper signed it, and now you won't close until we take away the last shred of his dignity.",
+      "speaker": "SPEAKER_00",
+      "words": [
+        {
+          "word": " Mr.",
+          "start": 37.56,
+          "end": 37.68,
+          "probability": 0.8509392738342285
+        },
+        {
+          "word": " Cooper",
+          "start": 37.8,
+          "end": 37.88,
+          "probability": 0.9561994671821594
+        },
+        {
+          "word": " signed",
+          "start": 37.88,
+          "end": 38.32,
+          "probability": 0.9765928983688354
+        },
+        {
+          "word": " it,",
+          "start": 38.32,
+          "end": 38.56,
+          "probability": 0.9987589120864868
+        },
+        {
+          "word": " and",
+          "start": 38.76,
+          "end": 39.04,
+          "probability": 0.9923081398010254
+        },
+        {
+          "word": " now",
+          "start": 39.04,
+          "end": 39.24,
+          "probability": 0.9939821362495422
+        },
+        {
+          "word": " you",
+          "start": 39.24,
+          "end": 39.72,
+          "probability": 0.8320859670639038
+        },
+        {
+          "word": " won't",
+          "start": 39.72,
+          "end": 39.94,
+          "probability": 0.9980396330356598
+        },
+        {
+          "word": " close",
+          "start": 39.94,
+          "end": 40.18,
+          "probability": 0.9910497665405273
+        },
+        {
+          "word": " until",
+          "start": 40.18,
+          "end": 40.44,
+          "probability": 0.9798000454902649
+        },
+        {
+          "word": " we",
+          "start": 40.44,
+          "end": 40.56,
+          "probability": 0.997596800327301
+        },
+        {
+          "word": " take",
+          "start": 40.56,
+          "end": 40.7,
+          "probability": 0.9963918328285217
+        },
+        {
+          "word": " away",
+          "start": 40.7,
+          "end": 40.9,
+          "probability": 0.9968986511230469
+        },
+        {
+          "word": " the",
+          "start": 40.9,
+          "end": 41.04,
+          "probability": 0.9761360883712769
+        },
+        {
+          "word": " last",
+          "start": 41.04,
+          "end": 41.24,
+          "probability": 0.9448804259300232
+        },
+        {
+          "word": " shred",
+          "start": 41.24,
+          "end": 41.44,
+          "probability": 0.5759420990943909
+        },
+        {
+          "word": " of",
+          "start": 41.44,
+          "end": 41.58,
+          "probability": 0.9903990626335144
+        },
+        {
+          "word": " his",
+          "start": 41.58,
+          "end": 41.72,
+          "probability": 0.8320720195770264
+        },
+        {
+          "word": " dignity.",
+          "start": 41.72,
+          "end": 41.94,
+          "probability": 0.9394011497497559
+        }
+      ]
+    },
+    {
+      "start": 42.4,
+      "end": 42.66,
+      "duration": 0.259999999999998,
+      "text": "Bingo.",
+      "speaker": "SPEAKER_00",
+      "words": [
+        {
+          "word": " Bingo.",
+          "start": 42.4,
+          "end": 42.66,
+          "probability": 0.6697499603033066
+        }
+      ]
+    },
+    {
+      "start": 43.2,
+      "end": 44.12,
+      "duration": 0.9199999999999946,
+      "text": "Well, that's not going to happen.",
+      "speaker": "SPEAKER_00",
+      "words": [
+        {
+          "word": " Well,",
+          "start": 43.2,
+          "end": 43.36,
+          "probability": 0.7340418100357056
+        },
+        {
+          "word": " that's",
+          "start": 43.4,
+          "end": 43.58,
+          "probability": 0.9972838461399078
+        },
+        {
+          "word": " not",
+          "start": 43.58,
+          "end": 43.68,
+          "probability": 0.9949134588241577
+        },
+        {
+          "word": " going",
+          "start": 43.68,
+          "end": 43.78,
+          "probability": 0.638450026512146
+        },
+        {
+          "word": " to",
+          "start": 43.78,
+          "end": 43.84,
+          "probability": 0.9993799924850464
+        },
+        {
+          "word": " happen.",
+          "start": 43.84,
+          "end": 44.12,
+          "probability": 0.9979079961776733
+        }
+      ]
+    },
+    {
+      "start": 44.36,
+      "end": 44.98,
+      "duration": 0.6199999999999974,
+      "text": "And why the hell not?",
+      "speaker": "SPEAKER_00",
+      "words": [
+        {
+          "word": " And",
+          "start": 44.36,
+          "end": 44.48,
+          "probability": 0.7877427339553833
+        },
+        {
+          "word": " why",
+          "start": 44.48,
+          "end": 44.56,
+          "probability": 0.9629475474357605
+        },
+        {
+          "word": " the",
+          "start": 44.56,
+          "end": 44.68,
+          "probability": 0.9517853856086731
+        },
+        {
+          "word": " hell",
+          "start": 44.68,
+          "end": 44.78,
+          "probability": 0.9989510774612427
+        },
+        {
+          "word": " not?",
+          "start": 44.78,
+          "end": 44.98,
+          "probability": 0.9426334500312805
+        }
+      ]
+    },
+    {
+      "start": 45.38,
+      "end": 48.7,
+      "duration": 3.3200000000000003,
+      "text": "Because I like Mr. Cooper, and my firm doesn't operate in bad faith.",
+      "speaker": "SPEAKER_00",
+      "words": [
+        {
+          "word": " Because",
+          "start": 45.38,
+          "end": 45.56,
+          "probability": 0.9207816123962402
+        },
+        {
+          "word": " I",
+          "start": 45.56,
+          "end": 45.66,
+          "probability": 0.996189296245575
+        },
+        {
+          "word": " like",
+          "start": 45.66,
+          "end": 45.86,
+          "probability": 0.9914590120315552
+        },
+        {
+          "word": " Mr.",
+          "start": 45.86,
+          "end": 46.1,
+          "probability": 0.9938477873802185
+        },
+        {
+          "word": " Cooper,",
+          "start": 46.26,
+          "end": 46.42,
+          "probability": 0.9942394495010376
+        },
+        {
+          "word": " and",
+          "start": 46.64,
+          "end": 46.74,
+          "probability": 0.997911274433136
+        },
+        {
+          "word": " my",
+          "start": 46.74,
+          "end": 46.9,
+          "probability": 0.996271014213562
+        },
+        {
+          "word": " firm",
+          "start": 46.9,
+          "end": 47.32,
+          "probability": 0.9693362712860107
+        },
+        {
+          "word": " doesn't",
+          "start": 47.32,
+          "end": 47.7,
+          "probability": 0.9220626056194305
+        },
+        {
+          "word": " operate",
+          "start": 47.7,
+          "end": 48.04,
+          "probability": 0.9846720099449158
+        },
+        {
+          "word": " in",
+          "start": 48.04,
+          "end": 48.2,
+          "probability": 0.9811831712722778
+        },
+        {
+          "word": " bad",
+          "start": 48.2,
+          "end": 48.36,
+          "probability": 0.8875190019607544
+        },
+        {
+          "word": " faith.",
+          "start": 48.36,
+          "end": 48.7,
+          "probability": 0.982264518737793
+        }
+      ]
+    },
+    {
+      "start": 49.24,
+      "end": 50.96,
+      "duration": 1.7199999999999989,
+      "text": "Oh, I see how it is.",
+      "speaker": "SPEAKER_03",
+      "words": [
+        {
+          "word": " Oh,",
+          "start": 49.24,
+          "end": 49.64,
+          "probability": 0.8921212553977966
+        },
+        {
+          "word": " I",
+          "start": 50.02,
+          "end": 50.24,
+          "probability": 0.9989251494407654
+        },
+        {
+          "word": " see",
+          "start": 50.24,
+          "end": 50.42,
+          "probability": 0.9984000325202942
+        },
+        {
+          "word": " how",
+          "start": 50.42,
+          "end": 50.6,
+          "probability": 0.9993564486503601
+        },
+        {
+          "word": " it",
+          "start": 50.6,
+          "end": 50.72,
+          "probability": 0.9845182299613953
+        },
+        {
+          "word": " is.",
+          "start": 50.72,
+          "end": 50.96,
+          "probability": 0.9995586276054382
+        }
+      ]
+    },
+    {
+      "start": 51.92,
+      "end": 54.0,
+      "duration": 2.0799999999999983,
+      "text": "Instead of working Cooper, you're working me.",
+      "speaker": "SPEAKER_03",
+      "words": [
+        {
+          "word": " Instead",
+          "start": 51.92,
+          "end": 52.18,
+          "probability": 0.9938035011291504
+        },
+        {
+          "word": " of",
+          "start": 52.18,
+          "end": 52.34,
+          "probability": 0.998884379863739
+        },
+        {
+          "word": " working",
+          "start": 52.34,
+          "end": 52.58,
+          "probability": 0.9736425280570984
+        },
+        {
+          "word": " Cooper,",
+          "start": 52.58,
+          "end": 53.02,
+          "probability": 0.9787467122077942
+        },
+        {
+          "word": " you're",
+          "start": 53.46,
+          "end": 53.52,
+          "probability": 0.8087242543697357
+        },
+        {
+          "word": " working",
+          "start": 53.52,
+          "end": 53.76,
+          "probability": 0.9928434491157532
+        },
+        {
+          "word": " me.",
+          "start": 53.76,
+          "end": 54.0,
+          "probability": 0.9801216125488281
+        }
+      ]
+    },
+    {
+      "start": 54.0,
+      "end": 59.7,
+      "duration": 5.700000000000003,
+      "text": "Why don't you take your pansy attitude back in there and make him sign my deal?",
+      "speaker": "SPEAKER_03",
+      "words": [
+        {
+          "word": " Why",
+          "start": 54.0,
+          "end": 54.6,
+          "probability": 0.2383357435464859
+        },
+        {
+          "word": " don't",
+          "start": 54.6,
+          "end": 56.3,
+          "probability": 0.922235757112503
+        },
+        {
+          "word": " you",
+          "start": 56.3,
+          "end": 56.44,
+          "probability": 0.9938566088676453
+        },
+        {
+          "word": " take",
+          "start": 56.44,
+          "end": 56.7,
+          "probability": 0.9741337895393372
+        },
+        {
+          "word": " your",
+          "start": 56.7,
+          "end": 56.92,
+          "probability": 0.9870821237564087
+        },
+        {
+          "word": " pansy",
+          "start": 56.92,
+          "end": 57.48,
+          "probability": 0.9315388202667236
+        },
+        {
+          "word": " attitude",
+          "start": 57.48,
+          "end": 57.92,
+          "probability": 0.9958303570747375
+        },
+        {
+          "word": " back",
+          "start": 57.92,
+          "end": 58.2,
+          "probability": 0.9886521697044373
+        },
+        {
+          "word": " in",
+          "start": 58.2,
+          "end": 58.44,
+          "probability": 0.9948145747184753
+        },
+        {
+          "word": " there",
+          "start": 58.44,
+          "end": 58.6,
+          "probability": 0.9944608211517334
+        },
+        {
+          "word": " and",
+          "start": 58.6,
+          "end": 58.72,
+          "probability": 0.5320618152618408
+        },
+        {
+          "word": " make",
+          "start": 58.72,
+          "end": 58.8,
+          "probability": 0.9850777387619019
+        },
+        {
+          "word": " him",
+          "start": 58.8,
+          "end": 58.92,
+          "probability": 0.48318246006965637
+        },
+        {
+          "word": " sign",
+          "start": 58.92,
+          "end": 59.16,
+          "probability": 0.9845507740974426
+        },
+        {
+          "word": " my",
+          "start": 59.16,
+          "end": 59.36,
+          "probability": 0.9978609681129456
+        },
+        {
+          "word": " deal?",
+          "start": 59.36,
+          "end": 59.7,
+          "probability": 0.9964466691017151
+        }
+      ]
+    },
+    {
+      "start": 60.62,
+      "end": 63.0,
+      "duration": 2.3800000000000026,
+      "text": "Or I'll pay someone else your money to do it for me.",
+      "speaker": "SPEAKER_03",
+      "words": [
+        {
+          "word": " Or",
+          "start": 60.62,
+          "end": 60.72,
+          "probability": 0.9544265866279602
+        },
+        {
+          "word": " I'll",
+          "start": 60.72,
+          "end": 60.86,
+          "probability": 0.9723978936672211
+        },
+        {
+          "word": " pay",
+          "start": 60.86,
+          "end": 61.04,
+          "probability": 0.973349928855896
+        },
+        {
+          "word": " someone",
+          "start": 61.04,
+          "end": 61.42,
+          "probability": 0.9933324456214905
+        },
+        {
+          "word": " else",
+          "start": 61.42,
+          "end": 61.66,
+          "probability": 0.9993807077407837
+        },
+        {
+          "word": " your",
+          "start": 61.66,
+          "end": 61.8,
+          "probability": 0.9778801798820496
+        },
+        {
+          "word": " money",
+          "start": 61.8,
+          "end": 62.16,
+          "probability": 0.997012734413147
+        },
+        {
+          "word": " to",
+          "start": 62.16,
+          "end": 62.32,
+          "probability": 0.9963984489440918
+        },
+        {
+          "word": " do",
+          "start": 62.32,
+          "end": 62.46,
+          "probability": 0.9949919581413269
+        },
+        {
+          "word": " it",
+          "start": 62.46,
+          "end": 62.56,
+          "probability": 0.9972135424613953
+        },
+        {
+          "word": " for",
+          "start": 62.56,
+          "end": 62.78,
+          "probability": 0.9989581108093262
+        },
+        {
+          "word": " me.",
+          "start": 62.78,
+          "end": 63.0,
+          "probability": 0.9981631636619568
+        }
+      ]
+    },
+    {
+      "start": 63.68,
+      "end": 67.88,
+      "duration": 4.199999999999996,
+      "text": "Well, first of all, Gerald, if you think anyone's going to touch this deal after your bad faith, you're mistaken.",
+      "speaker": "SPEAKER_00",
+      "words": [
+        {
+          "word": " Well,",
+          "start": 63.68,
+          "end": 63.78,
+          "probability": 0.3892572522163391
+        },
+        {
+          "word": " first",
+          "start": 63.9,
+          "end": 64.0,
+          "probability": 0.9924350380897522
+        },
+        {
+          "word": " of",
+          "start": 64.0,
+          "end": 64.2,
+          "probability": 0.9943481087684631
+        },
+        {
+          "word": " all,",
+          "start": 64.2,
+          "end": 64.34,
+          "probability": 0.9994140863418579
+        },
+        {
+          "word": " Gerald,",
+          "start": 64.4,
+          "end": 64.6,
+          "probability": 0.9719616174697876
+        },
+        {
+          "word": " if",
+          "start": 64.74,
+          "end": 64.8,
+          "probability": 0.9694088697433472
+        },
+        {
+          "word": " you",
+          "start": 64.8,
+          "end": 64.88,
+          "probability": 0.9962564706802368
+        },
+        {
+          "word": " think",
+          "start": 64.88,
+          "end": 65.02,
+          "probability": 0.9925244450569153
+        },
+        {
+          "word": " anyone's",
+          "start": 65.02,
+          "end": 65.4,
+          "probability": 0.9067023396492004
+        },
+        {
+          "word": " going",
+          "start": 65.4,
+          "end": 65.5,
+          "probability": 0.4707755446434021
+        },
+        {
+          "word": " to",
+          "start": 65.5,
+          "end": 65.58,
+          "probability": 0.998130738735199
+        },
+        {
+          "word": " touch",
+          "start": 65.58,
+          "end": 65.78,
+          "probability": 0.9852081537246704
+        },
+        {
+          "word": " this",
+          "start": 65.78,
+          "end": 66.06,
+          "probability": 0.9937463998794556
+        },
+        {
+          "word": " deal",
+          "start": 66.06,
+          "end": 66.26,
+          "probability": 0.9773714542388916
+        },
+        {
+          "word": " after",
+          "start": 66.26,
+          "end": 66.54,
+          "probability": 0.967227578163147
+        },
+        {
+          "word": " your",
+          "start": 66.54,
+          "end": 66.68,
+          "probability": 0.9153560996055603
+        },
+        {
+          "word": " bad",
+          "start": 66.68,
+          "end": 66.9,
+          "probability": 0.9963151812553406
+        },
+        {
+          "word": " faith,",
+          "start": 66.9,
+          "end": 67.2,
+          "probability": 0.9868185520172119
+        },
+        {
+          "word": " you're",
+          "start": 67.36,
+          "end": 67.44,
+          "probability": 0.9383950233459473
+        },
+        {
+          "word": " mistaken.",
+          "start": 67.44,
+          "end": 67.88,
+          "probability": 0.9896636605262756
+        }
+      ]
+    }
+  ],
+  "speakers": [
+    "SPEAKER_00",
+    "SPEAKER_01",
+    "SPEAKER_03"
+  ],
+  "speaker_stats": {
+    "SPEAKER_00": {
+      "segments": 12,
+      "total_duration": 30.79999999999998,
+      "total_words": 133,
+      "total_characters": 711,
+      "duration_percentage": 57.377049180327845,
+      "words_percentage": 60.18099547511312
+    },
+    "SPEAKER_01": {
+      "segments": 2,
+      "total_duration": 2.5600000000000023,
+      "total_words": 9,
+      "total_characters": 52,
+      "duration_percentage": 4.769001490312971,
+      "words_percentage": 4.072398190045249
+    },
+    "SPEAKER_03": {
+      "segments": 8,
+      "total_duration": 20.320000000000007,
+      "total_words": 79,
+      "total_characters": 397,
+      "duration_percentage": 37.85394932935918,
+      "words_percentage": 35.74660633484163
+    }
+  },
+  "transcription": {
+    "text": "Jessica, have I come in a bad time? Gerald, this is Harvey Specter. He's our best closer. Says here that Cooper won't be staying on his honorary vice president. That's right, I don't want him around. He wouldn't be around. It's an honorary position. I'll give a shit. Well, I think you do, because that's just changed since I left, which means it's you who's been dealing in bad faith. Well, now that you've got a grasp on what's happening that goddamn interim, what are you going to do about it? Because he's not getting that title. Well, let me make sure I understand this, okay? We negotiated a deal that gave you everything you wanted. Mr. Cooper signed it, and now you won't close until we take away the last shred of his dignity. Bingo. Well, that's not going to happen. And why the hell not? Because I like Mr. Cooper, and my firm doesn't operate in bad faith. Oh, I see how it is. Instead of working Cooper, you're working me. Why don't you take your pansy attitude back in there and make him sign my deal? Or I'll pay someone else your money to do it for me. Well, first of all, Gerald, if you think anyone's going to touch this deal after your bad faith, you're mistaken.",
+    "language": "en",
+    "segments": [
+      {
+        "id": 0,
+        "seek": 0,
+        "start": 0.4199999999999987,
+        "end": 1.74,
+        "text": " Jessica, have I come in a bad time?",
+        "tokens": [
+          50364,
+          15570,
+          11,
+          362,
+          286,
+          808,
+          294,
+          257,
+          1578,
+          565,
+          30,
+          50464
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.20117082810939702,
+        "compression_ratio": 1.5787671232876712,
+        "no_speech_prob": 0.05485273525118828,
+        "words": [
+          {
+            "word": " Jessica,",
+            "start": 0.4199999999999987,
+            "end": 0.82,
+            "probability": 0.8716175556182861
+          },
+          {
+            "word": " have",
+            "start": 1.04,
+            "end": 1.06,
+            "probability": 0.23633617162704468
+          },
+          {
+            "word": " I",
+            "start": 1.06,
+            "end": 1.12,
+            "probability": 0.9210238456726074
+          },
+          {
+            "word": " come",
+            "start": 1.12,
+            "end": 1.28,
+            "probability": 0.9811559915542603
+          },
+          {
+            "word": " in",
+            "start": 1.28,
+            "end": 1.36,
+            "probability": 0.8705545663833618
+          },
+          {
+            "word": " a",
+            "start": 1.36,
+            "end": 1.4,
+            "probability": 0.6518694162368774
+          },
+          {
+            "word": " bad",
+            "start": 1.4,
+            "end": 1.54,
+            "probability": 0.9920355677604675
+          },
+          {
+            "word": " time?",
+            "start": 1.54,
+            "end": 1.74,
+            "probability": 0.992156982421875
+          }
+        ]
+      },
+      {
+        "id": 1,
+        "seek": 0,
+        "start": 3.9799999999999978,
+        "end": 5.64,
+        "text": " Gerald, this is Harvey Specter.",
+        "tokens": [
+          50514,
+          38332,
+          11,
+          341,
+          307,
+          28796,
+          27078,
+          260,
+          13,
+          50664
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.20117082810939702,
+        "compression_ratio": 1.5787671232876712,
+        "no_speech_prob": 0.05485273525118828,
+        "words": [
+          {
+            "word": " Gerald,",
+            "start": 3.9799999999999978,
+            "end": 4.379999999999999,
+            "probability": 0.9718214273452759
+          },
+          {
+            "word": " this",
+            "start": 4.379999999999999,
+            "end": 4.78,
+            "probability": 0.9906861186027527
+          },
+          {
+            "word": " is",
+            "start": 4.78,
+            "end": 4.96,
+            "probability": 0.9984978437423706
+          },
+          {
+            "word": " Harvey",
+            "start": 4.96,
+            "end": 5.16,
+            "probability": 0.742357075214386
+          },
+          {
+            "word": " Specter.",
+            "start": 5.16,
+            "end": 5.64,
+            "probability": 0.569548025727272
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "seek": 0,
+        "start": 7.06,
+        "end": 7.96,
+        "text": " He's our best closer.",
+        "tokens": [
+          50714,
+          634,
+          311,
+          527,
+          1151,
+          4966,
+          13,
+          50764
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.20117082810939702,
+        "compression_ratio": 1.5787671232876712,
+        "no_speech_prob": 0.05485273525118828,
+        "words": [
+          {
+            "word": " He's",
+            "start": 7.06,
+            "end": 7.46,
+            "probability": 0.9729479253292084
+          },
+          {
+            "word": " our",
+            "start": 7.46,
+            "end": 7.52,
+            "probability": 0.9941569566726685
+          },
+          {
+            "word": " best",
+            "start": 7.52,
+            "end": 7.7,
+            "probability": 0.9970160722732544
+          },
+          {
+            "word": " closer.",
+            "start": 7.7,
+            "end": 7.96,
+            "probability": 0.531511664390564
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "seek": 0,
+        "start": 8.58,
+        "end": 12.3,
+        "text": " Says here that Cooper won't be staying on his honorary vice president.",
+        "tokens": [
+          50764,
+          36780,
+          510,
+          300,
+          20355,
+          1582,
+          380,
+          312,
+          7939,
+          322,
+          702,
+          49365,
+          11964,
+          3868,
+          13,
+          50964
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.20117082810939702,
+        "compression_ratio": 1.5787671232876712,
+        "no_speech_prob": 0.05485273525118828,
+        "words": [
+          {
+            "word": " Says",
+            "start": 8.58,
+            "end": 8.8,
+            "probability": 0.8710711598396301
+          },
+          {
+            "word": " here",
+            "start": 8.8,
+            "end": 9.04,
+            "probability": 0.9722079634666443
+          },
+          {
+            "word": " that",
+            "start": 9.04,
+            "end": 9.24,
+            "probability": 0.9761533737182617
+          },
+          {
+            "word": " Cooper",
+            "start": 9.24,
+            "end": 9.54,
+            "probability": 0.9560304880142212
+          },
+          {
+            "word": " won't",
+            "start": 9.54,
+            "end": 10.1,
+            "probability": 0.9956404566764832
+          },
+          {
+            "word": " be",
+            "start": 10.1,
+            "end": 10.22,
+            "probability": 0.9979833364486694
+          },
+          {
+            "word": " staying",
+            "start": 10.22,
+            "end": 10.44,
+            "probability": 0.9818476438522339
+          },
+          {
+            "word": " on",
+            "start": 10.44,
+            "end": 10.62,
+            "probability": 0.9913137555122375
+          },
+          {
+            "word": " his",
+            "start": 10.62,
+            "end": 10.82,
+            "probability": 0.32407185435295105
+          },
+          {
+            "word": " honorary",
+            "start": 10.82,
+            "end": 11.24,
+            "probability": 0.9253429770469666
+          },
+          {
+            "word": " vice",
+            "start": 11.24,
+            "end": 11.76,
+            "probability": 0.7542800307273865
+          },
+          {
+            "word": " president.",
+            "start": 11.76,
+            "end": 12.3,
+            "probability": 0.9890975952148438
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "seek": 0,
+        "start": 12.8,
+        "end": 13.82,
+        "text": " That's right, I don't want him around.",
+        "tokens": [
+          50964,
+          663,
+          311,
+          558,
+          11,
+          286,
+          500,
+          380,
+          528,
+          796,
+          926,
+          13,
+          51064
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.20117082810939702,
+        "compression_ratio": 1.5787671232876712,
+        "no_speech_prob": 0.05485273525118828,
+        "words": [
+          {
+            "word": " That's",
+            "start": 12.8,
+            "end": 13.0,
+            "probability": 0.9457244873046875
+          },
+          {
+            "word": " right,",
+            "start": 13.0,
+            "end": 13.12,
+            "probability": 0.9954193830490112
+          },
+          {
+            "word": " I",
+            "start": 13.22,
+            "end": 13.28,
+            "probability": 0.8486912846565247
+          },
+          {
+            "word": " don't",
+            "start": 13.28,
+            "end": 13.34,
+            "probability": 0.9487788677215576
+          },
+          {
+            "word": " want",
+            "start": 13.34,
+            "end": 13.48,
+            "probability": 0.841019868850708
+          },
+          {
+            "word": " him",
+            "start": 13.48,
+            "end": 13.56,
+            "probability": 0.9698400497436523
+          },
+          {
+            "word": " around.",
+            "start": 13.56,
+            "end": 13.82,
+            "probability": 0.9982362985610962
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "seek": 0,
+        "start": 14.62,
+        "end": 16.72,
+        "text": " He wouldn't be around. It's an honorary position.",
+        "tokens": [
+          51064,
+          634,
+          2759,
+          380,
+          312,
+          926,
+          13,
+          467,
+          311,
+          364,
+          49365,
+          2535,
+          13,
+          51214
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.20117082810939702,
+        "compression_ratio": 1.5787671232876712,
+        "no_speech_prob": 0.05485273525118828,
+        "words": [
+          {
+            "word": " He",
+            "start": 14.62,
+            "end": 14.82,
+            "probability": 0.9779326915740967
+          },
+          {
+            "word": " wouldn't",
+            "start": 14.82,
+            "end": 15.04,
+            "probability": 0.9988768100738525
+          },
+          {
+            "word": " be",
+            "start": 15.04,
+            "end": 15.18,
+            "probability": 0.9987123012542725
+          },
+          {
+            "word": " around.",
+            "start": 15.18,
+            "end": 15.52,
+            "probability": 0.9982175230979919
+          },
+          {
+            "word": " It's",
+            "start": 15.76,
+            "end": 15.94,
+            "probability": 0.9299406409263611
+          },
+          {
+            "word": " an",
+            "start": 15.94,
+            "end": 16.02,
+            "probability": 0.9908859729766846
+          },
+          {
+            "word": " honorary",
+            "start": 16.02,
+            "end": 16.28,
+            "probability": 0.9931839108467102
+          },
+          {
+            "word": " position.",
+            "start": 16.28,
+            "end": 16.72,
+            "probability": 0.9920623302459717
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "seek": 0,
+        "start": 17.22,
+        "end": 17.78,
+        "text": " I'll give a shit.",
+        "tokens": [
+          51214,
+          286,
+          603,
+          976,
+          257,
+          4611,
+          13,
+          51264
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.20117082810939702,
+        "compression_ratio": 1.5787671232876712,
+        "no_speech_prob": 0.05485273525118828,
+        "words": [
+          {
+            "word": " I'll",
+            "start": 17.22,
+            "end": 17.3,
+            "probability": 0.6955925226211548
+          },
+          {
+            "word": " give",
+            "start": 17.3,
+            "end": 17.48,
+            "probability": 0.9944357872009277
+          },
+          {
+            "word": " a",
+            "start": 17.48,
+            "end": 17.62,
+            "probability": 0.8974313139915466
+          },
+          {
+            "word": " shit.",
+            "start": 17.62,
+            "end": 17.78,
+            "probability": 0.821938157081604
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "seek": 0,
+        "start": 19.0,
+        "end": 24.02,
+        "text": " Well, I think you do, because that's just changed since I left, which means it's you who's been dealing in bad faith.",
+        "tokens": [
+          51314,
+          1042,
+          11,
+          286,
+          519,
+          291,
+          360,
+          11,
+          570,
+          300,
+          311,
+          445,
+          3105,
+          1670,
+          286,
+          1411,
+          11,
+          597,
+          1355,
+          309,
+          311,
+          291,
+          567,
+          311,
+          668,
+          6260,
+          294,
+          1578,
+          4522,
+          13,
+          51564
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.20117082810939702,
+        "compression_ratio": 1.5787671232876712,
+        "no_speech_prob": 0.05485273525118828,
+        "words": [
+          {
+            "word": " Well,",
+            "start": 19.0,
+            "end": 19.28,
+            "probability": 0.9729796051979065
+          },
+          {
+            "word": " I",
+            "start": 19.3,
+            "end": 19.36,
+            "probability": 0.9992455244064331
+          },
+          {
+            "word": " think",
+            "start": 19.36,
+            "end": 19.5,
+            "probability": 0.9990329742431641
+          },
+          {
+            "word": " you",
+            "start": 19.5,
+            "end": 19.66,
+            "probability": 0.9952996969223022
+          },
+          {
+            "word": " do,",
+            "start": 19.66,
+            "end": 19.8,
+            "probability": 0.9962819218635559
+          },
+          {
+            "word": " because",
+            "start": 19.92,
+            "end": 20.12,
+            "probability": 0.9964672327041626
+          },
+          {
+            "word": " that's",
+            "start": 20.12,
+            "end": 20.6,
+            "probability": 0.984419047832489
+          },
+          {
+            "word": " just",
+            "start": 20.6,
+            "end": 20.66,
+            "probability": 0.2299126386642456
+          },
+          {
+            "word": " changed",
+            "start": 20.66,
+            "end": 20.98,
+            "probability": 0.8734509348869324
+          },
+          {
+            "word": " since",
+            "start": 20.98,
+            "end": 21.34,
+            "probability": 0.9729235172271729
+          },
+          {
+            "word": " I",
+            "start": 21.34,
+            "end": 21.42,
+            "probability": 0.9848814010620117
+          },
+          {
+            "word": " left,",
+            "start": 21.42,
+            "end": 21.68,
+            "probability": 0.9949547648429871
+          },
+          {
+            "word": " which",
+            "start": 21.84,
+            "end": 22.0,
+            "probability": 0.997141420841217
+          },
+          {
+            "word": " means",
+            "start": 22.0,
+            "end": 22.22,
+            "probability": 0.9985052347183228
+          },
+          {
+            "word": " it's",
+            "start": 22.22,
+            "end": 22.7,
+            "probability": 0.9751631319522858
+          },
+          {
+            "word": " you",
+            "start": 22.7,
+            "end": 22.88,
+            "probability": 0.9847895503044128
+          },
+          {
+            "word": " who's",
+            "start": 22.88,
+            "end": 23.14,
+            "probability": 0.9786175191402435
+          },
+          {
+            "word": " been",
+            "start": 23.14,
+            "end": 23.28,
+            "probability": 0.9927892088890076
+          },
+          {
+            "word": " dealing",
+            "start": 23.28,
+            "end": 23.48,
+            "probability": 0.9807940721511841
+          },
+          {
+            "word": " in",
+            "start": 23.48,
+            "end": 23.68,
+            "probability": 0.6613292694091797
+          },
+          {
+            "word": " bad",
+            "start": 23.68,
+            "end": 23.82,
+            "probability": 0.9964669942855835
+          },
+          {
+            "word": " faith.",
+            "start": 23.82,
+            "end": 24.02,
+            "probability": 0.8491856455802917
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "seek": 0,
+        "start": 24.4,
+        "end": 28.06,
+        "text": " Well, now that you've got a grasp on what's happening that goddamn interim,",
+        "tokens": [
+          51564,
+          1042,
+          11,
+          586,
+          300,
+          291,
+          600,
+          658,
+          257,
+          21743,
+          322,
+          437,
+          311,
+          2737,
+          300,
+          32951,
+          33500,
+          11,
+          51764
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.20117082810939702,
+        "compression_ratio": 1.5787671232876712,
+        "no_speech_prob": 0.05485273525118828,
+        "words": [
+          {
+            "word": " Well,",
+            "start": 24.4,
+            "end": 24.54,
+            "probability": 0.9822747707366943
+          },
+          {
+            "word": " now",
+            "start": 24.66,
+            "end": 24.74,
+            "probability": 0.9987689852714539
+          },
+          {
+            "word": " that",
+            "start": 24.74,
+            "end": 24.9,
+            "probability": 0.9980598092079163
+          },
+          {
+            "word": " you've",
+            "start": 24.9,
+            "end": 25.16,
+            "probability": 0.9936391413211823
+          },
+          {
+            "word": " got",
+            "start": 25.16,
+            "end": 25.28,
+            "probability": 0.9790195822715759
+          },
+          {
+            "word": " a",
+            "start": 25.28,
+            "end": 25.4,
+            "probability": 0.8701407313346863
+          },
+          {
+            "word": " grasp",
+            "start": 25.4,
+            "end": 25.9,
+            "probability": 0.9946609139442444
+          },
+          {
+            "word": " on",
+            "start": 25.9,
+            "end": 26.16,
+            "probability": 0.9774507284164429
+          },
+          {
+            "word": " what's",
+            "start": 26.16,
+            "end": 26.42,
+            "probability": 0.9978399276733398
+          },
+          {
+            "word": " happening",
+            "start": 26.42,
+            "end": 26.78,
+            "probability": 0.9157255291938782
+          },
+          {
+            "word": " that",
+            "start": 26.78,
+            "end": 27.0,
+            "probability": 0.6988198757171631
+          },
+          {
+            "word": " goddamn",
+            "start": 27.0,
+            "end": 27.4,
+            "probability": 0.5584941506385803
+          },
+          {
+            "word": " interim,",
+            "start": 27.4,
+            "end": 28.06,
+            "probability": 0.9226382970809937
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "seek": 2806,
+        "start": 28.06,
+        "end": 31.26,
+        "text": " what are you going to do about it? Because he's not getting that title.",
+        "tokens": [
+          50364,
+          437,
+          366,
+          291,
+          516,
+          281,
+          360,
+          466,
+          309,
+          30,
+          1436,
+          415,
+          311,
+          406,
+          1242,
+          300,
+          4876,
+          13,
+          50514
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.09027306929878566,
+        "compression_ratio": 1.6797153024911031,
+        "no_speech_prob": 0.025467248633503914,
+        "words": [
+          {
+            "word": " what",
+            "start": 28.06,
+            "end": 28.64,
+            "probability": 0.048716865479946136
+          },
+          {
+            "word": " are",
+            "start": 28.64,
+            "end": 28.74,
+            "probability": 0.8513653874397278
+          },
+          {
+            "word": " you",
+            "start": 28.74,
+            "end": 28.76,
+            "probability": 0.9472775459289551
+          },
+          {
+            "word": " going",
+            "start": 28.76,
+            "end": 28.86,
+            "probability": 0.37424272298812866
+          },
+          {
+            "word": " to",
+            "start": 28.86,
+            "end": 28.92,
+            "probability": 0.9923822283744812
+          },
+          {
+            "word": " do",
+            "start": 28.92,
+            "end": 29.1,
+            "probability": 0.9919549822807312
+          },
+          {
+            "word": " about",
+            "start": 29.1,
+            "end": 29.36,
+            "probability": 0.9940518736839294
+          },
+          {
+            "word": " it?",
+            "start": 29.36,
+            "end": 29.62,
+            "probability": 0.9909465312957764
+          },
+          {
+            "word": " Because",
+            "start": 29.88,
+            "end": 30.16,
+            "probability": 0.9366523623466492
+          },
+          {
+            "word": " he's",
+            "start": 30.16,
+            "end": 30.34,
+            "probability": 0.9877561330795288
+          },
+          {
+            "word": " not",
+            "start": 30.34,
+            "end": 30.46,
+            "probability": 0.9984776377677917
+          },
+          {
+            "word": " getting",
+            "start": 30.46,
+            "end": 30.78,
+            "probability": 0.9789799451828003
+          },
+          {
+            "word": " that",
+            "start": 30.78,
+            "end": 30.9,
+            "probability": 0.9909287095069885
+          },
+          {
+            "word": " title.",
+            "start": 30.9,
+            "end": 31.26,
+            "probability": 0.997372031211853
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "seek": 2806,
+        "start": 32.36,
+        "end": 34.74,
+        "text": " Well, let me make sure I understand this, okay?",
+        "tokens": [
+          50564,
+          1042,
+          11,
+          718,
+          385,
+          652,
+          988,
+          286,
+          1223,
+          341,
+          11,
+          1392,
+          30,
+          50664
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.09027306929878566,
+        "compression_ratio": 1.6797153024911031,
+        "no_speech_prob": 0.025467248633503914,
+        "words": [
+          {
+            "word": " Well,",
+            "start": 32.36,
+            "end": 32.76,
+            "probability": 0.5739449262619019
+          },
+          {
+            "word": " let",
+            "start": 33.06,
+            "end": 33.24,
+            "probability": 0.9648792147636414
+          },
+          {
+            "word": " me",
+            "start": 33.24,
+            "end": 33.32,
+            "probability": 0.9954625964164734
+          },
+          {
+            "word": " make",
+            "start": 33.32,
+            "end": 33.5,
+            "probability": 0.993225634098053
+          },
+          {
+            "word": " sure",
+            "start": 33.5,
+            "end": 33.68,
+            "probability": 0.9991292357444763
+          },
+          {
+            "word": " I",
+            "start": 33.68,
+            "end": 33.8,
+            "probability": 0.9867031574249268
+          },
+          {
+            "word": " understand",
+            "start": 33.8,
+            "end": 34.2,
+            "probability": 0.9990518689155579
+          },
+          {
+            "word": " this,",
+            "start": 34.2,
+            "end": 34.44,
+            "probability": 0.9892877340316772
+          },
+          {
+            "word": " okay?",
+            "start": 34.56,
+            "end": 34.74,
+            "probability": 0.7151607871055603
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "seek": 2806,
+        "start": 34.84,
+        "end": 37.4,
+        "text": " We negotiated a deal that gave you everything you wanted.",
+        "tokens": [
+          50664,
+          492,
+          39028,
+          257,
+          2028,
+          300,
+          2729,
+          291,
+          1203,
+          291,
+          1415,
+          13,
+          50814
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.09027306929878566,
+        "compression_ratio": 1.6797153024911031,
+        "no_speech_prob": 0.025467248633503914,
+        "words": [
+          {
+            "word": " We",
+            "start": 34.84,
+            "end": 34.92,
+            "probability": 0.9916083216667175
+          },
+          {
+            "word": " negotiated",
+            "start": 34.92,
+            "end": 35.58,
+            "probability": 0.9938243627548218
+          },
+          {
+            "word": " a",
+            "start": 35.58,
+            "end": 35.88,
+            "probability": 0.9934670329093933
+          },
+          {
+            "word": " deal",
+            "start": 35.88,
+            "end": 36.1,
+            "probability": 0.999549925327301
+          },
+          {
+            "word": " that",
+            "start": 36.1,
+            "end": 36.28,
+            "probability": 0.9368624091148376
+          },
+          {
+            "word": " gave",
+            "start": 36.28,
+            "end": 36.4,
+            "probability": 0.9886112809181213
+          },
+          {
+            "word": " you",
+            "start": 36.4,
+            "end": 36.58,
+            "probability": 0.9979764819145203
+          },
+          {
+            "word": " everything",
+            "start": 36.58,
+            "end": 36.92,
+            "probability": 0.9979629516601562
+          },
+          {
+            "word": " you",
+            "start": 36.92,
+            "end": 37.12,
+            "probability": 0.9935362935066223
+          },
+          {
+            "word": " wanted.",
+            "start": 37.12,
+            "end": 37.4,
+            "probability": 0.7025552988052368
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "seek": 2806,
+        "start": 37.56,
+        "end": 41.94,
+        "text": " Mr. Cooper signed it, and now you won't close until we take away the last shred of his dignity.",
+        "tokens": [
+          50814,
+          2221,
+          13,
+          20355,
+          8175,
+          309,
+          11,
+          293,
+          586,
+          291,
+          1582,
+          380,
+          1998,
+          1826,
+          321,
+          747,
+          1314,
+          264,
+          1036,
+          21567,
+          295,
+          702,
+          19672,
+          13,
+          51064
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.09027306929878566,
+        "compression_ratio": 1.6797153024911031,
+        "no_speech_prob": 0.025467248633503914,
+        "words": [
+          {
+            "word": " Mr.",
+            "start": 37.56,
+            "end": 37.68,
+            "probability": 0.8509392738342285
+          },
+          {
+            "word": " Cooper",
+            "start": 37.8,
+            "end": 37.88,
+            "probability": 0.9561994671821594
+          },
+          {
+            "word": " signed",
+            "start": 37.88,
+            "end": 38.32,
+            "probability": 0.9765928983688354
+          },
+          {
+            "word": " it,",
+            "start": 38.32,
+            "end": 38.56,
+            "probability": 0.9987589120864868
+          },
+          {
+            "word": " and",
+            "start": 38.76,
+            "end": 39.04,
+            "probability": 0.9923081398010254
+          },
+          {
+            "word": " now",
+            "start": 39.04,
+            "end": 39.24,
+            "probability": 0.9939821362495422
+          },
+          {
+            "word": " you",
+            "start": 39.24,
+            "end": 39.72,
+            "probability": 0.8320859670639038
+          },
+          {
+            "word": " won't",
+            "start": 39.72,
+            "end": 39.94,
+            "probability": 0.9980396330356598
+          },
+          {
+            "word": " close",
+            "start": 39.94,
+            "end": 40.18,
+            "probability": 0.9910497665405273
+          },
+          {
+            "word": " until",
+            "start": 40.18,
+            "end": 40.44,
+            "probability": 0.9798000454902649
+          },
+          {
+            "word": " we",
+            "start": 40.44,
+            "end": 40.56,
+            "probability": 0.997596800327301
+          },
+          {
+            "word": " take",
+            "start": 40.56,
+            "end": 40.7,
+            "probability": 0.9963918328285217
+          },
+          {
+            "word": " away",
+            "start": 40.7,
+            "end": 40.9,
+            "probability": 0.9968986511230469
+          },
+          {
+            "word": " the",
+            "start": 40.9,
+            "end": 41.04,
+            "probability": 0.9761360883712769
+          },
+          {
+            "word": " last",
+            "start": 41.04,
+            "end": 41.24,
+            "probability": 0.9448804259300232
+          },
+          {
+            "word": " shred",
+            "start": 41.24,
+            "end": 41.44,
+            "probability": 0.5759420990943909
+          },
+          {
+            "word": " of",
+            "start": 41.44,
+            "end": 41.58,
+            "probability": 0.9903990626335144
+          },
+          {
+            "word": " his",
+            "start": 41.58,
+            "end": 41.72,
+            "probability": 0.8320720195770264
+          },
+          {
+            "word": " dignity.",
+            "start": 41.72,
+            "end": 41.94,
+            "probability": 0.9394011497497559
+          }
+        ]
+      },
+      {
+        "id": 13,
+        "seek": 2806,
+        "start": 42.4,
+        "end": 42.66,
+        "text": " Bingo.",
+        "tokens": [
+          51064,
+          363,
+          18459,
+          13,
+          51114
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.09027306929878566,
+        "compression_ratio": 1.6797153024911031,
+        "no_speech_prob": 0.025467248633503914,
+        "words": [
+          {
+            "word": " Bingo.",
+            "start": 42.4,
+            "end": 42.66,
+            "probability": 0.6697499603033066
+          }
+        ]
+      },
+      {
+        "id": 14,
+        "seek": 2806,
+        "start": 43.2,
+        "end": 44.12,
+        "text": " Well, that's not going to happen.",
+        "tokens": [
+          51114,
+          1042,
+          11,
+          300,
+          311,
+          406,
+          516,
+          281,
+          1051,
+          13,
+          51164
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.09027306929878566,
+        "compression_ratio": 1.6797153024911031,
+        "no_speech_prob": 0.025467248633503914,
+        "words": [
+          {
+            "word": " Well,",
+            "start": 43.2,
+            "end": 43.36,
+            "probability": 0.7340418100357056
+          },
+          {
+            "word": " that's",
+            "start": 43.4,
+            "end": 43.58,
+            "probability": 0.9972838461399078
+          },
+          {
+            "word": " not",
+            "start": 43.58,
+            "end": 43.68,
+            "probability": 0.9949134588241577
+          },
+          {
+            "word": " going",
+            "start": 43.68,
+            "end": 43.78,
+            "probability": 0.638450026512146
+          },
+          {
+            "word": " to",
+            "start": 43.78,
+            "end": 43.84,
+            "probability": 0.9993799924850464
+          },
+          {
+            "word": " happen.",
+            "start": 43.84,
+            "end": 44.12,
+            "probability": 0.9979079961776733
+          }
+        ]
+      },
+      {
+        "id": 15,
+        "seek": 2806,
+        "start": 44.36,
+        "end": 44.98,
+        "text": " And why the hell not?",
+        "tokens": [
+          51164,
+          400,
+          983,
+          264,
+          4921,
+          406,
+          30,
+          51214
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.09027306929878566,
+        "compression_ratio": 1.6797153024911031,
+        "no_speech_prob": 0.025467248633503914,
+        "words": [
+          {
+            "word": " And",
+            "start": 44.36,
+            "end": 44.48,
+            "probability": 0.7877427339553833
+          },
+          {
+            "word": " why",
+            "start": 44.48,
+            "end": 44.56,
+            "probability": 0.9629475474357605
+          },
+          {
+            "word": " the",
+            "start": 44.56,
+            "end": 44.68,
+            "probability": 0.9517853856086731
+          },
+          {
+            "word": " hell",
+            "start": 44.68,
+            "end": 44.78,
+            "probability": 0.9989510774612427
+          },
+          {
+            "word": " not?",
+            "start": 44.78,
+            "end": 44.98,
+            "probability": 0.9426334500312805
+          }
+        ]
+      },
+      {
+        "id": 16,
+        "seek": 2806,
+        "start": 45.38,
+        "end": 48.7,
+        "text": " Because I like Mr. Cooper, and my firm doesn't operate in bad faith.",
+        "tokens": [
+          51214,
+          1436,
+          286,
+          411,
+          2221,
+          13,
+          20355,
+          11,
+          293,
+          452,
+          6174,
+          1177,
+          380,
+          9651,
+          294,
+          1578,
+          4522,
+          13,
+          51414
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.09027306929878566,
+        "compression_ratio": 1.6797153024911031,
+        "no_speech_prob": 0.025467248633503914,
+        "words": [
+          {
+            "word": " Because",
+            "start": 45.38,
+            "end": 45.56,
+            "probability": 0.9207816123962402
+          },
+          {
+            "word": " I",
+            "start": 45.56,
+            "end": 45.66,
+            "probability": 0.996189296245575
+          },
+          {
+            "word": " like",
+            "start": 45.66,
+            "end": 45.86,
+            "probability": 0.9914590120315552
+          },
+          {
+            "word": " Mr.",
+            "start": 45.86,
+            "end": 46.1,
+            "probability": 0.9938477873802185
+          },
+          {
+            "word": " Cooper,",
+            "start": 46.26,
+            "end": 46.42,
+            "probability": 0.9942394495010376
+          },
+          {
+            "word": " and",
+            "start": 46.64,
+            "end": 46.74,
+            "probability": 0.997911274433136
+          },
+          {
+            "word": " my",
+            "start": 46.74,
+            "end": 46.9,
+            "probability": 0.996271014213562
+          },
+          {
+            "word": " firm",
+            "start": 46.9,
+            "end": 47.32,
+            "probability": 0.9693362712860107
+          },
+          {
+            "word": " doesn't",
+            "start": 47.32,
+            "end": 47.7,
+            "probability": 0.9220626056194305
+          },
+          {
+            "word": " operate",
+            "start": 47.7,
+            "end": 48.04,
+            "probability": 0.9846720099449158
+          },
+          {
+            "word": " in",
+            "start": 48.04,
+            "end": 48.2,
+            "probability": 0.9811831712722778
+          },
+          {
+            "word": " bad",
+            "start": 48.2,
+            "end": 48.36,
+            "probability": 0.8875190019607544
+          },
+          {
+            "word": " faith.",
+            "start": 48.36,
+            "end": 48.7,
+            "probability": 0.982264518737793
+          }
+        ]
+      },
+      {
+        "id": 17,
+        "seek": 2806,
+        "start": 49.24,
+        "end": 50.96,
+        "text": " Oh, I see how it is.",
+        "tokens": [
+          51414,
+          876,
+          11,
+          286,
+          536,
+          577,
+          309,
+          307,
+          13,
+          51514
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.09027306929878566,
+        "compression_ratio": 1.6797153024911031,
+        "no_speech_prob": 0.025467248633503914,
+        "words": [
+          {
+            "word": " Oh,",
+            "start": 49.24,
+            "end": 49.64,
+            "probability": 0.8921212553977966
+          },
+          {
+            "word": " I",
+            "start": 50.02,
+            "end": 50.24,
+            "probability": 0.9989251494407654
+          },
+          {
+            "word": " see",
+            "start": 50.24,
+            "end": 50.42,
+            "probability": 0.9984000325202942
+          },
+          {
+            "word": " how",
+            "start": 50.42,
+            "end": 50.6,
+            "probability": 0.9993564486503601
+          },
+          {
+            "word": " it",
+            "start": 50.6,
+            "end": 50.72,
+            "probability": 0.9845182299613953
+          },
+          {
+            "word": " is.",
+            "start": 50.72,
+            "end": 50.96,
+            "probability": 0.9995586276054382
+          }
+        ]
+      },
+      {
+        "id": 18,
+        "seek": 2806,
+        "start": 51.92,
+        "end": 54.0,
+        "text": " Instead of working Cooper, you're working me.",
+        "tokens": [
+          51514,
+          7156,
+          295,
+          1364,
+          20355,
+          11,
+          291,
+          434,
+          1364,
+          385,
+          13,
+          51664
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.09027306929878566,
+        "compression_ratio": 1.6797153024911031,
+        "no_speech_prob": 0.025467248633503914,
+        "words": [
+          {
+            "word": " Instead",
+            "start": 51.92,
+            "end": 52.18,
+            "probability": 0.9938035011291504
+          },
+          {
+            "word": " of",
+            "start": 52.18,
+            "end": 52.34,
+            "probability": 0.998884379863739
+          },
+          {
+            "word": " working",
+            "start": 52.34,
+            "end": 52.58,
+            "probability": 0.9736425280570984
+          },
+          {
+            "word": " Cooper,",
+            "start": 52.58,
+            "end": 53.02,
+            "probability": 0.9787467122077942
+          },
+          {
+            "word": " you're",
+            "start": 53.46,
+            "end": 53.52,
+            "probability": 0.8087242543697357
+          },
+          {
+            "word": " working",
+            "start": 53.52,
+            "end": 53.76,
+            "probability": 0.9928434491157532
+          },
+          {
+            "word": " me.",
+            "start": 53.76,
+            "end": 54.0,
+            "probability": 0.9801216125488281
+          }
+        ]
+      },
+      {
+        "id": 19,
+        "seek": 5400,
+        "start": 54.0,
+        "end": 59.7,
+        "text": " Why don't you take your pansy attitude back in there and make him sign my deal?",
+        "tokens": [
+          50364,
+          1545,
+          500,
+          380,
+          291,
+          747,
+          428,
+          32905,
+          88,
+          10157,
+          646,
+          294,
+          456,
+          293,
+          652,
+          796,
+          1465,
+          452,
+          2028,
+          30,
+          50664
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.09227799657565444,
+        "compression_ratio": 1.4470588235294117,
+        "no_speech_prob": 0.14530687034130096,
+        "words": [
+          {
+            "word": " Why",
+            "start": 54.0,
+            "end": 54.6,
+            "probability": 0.2383357435464859
+          },
+          {
+            "word": " don't",
+            "start": 54.6,
+            "end": 56.3,
+            "probability": 0.922235757112503
+          },
+          {
+            "word": " you",
+            "start": 56.3,
+            "end": 56.44,
+            "probability": 0.9938566088676453
+          },
+          {
+            "word": " take",
+            "start": 56.44,
+            "end": 56.7,
+            "probability": 0.9741337895393372
+          },
+          {
+            "word": " your",
+            "start": 56.7,
+            "end": 56.92,
+            "probability": 0.9870821237564087
+          },
+          {
+            "word": " pansy",
+            "start": 56.92,
+            "end": 57.48,
+            "probability": 0.9315388202667236
+          },
+          {
+            "word": " attitude",
+            "start": 57.48,
+            "end": 57.92,
+            "probability": 0.9958303570747375
+          },
+          {
+            "word": " back",
+            "start": 57.92,
+            "end": 58.2,
+            "probability": 0.9886521697044373
+          },
+          {
+            "word": " in",
+            "start": 58.2,
+            "end": 58.44,
+            "probability": 0.9948145747184753
+          },
+          {
+            "word": " there",
+            "start": 58.44,
+            "end": 58.6,
+            "probability": 0.9944608211517334
+          },
+          {
+            "word": " and",
+            "start": 58.6,
+            "end": 58.72,
+            "probability": 0.5320618152618408
+          },
+          {
+            "word": " make",
+            "start": 58.72,
+            "end": 58.8,
+            "probability": 0.9850777387619019
+          },
+          {
+            "word": " him",
+            "start": 58.8,
+            "end": 58.92,
+            "probability": 0.48318246006965637
+          },
+          {
+            "word": " sign",
+            "start": 58.92,
+            "end": 59.16,
+            "probability": 0.9845507740974426
+          },
+          {
+            "word": " my",
+            "start": 59.16,
+            "end": 59.36,
+            "probability": 0.9978609681129456
+          },
+          {
+            "word": " deal?",
+            "start": 59.36,
+            "end": 59.7,
+            "probability": 0.9964466691017151
+          }
+        ]
+      },
+      {
+        "id": 20,
+        "seek": 5400,
+        "start": 60.62,
+        "end": 63.0,
+        "text": " Or I'll pay someone else your money to do it for me.",
+        "tokens": [
+          50664,
+          1610,
+          286,
+          603,
+          1689,
+          1580,
+          1646,
+          428,
+          1460,
+          281,
+          360,
+          309,
+          337,
+          385,
+          13,
+          50814
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.09227799657565444,
+        "compression_ratio": 1.4470588235294117,
+        "no_speech_prob": 0.14530687034130096,
+        "words": [
+          {
+            "word": " Or",
+            "start": 60.62,
+            "end": 60.72,
+            "probability": 0.9544265866279602
+          },
+          {
+            "word": " I'll",
+            "start": 60.72,
+            "end": 60.86,
+            "probability": 0.9723978936672211
+          },
+          {
+            "word": " pay",
+            "start": 60.86,
+            "end": 61.04,
+            "probability": 0.973349928855896
+          },
+          {
+            "word": " someone",
+            "start": 61.04,
+            "end": 61.42,
+            "probability": 0.9933324456214905
+          },
+          {
+            "word": " else",
+            "start": 61.42,
+            "end": 61.66,
+            "probability": 0.9993807077407837
+          },
+          {
+            "word": " your",
+            "start": 61.66,
+            "end": 61.8,
+            "probability": 0.9778801798820496
+          },
+          {
+            "word": " money",
+            "start": 61.8,
+            "end": 62.16,
+            "probability": 0.997012734413147
+          },
+          {
+            "word": " to",
+            "start": 62.16,
+            "end": 62.32,
+            "probability": 0.9963984489440918
+          },
+          {
+            "word": " do",
+            "start": 62.32,
+            "end": 62.46,
+            "probability": 0.9949919581413269
+          },
+          {
+            "word": " it",
+            "start": 62.46,
+            "end": 62.56,
+            "probability": 0.9972135424613953
+          },
+          {
+            "word": " for",
+            "start": 62.56,
+            "end": 62.78,
+            "probability": 0.9989581108093262
+          },
+          {
+            "word": " me.",
+            "start": 62.78,
+            "end": 63.0,
+            "probability": 0.9981631636619568
+          }
+        ]
+      },
+      {
+        "id": 21,
+        "seek": 5400,
+        "start": 63.68,
+        "end": 67.88,
+        "text": " Well, first of all, Gerald, if you think anyone's going to touch this deal after your bad faith, you're mistaken.",
+        "tokens": [
+          50814,
+          1042,
+          11,
+          700,
+          295,
+          439,
+          11,
+          38332,
+          11,
+          498,
+          291,
+          519,
+          2878,
+          311,
+          516,
+          281,
+          2557,
+          341,
+          2028,
+          934,
+          428,
+          1578,
+          4522,
+          11,
+          291,
+          434,
+          21333,
+          13,
+          51064
+        ],
+        "temperature": 0.0,
+        "avg_logprob": -0.09227799657565444,
+        "compression_ratio": 1.4470588235294117,
+        "no_speech_prob": 0.14530687034130096,
+        "words": [
+          {
+            "word": " Well,",
+            "start": 63.68,
+            "end": 63.78,
+            "probability": 0.3892572522163391
+          },
+          {
+            "word": " first",
+            "start": 63.9,
+            "end": 64.0,
+            "probability": 0.9924350380897522
+          },
+          {
+            "word": " of",
+            "start": 64.0,
+            "end": 64.2,
+            "probability": 0.9943481087684631
+          },
+          {
+            "word": " all,",
+            "start": 64.2,
+            "end": 64.34,
+            "probability": 0.9994140863418579
+          },
+          {
+            "word": " Gerald,",
+            "start": 64.4,
+            "end": 64.6,
+            "probability": 0.9719616174697876
+          },
+          {
+            "word": " if",
+            "start": 64.74,
+            "end": 64.8,
+            "probability": 0.9694088697433472
+          },
+          {
+            "word": " you",
+            "start": 64.8,
+            "end": 64.88,
+            "probability": 0.9962564706802368
+          },
+          {
+            "word": " think",
+            "start": 64.88,
+            "end": 65.02,
+            "probability": 0.9925244450569153
+          },
+          {
+            "word": " anyone's",
+            "start": 65.02,
+            "end": 65.4,
+            "probability": 0.9067023396492004
+          },
+          {
+            "word": " going",
+            "start": 65.4,
+            "end": 65.5,
+            "probability": 0.4707755446434021
+          },
+          {
+            "word": " to",
+            "start": 65.5,
+            "end": 65.58,
+            "probability": 0.998130738735199
+          },
+          {
+            "word": " touch",
+            "start": 65.58,
+            "end": 65.78,
+            "probability": 0.9852081537246704
+          },
+          {
+            "word": " this",
+            "start": 65.78,
+            "end": 66.06,
+            "probability": 0.9937463998794556
+          },
+          {
+            "word": " deal",
+            "start": 66.06,
+            "end": 66.26,
+            "probability": 0.9773714542388916
+          },
+          {
+            "word": " after",
+            "start": 66.26,
+            "end": 66.54,
+            "probability": 0.967227578163147
+          },
+          {
+            "word": " your",
+            "start": 66.54,
+            "end": 66.68,
+            "probability": 0.9153560996055603
+          },
+          {
+            "word": " bad",
+            "start": 66.68,
+            "end": 66.9,
+            "probability": 0.9963151812553406
+          },
+          {
+            "word": " faith,",
+            "start": 66.9,
+            "end": 67.2,
+            "probability": 0.9868185520172119
+          },
+          {
+            "word": " you're",
+            "start": 67.36,
+            "end": 67.44,
+            "probability": 0.9383950233459473
+          },
+          {
+            "word": " mistaken.",
+            "start": 67.44,
+            "end": 67.88,
+            "probability": 0.9896636605262756
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "file_name": "12e911f9-2e9f-4ac0-aa56-8c6edebd8360_Sample2_processed.wav",
+      "file_size_mb": 2.260684,
+      "audio_duration_seconds": 70.645,
+      "processing_time_seconds": 5.243082046508789,
+      "speed_ratio": 13.473945166858561,
+      "model_size": "base",
+      "device": "cpu",
+      "word_timestamps": true,
+      "task": "transcribe",
+      "processing_time": 5.2431480884552
+    }
+  },
+  "diarization": {
+    "segments": [
+      {
+        "start": 0.0,
+        "end": 3.0,
+        "speaker": "SPEAKER_00",
+        "duration": 3.0
+      },
+      {
+        "start": 2.0,
+        "end": 6.5,
+        "speaker": "SPEAKER_01",
+        "duration": 4.5
+      },
+      {
+        "start": 5.5,
+        "end": 7.0,
+        "speaker": "SPEAKER_02",
+        "duration": 1.5
+      },
+      {
+        "start": 6.0,
+        "end": 9.0,
+        "speaker": "SPEAKER_01",
+        "duration": 3.0
+      },
+      {
+        "start": 8.0,
+        "end": 13.0,
+        "speaker": "SPEAKER_00",
+        "duration": 5.0
+      },
+      {
+        "start": 12.0,
+        "end": 14.5,
+        "speaker": "SPEAKER_03",
+        "duration": 2.5
+      },
+      {
+        "start": 13.5,
+        "end": 17.5,
+        "speaker": "SPEAKER_00",
+        "duration": 4.0
+      },
+      {
+        "start": 16.5,
+        "end": 19.0,
+        "speaker": "SPEAKER_03",
+        "duration": 2.5
+      },
+      {
+        "start": 18.0,
+        "end": 24.5,
+        "speaker": "SPEAKER_00",
+        "duration": 6.5
+      },
+      {
+        "start": 23.5,
+        "end": 32.5,
+        "speaker": "SPEAKER_03",
+        "duration": 9.0
+      },
+      {
+        "start": 31.5,
+        "end": 50.0,
+        "speaker": "SPEAKER_00",
+        "duration": 18.5
+      },
+      {
+        "start": 49.0,
+        "end": 55.0,
+        "speaker": "SPEAKER_03",
+        "duration": 6.0
+      },
+      {
+        "start": 54.0,
+        "end": 56.0,
+        "speaker": "SPEAKER_02",
+        "duration": 2.0
+      },
+      {
+        "start": 55.0,
+        "end": 64.0,
+        "speaker": "SPEAKER_03",
+        "duration": 9.0
+      },
+      {
+        "start": 63.0,
+        "end": 69.0,
+        "speaker": "SPEAKER_00",
+        "duration": 6.0
+      },
+      {
+        "start": 68.0,
+        "end": 70.5,
+        "speaker": "SPEAKER_02",
+        "duration": 2.5
+      }
+    ],
+    "speakers": [
+      "SPEAKER_00",
+      "SPEAKER_01",
+      "SPEAKER_02",
+      "SPEAKER_03"
+    ],
+    "num_speakers": 4,
+    "total_duration": 70.5,
+    "speaker_stats": {
+      "SPEAKER_00": {
+        "segments": 6,
+        "total_duration": 43.0,
+        "percentage": 50.29239766081871
+      },
+      "SPEAKER_01": {
+        "segments": 2,
+        "total_duration": 7.5,
+        "percentage": 8.771929824561402
+      },
+      "SPEAKER_02": {
+        "segments": 3,
+        "total_duration": 6.0,
+        "percentage": 7.017543859649122
+      },
+      "SPEAKER_03": {
+        "segments": 5,
+        "total_duration": 29.0,
+        "percentage": 33.91812865497076
+      }
+    },
+    "metadata": {
+      "file_name": "12e911f9-2e9f-4ac0-aa56-8c6edebd8360_Sample2_processed.wav",
+      "processing_time": 3.4506921768188477,
+      "num_speakers_detected": 4,
+      "engine": "speechbrain",
+      "embedding_model": "spkrec-ecapa-voxceleb",
+      "vad_available": true
+    }
+  },
+  "preprocessing": {
+    "applied": true,
+    "metrics": {
+      "original": {
+        "duration": 70.64497916666667,
+        "sample_rate": 48000,
+        "rms": 0.10507282614707947,
+        "peak": 0.7969796657562256,
+        "dc_offset": -0.0007773053948767483,
+        "clipping_percentage": 0.0,
+        "silence_percentage": 2.9396993593847642,
+        "samples": 3390959
+      },
+      "processed": {
+        "duration": 70.645,
+        "sample_rate": 16000,
+        "rms": 0.10822539776563644,
+        "peak": 0.6816372871398926,
+        "dc_offset": 2.5334786187158898e-05,
+        "clipping_percentage": 0.0,
+        "silence_percentage": 2.748513695236747,
+        "samples": 1130320
+      },
+      "processing_time": 1.524799108505249,
+      "sample_rate_changed": true,
+      "peak_change": -0.11534237861633301,
+      "dc_offset_change": -0.0007519706086895894,
+      "summary": "Sample rate: 48000→16000Hz, Audio normalized",
+      "processing_effective": true,
+      "speech_ready": true
+    }
+  },
+  "metadata": {
+    "file_name": "12e911f9-2e9f-4ac0-aa56-8c6edebd8360_Sample2.mp3",
+    "file_size_mb": 1.131043,
+    "total_duration": 67.88,
+    "num_speakers": 3,
+    "num_segments": 22,
+    "language": "en",
+    "whisper_model": "base",
+    "device": "auto",
+    "total_processing_time": 10.21918511390686,
+    "engines": [
+      "whisper",
+      "speechbrain"
+    ]
+  }
+}

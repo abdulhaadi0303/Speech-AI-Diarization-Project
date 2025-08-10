@@ -1,28 +1,23 @@
-// src/Components/transcription/LiveTranscriptEditor.jsx - UPDATED with Enhanced Download
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+// src/Components/transcription/LiveTranscriptEditor.jsx - RESTORED: Original working version without downloads
+import React, { useState, useRef, useEffect, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react';
 import { motion } from 'framer-motion';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import '../../styles/SmoothScrollEditor.css'; // 🆕 Import smooth scroll styles
+import '../../styles/SmoothScrollEditor.css';
 import { 
   Users, 
   Save, 
   RotateCcw, 
-  Settings, 
-  Download,
-  Edit3,
   Copy,
   CheckCircle,
   User,
   AlertCircle,
-  FileText,
-  File,
-  ChevronDown
+  Edit3
 } from 'lucide-react';
 import useAppStore from '../../stores/appStore';
 import toast from 'react-hot-toast';
 
-const LiveTranscriptEditor = ({ results, hasSession }) => {
+const LiveTranscriptEditor = forwardRef(({ results, hasSession }, ref) => {
   // 🔧 CORE STATE
   const [originalContent, setOriginalContent] = useState('');
   const [currentMappings, setCurrentMappings] = useState({});
@@ -31,7 +26,6 @@ const LiveTranscriptEditor = ({ results, hasSession }) => {
   const [copied, setCopied] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
   const [isInitialized, setIsInitialized] = useState(false);
-  const [showDownloadMenu, setShowDownloadMenu] = useState(false); // 🆕 Download menu state
   
   // 🔧 REFS
   const quillRef = useRef(null);
@@ -47,6 +41,25 @@ const LiveTranscriptEditor = ({ results, hasSession }) => {
     speakers: `speaker_mappings_${currentSessionId}`,
     hasEdits: `has_edits_${currentSessionId}`
   });
+
+  // ✅ EXPOSE METHODS TO PARENT VIA REF
+  useImperativeHandle(ref, () => ({
+    getCurrentContent: () => {
+      const editor = quillRef.current?.getEditor();
+      if (editor) {
+        return editor.root.innerHTML;
+      }
+      return generateLiveContent();
+    },
+    getCurrentMappings: () => currentMappings,
+    hasUnsavedChanges: () => hasUnsavedChanges,
+    getPlainTextContent: () => {
+      const htmlContent = getCurrentContent();
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = htmlContent;
+      return tempDiv.textContent || tempDiv.innerText || '';
+    }
+  }), [currentMappings, hasUnsavedChanges]);
 
   // ✅ Initialize content and mappings - NO POPUPS
   useEffect(() => {
@@ -69,7 +82,6 @@ const LiveTranscriptEditor = ({ results, hasSession }) => {
       }, 500);
       
       setHasUnsavedChanges(false);
-      // Removed: toast.success('Restored previous edits');
     } else if (results?.results?.segments) {
       console.log('🆕 Initializing transcript from results');
       const { content, speakers } = convertResultsToEditorFormat(results.results.segments);
@@ -191,6 +203,15 @@ const LiveTranscriptEditor = ({ results, hasSession }) => {
     }, 200);
   }, []);
 
+  // 🔧 GET CURRENT CONTENT from Quill
+  const getCurrentContent = useCallback(() => {
+    const editor = quillRef.current?.getEditor();
+    if (editor) {
+      return editor.root.innerHTML;
+    }
+    return generateLiveContent();
+  }, [generateLiveContent]);
+
   // 🔧 EFFECT: Initialize Quill content
   useEffect(() => {
     if (isInitialized && originalContent && quillRef.current?.getEditor()) {
@@ -252,235 +273,6 @@ const LiveTranscriptEditor = ({ results, hasSession }) => {
     }
   }, []);
 
-  // 🔧 GET CURRENT CONTENT from Quill
-  const getCurrentContent = useCallback(() => {
-    const editor = quillRef.current?.getEditor();
-    if (editor) {
-      return editor.root.innerHTML;
-    }
-    return generateLiveContent();
-  }, [generateLiveContent]);
-
-  // 🆕 ENHANCED DOWNLOAD FUNCTIONS
-  
-  // Generate speaker statistics
-  const generateSpeakerStats = useCallback(() => {
-    const stats = {};
-    const segments = results?.results?.segments || [];
-    
-    segments.forEach(segment => {
-      const speakerName = currentMappings[segment.speaker] || segment.speaker;
-      if (!stats[speakerName]) {
-        stats[speakerName] = {
-          segments: 0,
-          totalDuration: 0,
-          wordCount: 0
-        };
-      }
-      stats[speakerName].segments++;
-      stats[speakerName].totalDuration += (segment.end - segment.start);
-      stats[speakerName].wordCount += (segment.text || '').split(' ').length;
-    });
-    
-    return stats;
-  }, [results, currentMappings]);
-
-  // Format time helper
-  const formatTime = (seconds) => {
-    const hours = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = Math.floor(seconds % 60);
-    
-    if (hours > 0) {
-      return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    }
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  // 🆕 PROFESSIONAL TXT FORMAT - NO POPUP
-  const downloadProfessionalTxt = useCallback(() => {
-    try {
-      const currentContent = getCurrentContent();
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = currentContent;
-      const segments = results?.results?.segments || [];
-      const speakerStats = generateSpeakerStats();
-      const metadata = results?.results?.metadata || {};
-      
-      // Header
-      let content = `TRANSCRIPT
-${'='.repeat(60)}
-
-Document Information:
-• Generated: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}
-• Session ID: ${currentSessionId?.slice(0, 8) || 'N/A'}
-• Total Duration: ${formatTime(metadata.total_duration || 0)}
-• Total Speakers: ${Object.keys(currentMappings).length}
-• Language: ${metadata.language || 'Auto-detected'}
-
-Speaker Summary:
-`;
-
-      // Speaker stats
-      Object.entries(speakerStats).forEach(([speaker, stats]) => {
-        const percentage = metadata.total_duration ? 
-          ((stats.totalDuration / metadata.total_duration) * 100).toFixed(1) : '0';
-        content += `• ${speaker}: ${stats.segments} segments, ${formatTime(stats.totalDuration)} (${percentage}%), ~${stats.wordCount} words\n`;
-      });
-
-      content += `\n${'='.repeat(60)}\nTRANSCRIPT CONTENT\n${'='.repeat(60)}\n\n`;
-
-      // Format transcript with proper speaker names
-      segments.forEach((segment, index) => {
-        const speakerName = currentMappings[segment.speaker] || segment.speaker;
-        const timestamp = `[${formatTime(segment.start)} - ${formatTime(segment.end)}]`;
-        
-        content += `${timestamp} ${speakerName}:\n${segment.text}\n\n`;
-      });
-
-      content += `${'='.repeat(60)}\nEnd of Transcript\nGenerated by AI Speech Diarization Platform\n`;
-
-      const blob = new Blob([content], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `transcript_professional_${currentSessionId?.slice(0, 8) || 'session'}_${new Date().toISOString().slice(0, 10)}.txt`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-      
-      // Removed: toast.success('Professional transcript downloaded');
-    } catch (error) {
-      console.error('Download error:', error);
-      // Keep only error toast for critical failures
-      toast.error('Failed to download transcript');
-    }
-  }, [getCurrentContent, results, currentMappings, currentSessionId, generateSpeakerStats]);
-
-  // 🆕 MEETING MINUTES FORMAT - NO POPUP
-  const downloadMeetingMinutes = useCallback(() => {
-    try {
-      const segments = results?.results?.segments || [];
-      const speakerStats = generateSpeakerStats();
-      const metadata = results?.results?.metadata || {};
-      
-      let content = `MEETING MINUTES
-${'='.repeat(60)}
-
-Meeting Details:
-• Date: ${new Date().toLocaleDateString()}
-• Duration: ${formatTime(metadata.total_duration || 0)}
-• Participants: ${Object.keys(currentMappings).length}
-
-Attendees:
-`;
-
-      Object.keys(speakerStats).forEach(speaker => {
-        content += `• ${speaker}\n`;
-      });
-
-      content += `\nDiscussion:\n${'='.repeat(40)}\n\n`;
-
-      // Group segments by speaker for cleaner reading
-      let currentSpeaker = '';
-      let speakerContent = '';
-      
-      segments.forEach((segment, index) => {
-        const speakerName = currentMappings[segment.speaker] || segment.speaker;
-        
-        if (speakerName !== currentSpeaker) {
-          if (speakerContent) {
-            content += `${currentSpeaker}:\n${speakerContent}\n\n`;
-          }
-          currentSpeaker = speakerName;
-          speakerContent = segment.text;
-        } else {
-          speakerContent += ' ' + segment.text;
-        }
-      });
-      
-      // Add final speaker content
-      if (speakerContent) {
-        content += `${currentSpeaker}:\n${speakerContent}\n\n`;
-      }
-
-      content += `${'='.repeat(60)}\nAction Items: [To be filled]\nNext Meeting: [To be scheduled]\n`;
-
-      const blob = new Blob([content], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `meeting_minutes_${new Date().toISOString().slice(0, 10)}.txt`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-      
-      // Removed: toast.success('Meeting minutes downloaded');
-    } catch (error) {
-      toast.error('Failed to download meeting minutes');
-    }
-  }, [results, currentMappings, generateSpeakerStats]);
-
-  // 🆕 CSV EXPORT FOR ANALYSIS - NO POPUP
-  const downloadCSV = useCallback(() => {
-    try {
-      const segments = results?.results?.segments || [];
-      
-      let csvContent = 'Start Time,End Time,Duration,Speaker (Original),Speaker (Mapped),Text,Word Count\n';
-      
-      segments.forEach(segment => {
-        const speakerName = currentMappings[segment.speaker] || segment.speaker;
-        const duration = segment.end - segment.start;
-        const wordCount = (segment.text || '').split(' ').length;
-        
-        // Escape CSV fields
-        const escapedText = (segment.text || '').replace(/"/g, '""');
-        
-        csvContent += `${segment.start},${segment.end},${duration.toFixed(2)},"${segment.speaker}","${speakerName}","${escapedText}",${wordCount}\n`;
-      });
-
-      const blob = new Blob([csvContent], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `transcript_data_${currentSessionId?.slice(0, 8) || 'session'}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-      
-      // Removed: toast.success('CSV data downloaded');
-    } catch (error) {
-      toast.error('Failed to download CSV');
-    }
-  }, [results, currentMappings, currentSessionId]);
-
-  // Original simple download - NO POPUP
-  const downloadTranscript = useCallback(() => {
-    try {
-      const currentContent = getCurrentContent();
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = currentContent;
-      const plainText = tempDiv.textContent || tempDiv.innerText || '';
-      
-      const blob = new Blob([plainText], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `transcript_simple_${currentSessionId?.slice(0, 8) || 'session'}_${new Date().toISOString().slice(0, 10)}.txt`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-      
-      // Removed: toast.success('Simple transcript downloaded');
-    } catch (error) {
-      toast.error('Failed to download transcript');
-    }
-  }, [getCurrentContent, currentSessionId]);
-
   // 🔧 SAVE CHANGES - NO POPUP ON SUCCESS
   const saveChanges = useCallback(() => {
     if (!currentSessionId) {
@@ -518,7 +310,6 @@ Attendees:
       lastMappingsRef.current = JSON.stringify(currentMappings);
       setHasUnsavedChanges(false);
       
-      // Removed: toast.success('Changes saved successfully - speaker mapping remains active');
       console.log('💾 Saved changes - speaker mapping functionality preserved');
     } catch (error) {
       console.error('Save failed:', error);
@@ -562,8 +353,6 @@ Attendees:
       setTimeout(() => {
         setIsInitialized(true);
       }, 300);
-
-      // Removed: toast.success('Restored original transcript');
     }
   }, [results]);
 
@@ -577,7 +366,6 @@ Attendees:
       
       await navigator.clipboard.writeText(plainText);
       setCopied(true);
-      // Removed: toast.success('Copied to clipboard');
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       toast.error('Failed to copy');
@@ -609,34 +397,35 @@ Attendees:
     'bold', 'italic', 'underline', 'color', 'background'
   ], []);
 
-  // 🆕 SMOOTH SCROLL: Fixed scrolling implementation - NO AUTO SCROLL TEST
+  // 🆕 FIXED: Smooth scroll setup with overflow prevention
   useEffect(() => {
     if (quillRef.current && isInitialized) {
       const editor = quillRef.current.getEditor();
       if (editor) {
-        const quillContainer = quillRef.current.getEditor().container;
+        const quillContainer = editor.container;
         const editorElement = quillContainer.querySelector('.ql-editor');
+        const containerElement = quillContainer.querySelector('.ql-container');
         
-        if (editorElement) {
-          // 🔧 CRITICAL FIX: Ensure proper height and overflow
-          editorElement.style.height = 'auto';
-          editorElement.style.minHeight = '500px';
-          editorElement.style.maxHeight = 'none';
+        if (editorElement && containerElement) {
+          // 🔧 CRITICAL: Force strict height control
+          containerElement.style.height = '100%';
+          containerElement.style.maxHeight = '100%';
+          containerElement.style.overflow = 'hidden';
+          containerElement.style.display = 'flex';
+          containerElement.style.flexDirection = 'column';
+          
+          // 🔧 CRITICAL: Editor element with controlled height
+          editorElement.style.flex = '1';
+          editorElement.style.height = '0'; // Forces flex calculation
+          editorElement.style.minHeight = '0';
+          editorElement.style.maxHeight = '100%';
           editorElement.style.overflowY = 'auto';
           editorElement.style.overflowX = 'hidden';
           editorElement.style.scrollBehavior = 'smooth';
           editorElement.style.padding = '20px';
+          editorElement.style.boxSizing = 'border-box';
           
-          // Force container to allow scrolling
-          const container = quillContainer.querySelector('.ql-container');
-          if (container) {
-            container.style.height = '100%';
-            container.style.display = 'flex';
-            container.style.flexDirection = 'column';
-          }
-          
-          // 🔧 REMOVED: Auto scroll test that was causing the strange behavior
-          console.log('✨ Smooth scrolling setup completed (no auto-test)');
+          console.log('✨ FIXED: Overflow prevention and smooth scrolling setup completed');
         }
       }
     }
@@ -682,85 +471,6 @@ Attendees:
               <span>Copy</span>
             </button>
             
-            {/* 🆕 ENHANCED DOWNLOAD DROPDOWN */}
-            <div className="relative">
-              <button
-                onClick={() => setShowDownloadMenu(!showDownloadMenu)}
-                className="flex items-center space-x-2 px-4 py-2 bg-green-100 text-green-700 hover:bg-green-200 rounded-lg text-sm font-medium transition-colors"
-              >
-                <Download className="w-4 h-4" />
-                <span>Download</span>
-                <ChevronDown className="w-3 h-3" />
-              </button>
-              
-              {showDownloadMenu && (
-                <div className="absolute right-0 top-full mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                  <div className="p-2">
-                    <div className="text-xs text-gray-500 font-medium mb-2 px-2">Professional Formats</div>
-                    
-                    <button
-                      onClick={() => {
-                        downloadProfessionalTxt();
-                        setShowDownloadMenu(false);
-                      }}
-                      className="w-full flex items-center space-x-3 px-3 py-2 text-left hover:bg-gray-50 rounded-md transition-colors"
-                    >
-                      <FileText className="w-4 h-4 text-blue-600" />
-                      <div>
-                        <div className="font-medium text-sm">Professional Transcript</div>
-                        <div className="text-xs text-gray-500">Formatted with metadata & stats</div>
-                      </div>
-                    </button>
-                    
-                    <button
-                      onClick={() => {
-                        downloadMeetingMinutes();
-                        setShowDownloadMenu(false);
-                      }}
-                      className="w-full flex items-center space-x-3 px-3 py-2 text-left hover:bg-gray-50 rounded-md transition-colors"
-                    >
-                      <File className="w-4 h-4 text-green-600" />
-                      <div>
-                        <div className="font-medium text-sm">Meeting Minutes</div>
-                        <div className="text-xs text-gray-500">Business-ready format</div>
-                      </div>
-                    </button>
-                    
-                    <button
-                      onClick={() => {
-                        downloadCSV();
-                        setShowDownloadMenu(false);
-                      }}
-                      className="w-full flex items-center space-x-3 px-3 py-2 text-left hover:bg-gray-50 rounded-md transition-colors"
-                    >
-                      <FileText className="w-4 h-4 text-purple-600" />
-                      <div>
-                        <div className="font-medium text-sm">Data Export (CSV)</div>
-                        <div className="text-xs text-gray-500">For analysis & spreadsheets</div>
-                      </div>
-                    </button>
-                    
-                    <div className="border-t border-gray-100 my-2"></div>
-                    <div className="text-xs text-gray-500 font-medium mb-2 px-2">Basic Format</div>
-                    
-                    <button
-                      onClick={() => {
-                        downloadTranscript();
-                        setShowDownloadMenu(false);
-                      }}
-                      className="w-full flex items-center space-x-3 px-3 py-2 text-left hover:bg-gray-50 rounded-md transition-colors"
-                    >
-                      <FileText className="w-4 h-4 text-gray-600" />
-                      <div>
-                        <div className="font-medium text-sm">Simple Text</div>
-                        <div className="text-xs text-gray-500">Plain transcript only</div>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-            
             <button
               onClick={resetToOriginal}
               className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors"
@@ -785,15 +495,7 @@ Attendees:
         </div>
       </div>
 
-      {/* Close dropdown when clicking outside */}
-      {showDownloadMenu && (
-        <div 
-          className="fixed inset-0 z-40" 
-          onClick={() => setShowDownloadMenu(false)}
-        />
-      )}
-
-      {/* 🔧 MOVED: Speaker Panel - Now appears on TOP of editor */}
+      {/* 🔧 RESTORED: Speaker Panel - Original layout on TOP of editor */}
       {showSpeakerPanel && (
         <motion.div
           initial={{ height: 0, opacity: 0 }}
@@ -807,7 +509,7 @@ Attendees:
               Speaker Names
             </h4>
             
-            {/* 🔧 RESPONSIVE GRID: Horizontal layout for speaker inputs */}
+            {/* 🔧 RESTORED: Original responsive grid layout */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-4">
               {Object.entries(currentMappings).map(([originalSpeaker, currentValue]) => (
                 <div key={originalSpeaker} className="space-y-2">
@@ -843,12 +545,12 @@ Attendees:
             </div>
             
             <div className="flex flex-wrap gap-4">
-              <div className="flex-1 min-w-64 p-3 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-xs text-green-700 font-medium">
-                  ✅ <strong>ENHANCED DOWNLOADS!</strong>
+              <div className="flex-1 min-w-64 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-xs text-blue-700 font-medium">
+                  ℹ️ <strong>Downloads moved to header!</strong>
                 </p>
-                <p className="text-xs text-green-600 mt-1">
-                  • Professional formats • Meeting minutes • CSV data • Speaker stats
+                <p className="text-xs text-blue-600 mt-1">
+                  Use the enhanced download menu in the page header for all download options.
                 </p>
               </div>
 
@@ -865,8 +567,8 @@ Attendees:
                 </div>
               )}
 
-              <div className="flex-1 min-w-64 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-xs text-blue-700">
+              <div className="flex-1 min-w-64 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-xs text-green-700">
                   🔧 <strong>Status:</strong> {Object.keys(currentMappings).length} speakers • Initialized: {isInitialized ? '✅' : '⏳'}
                 </p>
               </div>
@@ -875,23 +577,24 @@ Attendees:
         </motion.div>
       )}
 
-      {/* 🔧 UPDATED: Editor - Now takes full width */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex-1 p-4 overflow-hidden">
-          <ReactQuill
-            ref={quillRef}
-            theme="snow"
-            onChange={handleEditorChange}
-            modules={modules}
-            formats={formats}
-            style={{
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              overflow: 'hidden'
-            }}
-            className="h-full smooth-scroll-editor"
-          />
+      {/* 🔧 FIXED: Editor with increased height calculation to fit outer box */}
+      <div className="flex-1 flex flex-col overflow-hidden h-full">
+        <div className="flex-1 p-4 overflow-hidden h-full">
+          <div className="h-full overflow-hidden">
+            <ReactQuill
+              ref={quillRef}
+              theme="snow"
+              onChange={handleEditorChange}
+              modules={modules}
+              formats={formats}
+              style={{
+                height: showSpeakerPanel ? 'calc(160vh - 900px)' : 'calc(160vh - 700px)', // Increased height
+                maxHeight: showSpeakerPanel ? 'calc(160vh - 900px)' : 'calc(160vh - 700px)', // Increased height
+                minHeight: showSpeakerPanel ? '600px' : '800px' // Increased minimum heights
+              }}
+              className="smooth-scroll-editor"
+            />
+          </div>
         </div>
         
         {/* Status Bar */}
@@ -921,6 +624,8 @@ Attendees:
       </div>
     </div>
   );
-};
+});
+
+LiveTranscriptEditor.displayName = 'LiveTranscriptEditor';
 
 export default LiveTranscriptEditor;
