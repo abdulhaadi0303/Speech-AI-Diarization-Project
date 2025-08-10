@@ -1,8 +1,8 @@
-// src/Components/layout/SideBar.jsx - Enhanced Navigation for 4-Page Structure
+// src/Components/layout/SideBar.jsx - Enhanced Navigation for 5-Page Structure
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
-// Updated navigation data for 4-page structure
+// Updated navigation data for 5-page structure with Admin Panel
 const navigationItems = [
   { 
     id: 'home', 
@@ -26,10 +26,17 @@ const navigationItems = [
     description: 'AI Analysis & Insights'
   },
   { 
+    id: 'admin', 
+    label: 'Admin', 
+    path: '/admin', 
+    icon: '⚙️',
+    description: 'Prompt Management & Settings'
+  },
+  { 
     id: 'settings', 
     label: 'Settings', 
     path: '/settings', 
-    icon: '⚙️',
+    icon: '🔧',
     description: 'Application Settings'
   }
 ];
