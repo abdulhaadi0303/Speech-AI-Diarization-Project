@@ -189,7 +189,7 @@ const TranscriptionPage = () => {
             progress: 0,
             sessionId: sessionId
           });
-          toast.error(status.message || 'Processing failed');
+          toast.error('Processing failed');
           
         } else if (status.status === 'processing') {
           // Update progress from backend if it's higher
@@ -262,17 +262,6 @@ const TranscriptionPage = () => {
     };
   }, []);
 
-  if (!isConnected) {
-    return (
-      <div className="min-h-screen bg-gray-800 flex items-center justify-center">
-        <div className="text-center bg-gray-700 rounded-2xl p-8 shadow-lg max-w-md border border-gray-600">
-          <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-white mb-2">Backend Disconnected</h2>
-          <p className="text-gray-300">Please ensure the backend server is running and accessible.</p>
-        </div>
-      </div>
-    );
-  }
 
   const hasSession = !!currentSessionId;
 

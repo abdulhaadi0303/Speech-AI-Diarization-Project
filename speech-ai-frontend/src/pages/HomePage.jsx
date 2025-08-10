@@ -7,7 +7,7 @@ import useAppStore from '../stores/appStore';
 import toast from 'react-hot-toast';
 
 // Import all the extracted components
-import ConnectionStatusCard from '../Components/home/ConnectionStatusCard';
+
 import PageHeader from '../Components/home/PageHeader';
 import ProcessingBanner from '../Components/home/ProcessingBanner';
 import AudioUploader from '../Components/home/AudioUploader';
@@ -169,11 +169,6 @@ const HomePage = () => {
 
   // Determine if processing is possible
   const canProcess = selectedFile && !isProcessing;
-
-  // Show connection status card if not connected
-  if (!isConnected) {
-    return <ConnectionStatusCard isConnected={isConnected} />;
-  }
 
   return (
     <div className="min-h-screen bg-gray-900 overflow-auto">
