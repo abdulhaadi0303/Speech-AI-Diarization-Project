@@ -90,7 +90,7 @@ const AdminDashboard = () => {
       setPrompts(response.data);
     } catch (error) {
       console.error('Failed to load prompts:', error);
-      toast.error('Failed to load prompts');
+      // toast.error('Failed to load prompts');
       throw error;
     }
   };

@@ -493,29 +493,6 @@ Timestamp: ${result.timestamp}
   const isValidSession = hasValidSession();
   const sessionData = activeSessions.has(currentSessionId) ? activeSessions.get(currentSessionId) : null;
 
-  // Show connection error if backend is not available
-  if (!backendStatus.connected) {
-    return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6">
-        <div className="bg-gray-800 rounded-xl border border-gray-700 p-8 max-w-md w-full text-center">
-          <AlertTriangle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-white mb-2">Backend Disconnected</h2>
-          <p className="text-gray-400 mb-6">
-            Cannot connect to the analysis backend. Please check that the server is running.
-          </p>
-          <div className="bg-gray-700 rounded-lg p-4 text-left text-sm">
-            <div className="font-medium text-white mb-2">To start Ollama:</div>
-            <code className="block bg-gray-900 p-2 rounded border border-gray-600 text-cyan-400">
-              ollama serve
-            </code>
-            <div className="mt-2 text-gray-400">
-              Make sure the model is downloaded: <code className="text-cyan-400">ollama pull llama3.2:3b</code>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-900 p-6 overflow-auto">
