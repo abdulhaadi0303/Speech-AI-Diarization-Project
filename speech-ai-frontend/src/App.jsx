@@ -1,4 +1,4 @@
-// src/App.jsx - Updated with Editor Styles Import
+// src/App.jsx - Updated with Admin Panel as separate page
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
@@ -13,9 +13,9 @@ import HomePage from './pages/HomePage';
 import TranscriptionPage from './pages/TranscriptionPage'; // This is our ResultPage
 import SettingsPage from './pages/SettingsPage'; // Use the page version
 import AnalysisPage from './pages/AnalysisPage'; // New AI Analysis page
+import AdminDashboard from './pages/AdminPanel'; // Admin Panel as separate page
 import { BackendProvider } from './contexts/BackendContext';
 import ErrorBoundary from './Components/common/ErrorBoundary';
-import AdminDashboard from './pages/AdminPanel.jsx';
 
 const App = () => {
   const [showSidebar, setShowSidebar] = useState(true);
@@ -63,7 +63,8 @@ const App = () => {
             <div
               className={`
                 flex flex-col
-                ${showSidebar ? 'ml-[5%] max-[1000px]:ml-[6%] max-[850px]:ml-[7.5%] w-[95%] max-[1000px]:w-[94%] max-[850px]:w-[92.5%]' : 'w-full'}
+                ${showSidebar ? 
+                  'ml-[5%] max-[1000px]:ml-[6%] max-[850px]:ml-[7.5%] w-[95%] max-[1000px]:w-[94%] max-[850px]:w-[92.5%]' : 'w-full'}
               `}
             >
               <Header />
@@ -75,13 +76,14 @@ const App = () => {
                   {/* ResultPage - Processing Status + Results Display */}
                   <Route path="/results" element={<TranscriptionPage />} />
                   
-                  {/* SettingsPage - Keep original settings functionality */}
-                  <Route path="/settings" element={<SettingsPage />} />
-                  
-                  {/* AnalysisPage - New AI Analysis page */}
+                  {/* AnalysisPage - AI Analysis page */}
                   <Route path="/analysis" element={<AnalysisPage />} />
-
+                  
+                  {/* AdminPage - Prompt Management Dashboard */}
                   <Route path="/admin" element={<AdminDashboard />} />
+                  
+                  {/* SettingsPage - Application settings */}
+                  <Route path="/settings" element={<SettingsPage />} />
                 </Routes>
               </main>
             </div>

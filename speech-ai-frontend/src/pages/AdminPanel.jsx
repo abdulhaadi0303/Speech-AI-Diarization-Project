@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { 
   Plus, 
   Settings, 
-  BarChart3, 
   Search, 
   Filter,
   Save,
@@ -33,23 +32,24 @@ const AdminDashboard = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingPrompt, setEditingPrompt] = useState(null);
-  const [analytics, setAnalytics] = useState(null);
-  const [showAnalytics, setShowAnalytics] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   // Form data for creating/editing prompts
-  const [formData, setFormData] = useState({
-    key: '',
-    title: '',
-    description: '',
-    prompt_template: '',
-    icon: 'Brain',
-    emoji: '🤖',
-    category: 'general',
-    gradient_from: 'cyan-500',
-    gradient_to: 'cyan-600',
-    max_tokens: 2000,
-    estimated_time: 30.0
+  const [formData, setFormData] = useState(() => {
+    const defaultGradient = { from: 'blue-500', to: 'blue-600' };
+    return {
+      key: '',
+      title: '',
+      description: '',
+      prompt_template: '',
+      icon: 'Brain',
+      emoji: '🤖',
+      category: 'general',
+      gradient_from: defaultGradient.from,
+      gradient_to: defaultGradient.to,
+      max_tokens: 2000,
+      estimated_time: 30.0
+    };
   });
 
   const defaultCategories = [
@@ -71,8 +71,7 @@ const AdminDashboard = () => {
     try {
       await Promise.all([
         loadPrompts(),
-        loadCategories(),
-        loadAnalytics()
+        loadCategories()
       ]);
     } catch (error) {
       console.error('Failed to load initial data:', error);
@@ -103,21 +102,6 @@ const AdminDashboard = () => {
     } catch (error) {
       console.error('Failed to load categories:', error);
       setCategories(defaultCategories);
-    }
-  };
-
-  const loadAnalytics = async () => {
-    try {
-      const response = await backendApi.prompts.getAnalytics();
-      setAnalytics(response.data);
-    } catch (error) {
-      console.error('Failed to load analytics:', error);
-      // Set mock analytics as fallback
-      setAnalytics({
-        overview: { total_prompts: 0, active_prompts: 0, total_usage: 0 },
-        categories: {},
-        top_prompts: []
-      });
     }
   };
 
@@ -153,7 +137,6 @@ const AdminDashboard = () => {
       
       // Reload data
       await loadPrompts();
-      await loadAnalytics();
       
     } catch (error) {
       console.error('Failed to create prompt:', error);
@@ -187,7 +170,6 @@ const AdminDashboard = () => {
       
       // Reload data
       await loadPrompts();
-      await loadAnalytics();
       
     } catch (error) {
       console.error('Failed to update prompt:', error);
@@ -213,7 +195,6 @@ const AdminDashboard = () => {
       
       // Reload data
       await loadPrompts();
-      await loadAnalytics();
       
     } catch (error) {
       console.error('Failed to delete prompt:', error);
@@ -261,6 +242,7 @@ const AdminDashboard = () => {
   };
 
   const resetForm = () => {
+    const defaultGradient = getCategoryGradient('general');
     setFormData({
       key: '',
       title: '',
@@ -269,18 +251,26 @@ const AdminDashboard = () => {
       icon: 'Brain',
       emoji: '🤖',
       category: 'general',
-      gradient_from: 'cyan-500',
-      gradient_to: 'cyan-600',
+      gradient_from: defaultGradient.from,
+      gradient_to: defaultGradient.to,
       max_tokens: 2000,
       estimated_time: 30.0
     });
   };
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setFormData(prev => {
+      const newData = { ...prev, [field]: value };
+      
+      // Auto-update gradient colors when category changes
+      if (field === 'category') {
+        const gradient = getCategoryGradient(value);
+        newData.gradient_from = gradient.from;
+        newData.gradient_to = gradient.to;
+      }
+      
+      return newData;
+    });
   };
 
   // Filter prompts based on search and category
@@ -300,8 +290,25 @@ const AdminDashboard = () => {
   };
 
   const getCategoryColor = (category) => {
-    const categoryConfig = categories.find(cat => cat.value === category);
-    return categoryConfig?.color || 'gray';
+    const categoryColors = {
+      general: 'blue',
+      meeting: 'green', 
+      content: 'purple',
+      analysis: 'yellow',
+      productivity: 'orange'
+    };
+    return categoryColors[category] || 'blue';
+  };
+
+  const getCategoryGradient = (category) => {
+    const gradients = {
+      general: { from: 'blue-500', to: 'blue-600' },
+      meeting: { from: 'green-500', to: 'green-600' },
+      content: { from: 'purple-500', to: 'purple-600' },
+      analysis: { from: 'yellow-500', to: 'yellow-600' },
+      productivity: { from: 'orange-500', to: 'orange-600' }
+    };
+    return gradients[category] || gradients.general;
   };
 
   if (loading) {
@@ -334,13 +341,6 @@ const AdminDashboard = () => {
                 <span>Refresh</span>
               </button>
               <button
-                onClick={() => setShowAnalytics(!showAnalytics)}
-                className="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-              >
-                <BarChart3 className="w-4 h-4" />
-                <span>Analytics</span>
-              </button>
-              <button
                 onClick={() => setShowCreateModal(true)}
                 className="flex items-center space-x-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors"
               >
@@ -353,55 +353,6 @@ const AdminDashboard = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Analytics Panel */}
-        {showAnalytics && analytics && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-lg shadow-sm border p-6 mb-8"
-          >
-            <h2 className="text-lg font-semibold mb-4">System Analytics</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-cyan-600">{analytics.overview.total_prompts}</div>
-                <div className="text-sm text-gray-600">Total Prompts</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">{analytics.overview.active_prompts}</div>
-                <div className="text-sm text-gray-600">Active Prompts</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">{analytics.overview.total_usage}</div>
-                <div className="text-sm text-gray-600">Total Usage</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-orange-600">
-                  {analytics.overview.average_usage.toFixed(1)}
-                </div>
-                <div className="text-sm text-gray-600">Avg Usage</div>
-              </div>
-            </div>
-
-            {analytics.top_prompts.length > 0 && (
-              <div>
-                <h3 className="font-medium mb-3">Top Used Prompts</h3>
-                <div className="space-y-2">
-                  {analytics.top_prompts.map((prompt, index) => (
-                    <div key={prompt.key} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                      <div>
-                        <span className="font-medium">{prompt.title}</span>
-                        <span className="text-sm text-gray-500 ml-2">({prompt.category})</span>
-                      </div>
-                      <span className="text-sm font-medium text-cyan-600">{prompt.usage_count} uses</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </motion.div>
-        )}
-
         {/* Filters */}
         <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
@@ -446,7 +397,7 @@ const AdminDashboard = () => {
               className="bg-white rounded-lg shadow-sm border overflow-hidden hover:shadow-md transition-shadow"
             >
               {/* Card Header */}
-              <div className={`p-4 bg-gradient-to-r from-${prompt.gradient_from} to-${prompt.gradient_to}`}>
+              <div className={`p-4 bg-gradient-to-r from-${prompt.gradient_from || getCategoryGradient(prompt.category).from} to-${prompt.gradient_to || getCategoryGradient(prompt.category).to}`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div className="p-2 bg-white/20 rounded-lg">
