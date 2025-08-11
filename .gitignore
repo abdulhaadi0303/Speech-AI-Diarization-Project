@@ -54,6 +54,10 @@ media/
 *.png
 *.gif
 
+whisper-backend/uploads
+whisper-backend/outputs
+
+
 # IDE & OS Files (common)
 .DS_Store
 .idea/
