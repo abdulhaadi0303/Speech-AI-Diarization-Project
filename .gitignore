@@ -1,20 +1,20 @@
 # === FRONTEND ===
 # React (Node.js)
 speech-ai-frontend/node_modules/
-frontend/node_modules/
-frontend/build/
-frontend/.env.local
-frontend/.env.development.local
-frontend/.env.test.local
-frontend/.env.production.local
-frontend/.parcel-cache/
-frontend/.next/
-frontend/.turbo/
+**/node_modules/
+speech-ai-frontend/build/
+speech-ai-frontend/.env.local
+speech-ai-frontend/.env.development.local
+speech-ai-frontend/.env.test.local
+speech-ai-frontend/.env.production.local
+speech-ai-frontend/.parcel-cache/
+speech-ai-frontend/.next/
+speech-ai-frontend/.turbo/
 
 # logs
-frontend/npm-debug.log*
-frontend/yarn-debug.log*
-frontend/yarn-error.log*
+speech-ai-frontend/npm-debug.log*
+speech-ai-frontend/yarn-debug.log*
+speech-ai-frontend/yarn-error.log*
 
 # === BACKEND ===
 # Python
@@ -62,3 +62,5 @@ media/
 *.bak
 *.tmp
 Thumbs.db
+**/__MACOSX/
+**/._*
