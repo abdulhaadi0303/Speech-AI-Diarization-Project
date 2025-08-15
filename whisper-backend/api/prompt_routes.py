@@ -1,4 +1,4 @@
-# api/prompt_routes.py - Complete API routes for prompt management
+# api/prompt_routes.py - Complete API routes for prompt management (UPDATED: Removed system prompt protection)
 
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
@@ -89,44 +89,29 @@ class PromptUpdate(BaseModel):
             raise ValueError('Estimated time must be between 1 and 300 seconds')
         return v
 
-class PromptResponse(BaseModel):
-    id: int
-    key: str
-    title: str
-    description: str
-    icon: str
-    emoji: str
-    category: str
-    gradient_from: str
-    gradient_to: str
-    is_active: bool
-    is_system: bool
-    usage_count: int
-    estimated_time: float
-    created_at: str
-    updated_at: Optional[str] = None
-
-# Dependency to get DB session
+# Dependency to get database session
 def get_db():
     if not DATABASE_AVAILABLE or not db_manager:
         raise HTTPException(
             status_code=503, 
-            detail="Database not available. Please ensure the database is initialized."
+            detail="Database not available. Please check database connection."
         )
     
-    session = db_manager.get_session()
+    db = db_manager.get_session()
     try:
-        yield session
+        yield db
     finally:
-        session.close()
+        db.close()
 
-@router.get("/", response_model=List[dict])
+# API Endpoints
+
+@router.get("/")
 async def get_all_prompts(
     category: Optional[str] = None,
     active_only: bool = True,
     db: Session = Depends(get_db)
 ):
-    """Get all analysis prompts, optionally filtered by category"""
+    """Get all analysis prompts with optional filtering"""
     try:
         query = db.query(AnalysisPrompt)
         
@@ -136,7 +121,7 @@ async def get_all_prompts(
         if category and category != 'all':
             query = query.filter(AnalysisPrompt.category == category)
         
-        prompts = query.order_by(AnalysisPrompt.created_at.desc()).all()
+        prompts = query.order_by(AnalysisPrompt.category, AnalysisPrompt.title).all()
         
         return [prompt.to_dict() for prompt in prompts]
         
@@ -148,24 +133,18 @@ async def get_all_prompts(
 async def get_categories(db: Session = Depends(get_db)):
     """Get all available prompt categories"""
     try:
+        # Get unique categories from database
         categories = db.query(AnalysisPrompt.category).distinct().all()
         category_list = [cat[0] for cat in categories if cat[0]]
         
-        # Add default categories if not present
+        # Add default categories if they don't exist
         default_categories = ['general', 'meeting', 'content', 'analysis', 'productivity']
-        for cat in default_categories:
-            if cat not in category_list:
-                category_list.append(cat)
+        for default_cat in default_categories:
+            if default_cat not in category_list:
+                category_list.append(default_cat)
         
         return {
-            "categories": [
-                {"value": "all", "label": "All Categories", "color": "gray"},
-                {"value": "general", "label": "General", "color": "blue"},
-                {"value": "meeting", "label": "Meeting", "color": "green"},
-                {"value": "content", "label": "Content", "color": "purple"},
-                {"value": "analysis", "label": "Analysis", "color": "yellow"},
-                {"value": "productivity", "label": "Productivity", "color": "orange"}
-            ]
+            "categories": sorted(category_list)
         }
         
     except Exception as e:
@@ -249,21 +228,13 @@ async def update_prompt(
     prompt_data: PromptUpdate, 
     db: Session = Depends(get_db)
 ):
-    """Update an existing prompt"""
+    """Update an existing prompt - UPDATED: Removed system prompt protection"""
     try:
         prompt = db.query(AnalysisPrompt).filter(AnalysisPrompt.id == prompt_id).first()
         if not prompt:
             raise HTTPException(status_code=404, detail="Prompt not found")
         
-        # Don't allow updating system prompts' core fields
-        if prompt.is_system and any([
-            prompt_data.prompt_template is not None,
-            prompt_data.title is not None
-        ]):
-            raise HTTPException(
-                status_code=403, 
-                detail="Cannot modify core fields of system prompts"
-            )
+        # ✅ REMOVED: System prompt protection logic - ALL prompts can now be edited
         
         # Update fields
         update_data = prompt_data.dict(exclude_unset=True)
@@ -289,17 +260,13 @@ async def update_prompt(
 
 @router.delete("/{prompt_id}")
 async def delete_prompt(prompt_id: int, db: Session = Depends(get_db)):
-    """Delete a prompt (only non-system prompts)"""
+    """Delete a prompt - UPDATED: Removed system prompt protection"""
     try:
         prompt = db.query(AnalysisPrompt).filter(AnalysisPrompt.id == prompt_id).first()
         if not prompt:
             raise HTTPException(status_code=404, detail="Prompt not found")
         
-        if prompt.is_system:
-            raise HTTPException(
-                status_code=403, 
-                detail="Cannot delete system prompts"
-            )
+        # ✅ REMOVED: System prompt protection logic - ALL prompts can now be deleted
         
         db.delete(prompt)
         db.commit()
@@ -353,10 +320,7 @@ async def increment_usage_count(prompt_key: str, db: Session = Depends(get_db)):
         prompt.usage_count += 1
         db.commit()
         
-        return {
-            "message": "Usage count incremented",
-            "usage_count": prompt.usage_count
-        }
+        return {"message": "Usage count incremented"}
         
     except HTTPException:
         raise
@@ -367,53 +331,53 @@ async def increment_usage_count(prompt_key: str, db: Session = Depends(get_db)):
 
 @router.get("/analytics/usage")
 async def get_usage_analytics(db: Session = Depends(get_db)):
-    """Get usage analytics for all prompts"""
+    """Get prompt usage analytics"""
     try:
-        prompts = db.query(AnalysisPrompt).all()
+        # Get all prompts with usage data
+        prompts = db.query(AnalysisPrompt).order_by(AnalysisPrompt.usage_count.desc()).all()
         
-        total_prompts = len(prompts)
-        active_prompts = sum(1 for p in prompts if p.is_active)
-        total_usage = sum(p.usage_count for p in prompts)
+        # Calculate statistics
+        total_usage = sum(prompt.usage_count for prompt in prompts)
+        active_prompts = sum(1 for prompt in prompts if prompt.is_active)
         
-        # Category breakdown
-        categories = {}
+        # Get top used prompts
+        top_prompts = [
+            {
+                "key": prompt.key,
+                "title": prompt.title,
+                "usage_count": prompt.usage_count,
+                "category": prompt.category
+            }
+            for prompt in prompts[:10]  # Top 10
+        ]
+        
+        # Get category statistics
+        category_stats = {}
         for prompt in prompts:
-            cat = prompt.category
-            if cat not in categories:
-                categories[cat] = {"count": 0, "total_usage": 0}
-            categories[cat]["count"] += 1
-            categories[cat]["total_usage"] += prompt.usage_count
-        
-        # Top used prompts
-        top_prompts = sorted(prompts, key=lambda x: x.usage_count, reverse=True)[:5]
+            category = prompt.category or 'uncategorized'
+            if category not in category_stats:
+                category_stats[category] = {"count": 0, "usage": 0}
+            category_stats[category]["count"] += 1
+            category_stats[category]["usage"] += prompt.usage_count
         
         return {
             "overview": {
-                "total_prompts": total_prompts,
+                "total_prompts": len(prompts),
                 "active_prompts": active_prompts,
                 "total_usage": total_usage,
-                "average_usage": total_usage / total_prompts if total_prompts > 0 else 0
+                "average_usage": total_usage / len(prompts) if prompts else 0
             },
-            "categories": categories,
-            "top_prompts": [
-                {
-                    "key": p.key,
-                    "title": p.title,
-                    "usage_count": p.usage_count,
-                    "category": p.category
-                }
-                for p in top_prompts
-            ]
+            "top_prompts": top_prompts,
+            "categories": category_stats
         }
         
     except Exception as e:
         logger.error(f"Error fetching analytics: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch analytics: {str(e)}")
 
-# Health check endpoint for prompt system
 @router.get("/health")
-async def prompt_system_health(db: Session = Depends(get_db)):
-    """Check prompt system health"""
+async def health_check(db: Session = Depends(get_db)):
+    """Health check endpoint for prompt system"""
     try:
         # Test database connection
         prompt_count = db.query(AnalysisPrompt).count()
