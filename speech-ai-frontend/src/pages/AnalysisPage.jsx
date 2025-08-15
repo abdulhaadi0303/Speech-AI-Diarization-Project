@@ -1,5 +1,5 @@
-// src/pages/AnalysisPage.jsx - AI Analysis Page (Fixed Session Detection)
-import React, { useState, useEffect, useRef } from 'react';
+// src/pages/AnalysisPage.jsx - Complete Enhanced with Persistent State Management
+import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { 
@@ -19,34 +19,67 @@ import {
 
 // Import components
 import UnifiedAnalysisCard from '../Components/analysis/UnifiedAnalysisCard';
+import AnalysisProgressBanner from '../Components/analysis/AnalysisProgressBanner';
+import AnalysisHistoryModal from '../Components/analysis/AnalysisHistoryModal';
 import { useBackend } from '../contexts/BackendContext';
 import { backendApi } from '../services/api';
 import useAppStore from '../stores/appStore';
 
 const AnalysisPage = () => {
-  // State management
-  const [prompts, setPrompts] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [loadingPromptData, setLoadingPromptData] = useState(false);
-  const [customPrompt, setCustomPrompt] = useState('');
-  const [showCustomAnalysis, setShowCustomAnalysis] = useState(false);
-  
-  // Analysis state
-  const [analysisResults, setAnalysisResults] = useState({});
-  const [analysisProgress, setAnalysisProgress] = useState({});
-  const [loadingPrompts, setLoadingPrompts] = useState(new Set());
+  // ✅ MIGRATED: All state now comes from Zustand store
+  const {
+    // Analysis data state
+    analysisPrompts,
+    setAnalysisPrompts,
+    analysisSearchTerm,
+    setAnalysisSearchTerm,
+    analysisSelectedCategory,
+    setAnalysisSelectedCategory,
+    analysisLoadingPromptData,
+    setAnalysisLoadingPromptData,
+    analysisCustomPrompt,
+    setAnalysisCustomPrompt,
+    analysisShowCustomAnalysis,
+    setAnalysisShowCustomAnalysis,
+    
+    // Results and progress - PERSISTENT
+    analysisResults,
+    setAnalysisResults,
+    updateAnalysisResult,
+    analysisProgress,
+    setAnalysisProgress,
+    updateAnalysisProgress,
+    
+    // Loading states - PERSISTENT
+    analysisLoadingPrompts,
+    addAnalysisLoadingPrompt,
+    removeAnalysisLoadingPrompt,
+    
+    // Polling metadata - PERSISTENT
+    analysisPollingIntervals,
+    addAnalysisPollingInterval,
+    removeAnalysisPollingInterval,
+    
+    // Modal state - PERSISTENT
+    analysisShowHistoryModal,
+    setAnalysisShowHistoryModal,
+    
+    // Actions
+    clearAnalysisHistory,
+    refreshAnalysisState,
+    
+    // Session data
+    currentSessionId,
+    results,
+    processingStatus
+  } = useAppStore();
   
   // Backend connection and session management
   const { backendStatus, activeSessions } = useBackend();
   
-  // Get current session from Zustand store (same as TranscriptionPage)
-  const currentSessionId = useAppStore((state) => state.currentSessionId);
-  const results = useAppStore((state) => state.results);
-  const processingStatus = useAppStore((state) => state.processingStatus);
-  
-  // Polling refs
+  // ✅ ENHANCED: Polling refs - now uses metadata from store
   const pollingIntervals = useRef(new Map());
+  const componentMountedRef = useRef(true);
   
   // Categories for filtering
   const categories = [
@@ -58,14 +91,27 @@ const AnalysisPage = () => {
     { value: 'productivity', label: 'Productivity' }
   ];
 
-  // Load prompts from database on component mount
+  // ✅ ENHANCED: Initialize and restore polling on mount
   useEffect(() => {
-    loadPromptsFromDatabase();
+    componentMountedRef.current = true;
+    
+    // Load prompts if not already loaded
+    if (analysisPrompts.length === 0) {
+      loadPromptsFromDatabase();
+    }
+    
+    // Restore background polling for any in-progress analyses
+    restoreBackgroundPolling();
+    
+    return () => {
+      componentMountedRef.current = false;
+    };
   }, []);
 
-  // Cleanup polling intervals on unmount
+  // ✅ ENHANCED: Cleanup polling intervals on unmount
   useEffect(() => {
     return () => {
+      componentMountedRef.current = false;
       pollingIntervals.current.forEach((interval) => {
         clearInterval(interval);
       });
@@ -73,22 +119,38 @@ const AnalysisPage = () => {
     };
   }, []);
 
+  // ✅ NEW: Restore background polling for in-progress analyses
+  const restoreBackgroundPolling = () => {
+    Object.entries(analysisPollingIntervals).forEach(([promptKey, metadata]) => {
+      const progress = analysisProgress[promptKey];
+      
+      // Only restore polling if analysis is still in progress
+      if (progress && progress.status === 'processing') {
+        console.log(`🔄 Restoring polling for: ${promptKey}`);
+        startPollingForResult(promptKey, metadata.sessionId);
+      } else {
+        // Clean up stale polling metadata
+        removeAnalysisPollingInterval(promptKey);
+      }
+    });
+  };
+
   const loadPromptsFromDatabase = async () => {
-    setLoadingPromptData(true);
+    setAnalysisLoadingPromptData(true);
     try {
       const response = await backendApi.prompts.getAll({
         active_only: true
       });
       
       if (response?.data) {
-        setPrompts(response.data);
+        setAnalysisPrompts(response.data);
         console.log(`✅ Loaded ${response.data.length} analysis prompts`);
       } else {
         throw new Error('Invalid response format');
       }
     } catch (error) {
       console.error('Failed to load prompts:', error);
-      toast.error('Failed to load analysis prompts from database');
+      toast.error('Failed to load analysis prompts. Using fallback prompts.');
       
       // Fallback to legacy API
       try {
@@ -126,7 +188,7 @@ const AnalysisPage = () => {
               icon: 'Brain'
             };
           });
-          setPrompts(promptsArray);
+          setAnalysisPrompts(promptsArray);
           console.log(`✅ Loaded ${promptsArray.length} fallback prompts with colors`);
         }
       } catch (fallbackError) {
@@ -134,7 +196,7 @@ const AnalysisPage = () => {
         toast.error('Could not load any analysis prompts');
       }
     } finally {
-      setLoadingPromptData(false);
+      setAnalysisLoadingPromptData(false);
     }
   };
 
@@ -162,6 +224,7 @@ const AnalysisPage = () => {
     return null;
   };
 
+  // ✅ ENHANCED: Run analysis with persistent state
   const runAnalysis = async (promptKey) => {
     if (!currentSessionId) {
       toast.error('No session selected. Please process audio first.');
@@ -174,7 +237,7 @@ const AnalysisPage = () => {
     }
 
     // Check if analysis is already running for this prompt
-    if (loadingPrompts.has(promptKey)) {
+    if (analysisLoadingPrompts.includes(promptKey)) {
       toast.error('Analysis already running for this prompt');
       return;
     }
@@ -202,95 +265,196 @@ const AnalysisPage = () => {
       console.log(`📄 Transcript length: ${transcript.length} characters`);
 
       // Update loading state
-      setLoadingPrompts(prev => new Set(prev).add(promptKey));
-      setAnalysisProgress(prev => ({
-        ...prev,
-        [promptKey]: { 
-          status: 'processing', 
-          progress: 0,
-          timestamp: new Date().toISOString()
-        }
-      }));
+      addAnalysisLoadingPrompt(promptKey);
+      
+      // Update progress
+      updateAnalysisProgress(promptKey, { 
+        status: 'processing', 
+        progress: 0,
+        timestamp: new Date().toISOString(),
+        sessionId: currentSessionId,
+        title: analysisPrompts.find(p => p.key === promptKey)?.title || 'Analysis'
+      });
+
+      // Add polling metadata
+      addAnalysisPollingInterval(promptKey, {
+        sessionId: currentSessionId,
+        startTime: new Date().toISOString()
+      });
 
       // Find the prompt
-      const prompt = prompts.find(p => p.key === promptKey);
+      const prompt = analysisPrompts.find(p => p.key === promptKey);
       if (!prompt) {
         throw new Error('Prompt not found');
       }
 
-      // Start analysis
+      // Process with LLM
       const analysisResponse = await backendApi.processWithLLM({
         transcript,
         prompt_key: promptKey
       });
 
-      console.log(`✅ Analysis completed for: ${promptKey}`);
-      console.log('📦 Analysis response:', analysisResponse.data);
+      console.log(`✅ Analysis response for ${promptKey}:`, analysisResponse.data);
 
-      // Update results - store with correct format
-      const resultData = {
-        response: analysisResponse.data.result || analysisResponse.data.response,
-        result: analysisResponse.data.result || analysisResponse.data.response,
-        model: analysisResponse.data.model,
-        prompt_title: analysisResponse.data.prompt_title || prompt.title,
-        prompt_key: promptKey,
-        timestamp: new Date().toISOString(),
-        processing_time: analysisResponse.data.processing_time,
-        ...analysisResponse.data
-      };
+      // Check if response indicates async processing
+      if (analysisResponse.data.processing_id || analysisResponse.data.status === 'processing') {
+        console.log(`⏳ Async processing started for ${promptKey}`);
+        startPollingForResult(promptKey, currentSessionId, analysisResponse.data.processing_id);
+        
+        updateAnalysisProgress(promptKey, { 
+          status: 'processing', 
+          progress: 10,
+          processing_id: analysisResponse.data.processing_id,
+          timestamp: new Date().toISOString(),
+          sessionId: currentSessionId
+        });
+      } else {
+        // Immediate result
+        console.log(`✅ Immediate result for ${promptKey}`);
+        
+        updateAnalysisResult(promptKey, {
+          response: analysisResponse.data.result || analysisResponse.data.response,
+          result: analysisResponse.data.result || analysisResponse.data.response,
+          model: analysisResponse.data.model,
+          prompt_title: prompt?.title || 'Analysis',
+          prompt_key: promptKey,
+          timestamp: new Date().toISOString(),
+          processing_time: analysisResponse.data.processing_time,
+          ...analysisResponse.data
+        });
 
-      console.log('💾 Storing result data:', resultData);
-
-      setAnalysisResults(prev => {
-        const newResults = { ...prev, [promptKey]: resultData };
-        console.log('📊 Updated analysisResults:', newResults);
-        return newResults;
-      });
-
-      setAnalysisProgress(prev => ({
-        ...prev,
-        [promptKey]: { 
+        updateAnalysisProgress(promptKey, { 
           status: 'completed', 
           progress: 100,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          completedTime: new Date().toISOString()
+        });
+
+        // Clean up polling metadata
+        removeAnalysisPollingInterval(promptKey);
+        removeAnalysisLoadingPrompt(promptKey);
+
+        toast.success(`Analysis completed: ${prompt?.title}`);
+
+        // Increment usage count
+        try {
+          await backendApi.prompts.incrementUsage(promptKey);
+        } catch (usageError) {
+          console.warn('Failed to increment usage count:', usageError);
         }
-      }));
-
-      toast.success(`Analysis completed: ${prompt.title}`);
-
-      // Increment usage count
-      try {
-        await backendApi.prompts.incrementUsage(promptKey);
-      } catch (usageError) {
-        console.warn('Failed to increment usage count:', usageError);
       }
 
     } catch (error) {
       console.error('Analysis failed:', error);
       
-      setAnalysisProgress(prev => ({
-        ...prev,
-        [promptKey]: { 
-          status: 'failed', 
-          progress: 0,
-          error: errorMessage,
-          timestamp: new Date().toISOString()
-        }
-      }));
-
       const errorMessage = error.userMessage || error.response?.data?.detail || 'Analysis failed';
-      toast.error(errorMessage);
-    } finally {
-      setLoadingPrompts(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(promptKey);
-        return newSet;
+      
+      updateAnalysisProgress(promptKey, { 
+        status: 'failed', 
+        progress: 0,
+        error: errorMessage,
+        timestamp: new Date().toISOString()
       });
+
+      // Clean up states
+      removeAnalysisPollingInterval(promptKey);
+      removeAnalysisLoadingPrompt(promptKey);
+
+      toast.error(errorMessage);
     }
   };
 
+  // ✅ ENHANCED: Polling with persistent state management
+  const startPollingForResult = (promptKey, sessionId, processingId = null) => {
+    // Prevent duplicate polling
+    if (pollingIntervals.current.has(promptKey)) {
+      return;
+    }
+
+    console.log(`🔄 Starting polling for ${promptKey}`);
+    
+    const interval = setInterval(async () => {
+      if (!componentMountedRef.current) {
+        clearInterval(interval);
+        pollingIntervals.current.delete(promptKey);
+        return;
+      }
+
+      try {
+        const statusResponse = await backendApi.getAnalysisStatus(promptKey, sessionId);
+        const status = statusResponse.data;
+
+        if (status.status === 'completed' && status.result) {
+          console.log(`✅ Polling completed for ${promptKey}`);
+          
+          const prompt = analysisPrompts.find(p => p.key === promptKey);
+          updateAnalysisResult(promptKey, {
+            response: status.result.response || status.result.result,
+            result: status.result.response || status.result.result,
+            model: status.result.model,
+            prompt_title: prompt?.title || 'Analysis',
+            prompt_key: promptKey,
+            timestamp: new Date().toISOString(),
+            processing_time: status.result.processing_time,
+            ...status.result
+          });
+
+          updateAnalysisProgress(promptKey, { 
+            status: 'completed', 
+            progress: 100,
+            timestamp: new Date().toISOString(),
+            completedTime: new Date().toISOString()
+          });
+
+          // Clean up
+          clearInterval(interval);
+          pollingIntervals.current.delete(promptKey);
+          removeAnalysisPollingInterval(promptKey);
+          removeAnalysisLoadingPrompt(promptKey);
+
+          toast.success(`Analysis completed: ${prompt?.title}`);
+
+        } else if (status.status === 'failed') {
+          console.log(`❌ Polling failed for ${promptKey}`);
+          
+          updateAnalysisProgress(promptKey, { 
+            status: 'failed', 
+            progress: 0,
+            error: status.error || 'Analysis failed',
+            timestamp: new Date().toISOString()
+          });
+
+          // Clean up
+          clearInterval(interval);
+          pollingIntervals.current.delete(promptKey);
+          removeAnalysisPollingInterval(promptKey);
+          removeAnalysisLoadingPrompt(promptKey);
+
+          toast.error(`Analysis failed: ${status.error || 'Unknown error'}`);
+
+        } else if (status.status === 'processing') {
+          // Update progress if available
+          if (status.progress !== undefined) {
+            updateAnalysisProgress(promptKey, {
+              ...analysisProgress[promptKey],
+              progress: status.progress,
+              timestamp: new Date().toISOString()
+            });
+          }
+        }
+
+      } catch (error) {
+        console.error(`Polling error for ${promptKey}:`, error);
+        // Continue polling on error, don't stop immediately
+      }
+    }, 2000); // Poll every 2 seconds
+
+    pollingIntervals.current.set(promptKey, interval);
+  };
+
+  // ✅ ENHANCED: Custom analysis with persistent state
   const runCustomAnalysis = async () => {
-    if (!customPrompt.trim()) {
+    if (!analysisCustomPrompt.trim()) {
       toast.error('Please enter a custom analysis prompt');
       return;
     }
@@ -320,18 +484,18 @@ const AnalysisPage = () => {
       }
 
       // Update loading state
-      setLoadingPrompts(prev => new Set(prev).add(customKey));
-      setAnalysisProgress(prev => ({
-        ...prev,
-        [customKey]: { 
-          status: 'processing', 
-          progress: 0,
-          timestamp: new Date().toISOString()
-        }
-      }));
+      addAnalysisLoadingPrompt(customKey);
+      
+      updateAnalysisProgress(customKey, { 
+        status: 'processing', 
+        progress: 0,
+        timestamp: new Date().toISOString(),
+        sessionId: currentSessionId,
+        title: 'Custom Analysis'
+      });
 
       // Create custom prompt with transcript
-      const fullPrompt = customPrompt.replace('{transcript}', transcript);
+      const fullPrompt = analysisCustomPrompt.replace('{transcript}', transcript);
 
       // Process with LLM (using custom processing)
       const analysisResponse = await backendApi.processWithLLM({
@@ -341,61 +505,50 @@ const AnalysisPage = () => {
       });
 
       // Update results for custom analysis
-      setAnalysisResults(prev => ({
-        ...prev,
-        [customKey]: {
-          response: analysisResponse.data.result || analysisResponse.data.response,
-          result: analysisResponse.data.result || analysisResponse.data.response,
-          model: analysisResponse.data.model,
-          prompt_title: 'Custom Analysis',
-          prompt_key: customKey,
-          timestamp: new Date().toISOString(),
-          custom_prompt: customPrompt,
-          processing_time: analysisResponse.data.processing_time,
-          ...analysisResponse.data
-        }
-      }));
+      updateAnalysisResult(customKey, {
+        response: analysisResponse.data.result || analysisResponse.data.response,
+        result: analysisResponse.data.result || analysisResponse.data.response,
+        model: analysisResponse.data.model,
+        prompt_title: 'Custom Analysis',
+        prompt_key: customKey,
+        timestamp: new Date().toISOString(),
+        custom_prompt: analysisCustomPrompt,
+        processing_time: analysisResponse.data.processing_time,
+        ...analysisResponse.data
+      });
 
-      setAnalysisProgress(prev => ({
-        ...prev,
-        [customKey]: { 
-          status: 'completed', 
-          progress: 100,
-          timestamp: new Date().toISOString()
-        }
-      }));
+      updateAnalysisProgress(customKey, { 
+        status: 'completed', 
+        progress: 100,
+        timestamp: new Date().toISOString(),
+        completedTime: new Date().toISOString()
+      });
 
+      removeAnalysisLoadingPrompt(customKey);
       toast.success('Custom analysis completed');
 
     } catch (error) {
       console.error('Custom analysis failed:', error);
       
-      setAnalysisProgress(prev => ({
-        ...prev,
-        [customKey]: { 
-          status: 'failed', 
-          progress: 0,
-          error: error.userMessage || 'Custom analysis failed',
-          timestamp: new Date().toISOString()
-        }
-      }));
-
-      toast.error(error.userMessage || 'Custom analysis failed');
-    } finally {
-      setLoadingPrompts(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(customKey);
-        return newSet;
+      updateAnalysisProgress(customKey, { 
+        status: 'failed', 
+        progress: 0,
+        error: error.userMessage || 'Custom analysis failed',
+        timestamp: new Date().toISOString()
       });
+
+      removeAnalysisLoadingPrompt(customKey);
+      toast.error(error.userMessage || 'Custom analysis failed');
     }
   };
 
+  // ✅ ENHANCED: Download with persistent state
   const downloadAnalysis = (promptKey) => {
     const result = analysisResults[promptKey];
-    const prompt = prompts.find(p => p.key === promptKey);
+    const prompt = analysisPrompts.find(p => p.key === promptKey);
     const title = promptKey === 'custom_analysis' ? 'Custom Analysis' : prompt?.title || 'Analysis';
 
-    console.log('📥 Download request for:', promptKey);
+    console.log('🔥 Download request for:', promptKey);
     console.log('📦 Result data:', result);
 
     if (!result || !(result.response || result.result)) {
@@ -436,23 +589,42 @@ Timestamp: ${result.timestamp}
     toast.success('Analysis downloaded');
   };
 
-  // Helper function to clear analysis history
-  const clearAnalysisHistory = () => {
-    setAnalysisResults({});
-    setAnalysisProgress({});
+  // ✅ ENHANCED: Clear history with cleanup
+  const handleClearAnalysisHistory = () => {
+    // Stop all polling intervals
     pollingIntervals.current.forEach((interval) => {
       clearInterval(interval);
     });
     pollingIntervals.current.clear();
+    
+    // Clear state
+    clearAnalysisHistory();
     toast.success('Analysis history cleared');
   };
 
-  // Filter prompts based on search and category
-  const filteredPrompts = prompts.filter(prompt => {
-    const matchesSearch = prompt.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         prompt.description.toLowerCase().includes(searchTerm.toLowerCase());
+  // ✅ ENHANCED: Refresh with state reset
+  const handleRefreshAnalysis = () => {
+    // Stop all polling intervals
+    pollingIntervals.current.forEach((interval) => {
+      clearInterval(interval);
+    });
+    pollingIntervals.current.clear();
     
-    const matchesCategory = selectedCategory === 'all' || prompt.category === selectedCategory;
+    // Refresh analysis state (keeps UI preferences)
+    refreshAnalysisState();
+    
+    // Reload prompts
+    loadPromptsFromDatabase();
+    
+    toast.success('Analysis refreshed');
+  };
+
+  // Filter prompts based on search and category
+  const filteredPrompts = analysisPrompts.filter(prompt => {
+    const matchesSearch = prompt.title.toLowerCase().includes(analysisSearchTerm.toLowerCase()) ||
+                         prompt.description.toLowerCase().includes(analysisSearchTerm.toLowerCase());
+    
+    const matchesCategory = analysisSelectedCategory === 'all' || prompt.category === analysisSelectedCategory;
     
     return matchesSearch && matchesCategory;
   });
@@ -491,8 +663,19 @@ Timestamp: ${result.timestamp}
   };
 
   const isValidSession = hasValidSession();
-  const sessionData = activeSessions.has(currentSessionId) ? activeSessions.get(currentSessionId) : null;
 
+  // ✅ NEW: History modal handlers
+  const handleViewProgress = () => {
+    setAnalysisShowHistoryModal(true);
+  };
+
+  const handleCloseHistoryModal = () => {
+    setAnalysisShowHistoryModal(false);
+  };
+
+  const handleHistoryDownload = (promptKey, progress) => {
+    downloadAnalysis(promptKey);
+  };
 
   return (
     <div className="min-h-screen bg-gray-900 p-6 overflow-auto">
@@ -511,16 +694,23 @@ Timestamp: ${result.timestamp}
             </div>
             <div className="flex items-center space-x-3">
               <button
-                onClick={loadPromptsFromDatabase}
-                disabled={loadingPromptData}
+                onClick={handleRefreshAnalysis}
+                disabled={analysisLoadingPromptData}
                 className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors flex items-center space-x-2"
               >
-                <RefreshCw className={`w-4 h-4 ${loadingPromptData ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`w-4 h-4 ${analysisLoadingPromptData ? 'animate-spin' : ''}`} />
                 <span>Refresh</span>
               </button>
             </div>
           </div>
         </div>
+
+        {/* ✅ NEW: Progress Banner */}
+        <AnalysisProgressBanner 
+          analysisProgress={analysisProgress}
+          onViewProgress={handleViewProgress}
+          onClearProgress={handleClearAnalysisHistory}
+        />
 
         {/* Session Status Info */}
         {isValidSession && (
@@ -540,7 +730,7 @@ Timestamp: ${result.timestamp}
               </div>
               
               <button
-                onClick={clearAnalysisHistory}
+                onClick={handleClearAnalysisHistory}
                 className="px-3 py-2 text-gray-400 hover:text-white transition-colors text-sm"
               >
                 Clear History
@@ -573,15 +763,15 @@ Timestamp: ${result.timestamp}
                 <input
                   type="text"
                   placeholder="Search analysis prompts..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  value={analysisSearchTerm}
+                  onChange={(e) => setAnalysisSearchTerm(e.target.value)}
                   className="pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                 />
               </div>
               
               <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
+                value={analysisSelectedCategory}
+                onChange={(e) => setAnalysisSelectedCategory(e.target.value)}
                 className="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
               >
                 {categories.map(category => (
@@ -593,7 +783,7 @@ Timestamp: ${result.timestamp}
             </div>
             
             <div className="text-sm text-gray-400">
-              {filteredPrompts.length} of {prompts.length} prompts
+              {filteredPrompts.length} of {analysisPrompts.length} prompts
             </div>
           </div>
         </div>
@@ -603,7 +793,7 @@ Timestamp: ${result.timestamp}
           <div className="lg:col-span-2">
             <h2 className="text-xl font-semibold text-white mb-4">Predefined Analysis</h2>
             
-            {loadingPromptData ? (
+            {analysisLoadingPromptData ? (
               <div className="text-center py-12">
                 <Loader2 className="animate-spin w-8 h-8 text-cyan-500 mx-auto" />
                 <p className="text-gray-400 mt-2">Loading prompts...</p>
@@ -613,7 +803,7 @@ Timestamp: ${result.timestamp}
                 <Brain className="w-12 h-12 text-gray-600 mx-auto mb-4" />
                 <p className="text-gray-400 mb-2">No analysis prompts available</p>
                 <p className="text-gray-500 text-sm">
-                  {prompts.length === 0 
+                  {analysisPrompts.length === 0 
                     ? 'No prompts found in the database'
                     : 'Try adjusting your search or filter criteria'
                   }
@@ -628,7 +818,7 @@ Timestamp: ${result.timestamp}
                     selectedSession={currentSessionId}
                     analysisResults={analysisResults}
                     analysisProgress={analysisProgress}
-                    isLoading={loadingPrompts.has(prompt.key)}
+                    isLoading={analysisLoadingPrompts.includes(prompt.key)}
                     onRunAnalysis={runAnalysis}
                     onDownload={downloadAnalysis}
                     showUsageStats={true}
@@ -650,8 +840,8 @@ Timestamp: ${result.timestamp}
               </div>
               
               <textarea
-                value={customPrompt}
-                onChange={(e) => setCustomPrompt(e.target.value)}
+                value={analysisCustomPrompt}
+                onChange={(e) => setAnalysisCustomPrompt(e.target.value)}
                 placeholder="Enter your custom analysis prompt here. Use {transcript} as placeholder for the transcript content."
                 className="w-full h-32 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 resize-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
               />
@@ -662,10 +852,10 @@ Timestamp: ${result.timestamp}
               
               <button
                 onClick={runCustomAnalysis}
-                disabled={!customPrompt.trim() || !isValidSession || loadingPrompts.has('custom_analysis')}
+                disabled={!analysisCustomPrompt.trim() || !isValidSession || analysisLoadingPrompts.includes('custom_analysis')}
                 className="w-full mt-4 px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center space-x-2"
               >
-                {loadingPrompts.has('custom_analysis') ? (
+                {analysisLoadingPrompts.includes('custom_analysis') ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span>Analyzing...</span>
@@ -703,6 +893,15 @@ Timestamp: ${result.timestamp}
             )}
           </div>
         </div>
+
+        {/* ✅ NEW: History Modal */}
+        <AnalysisHistoryModal 
+          isOpen={analysisShowHistoryModal}
+          onClose={handleCloseHistoryModal}
+          analysisProgress={analysisProgress}
+          analysisResults={analysisResults}
+          onDownload={handleHistoryDownload}
+        />
       </div>
     </div>
   );
