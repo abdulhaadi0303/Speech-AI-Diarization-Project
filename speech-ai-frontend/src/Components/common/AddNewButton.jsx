@@ -1,4 +1,4 @@
-// src/Components/common/AddNewButton.jsx
+// src/Components/common/AddNewButton.jsx - Enhanced with Complete Analysis State Reset
 import React from 'react';
 import { RotateCcw } from 'lucide-react';
 import useAppStore from '../../stores/appStore';
@@ -10,10 +10,11 @@ const AddNewButton = () => {
   const handleAddNew = () => {
     const confirmed = window.confirm(
       'Start a new session?\n\n' +
-      'This will clear all uploaded files and reset all settings.'
+      'This will clear all uploaded files, analysis results, and reset all settings.'
     );
     
     if (confirmed) {
+      // Reset all state including analysis data
       resetAllState();
       toast.success('New session started - all state cleared');
     }
