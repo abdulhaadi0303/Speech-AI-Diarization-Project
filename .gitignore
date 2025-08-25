@@ -1,5 +1,6 @@
 # === FRONTEND ===
 # React (Node.js)
+
 speech-ai-frontend/node_modules/
 **/node_modules/
 speech-ai-frontend/build/
