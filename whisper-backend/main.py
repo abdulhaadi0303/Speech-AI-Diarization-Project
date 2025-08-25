@@ -1,4 +1,4 @@
-# main.py - Enhanced Speech Diarization API with Database Integration (FIXED AUDIO PROCESSING)
+# main.py - Enhanced Speech Diarization API with Database Integration (FIXED + RESTORED ENDPOINTS)
 
 import os
 import shutil
@@ -11,33 +11,43 @@ from datetime import datetime
 from typing import Dict, List, Optional, Any
 
 import uvicorn
+import httpx
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
+from pydantic import BaseModel
 
-# Database imports
+# Database imports - FIXED
 try:
     from database.models import DatabaseManager, AnalysisPrompt, AnalysisResult
-    from api.prompt_routes import router as prompt_router
     DATABASE_AVAILABLE = True
     db_manager = DatabaseManager()
-    print("✅ Database modules loaded successfully")
+    print("Database modules loaded successfully")
 except ImportError as e:
-    print(f"⚠️ Database not available: {e}")
+    print(f"Database not available: {e}")
     DATABASE_AVAILABLE = False
     db_manager = None
+
+# Prompt router import - FIXED
+try:
+    from api.prompt_routes import router as prompt_router
+    PROMPT_ROUTER_AVAILABLE = True
+    print("Prompt router imported successfully")
+except ImportError as e:
+    print(f"Prompt router not available: {e}")
+    PROMPT_ROUTER_AVAILABLE = False
     prompt_router = None
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Constants
+# Constants - RESTORED FROM OLD CODE
 DEFAULT_MODEL = "llama3:latest"
 OLLAMA_BASE_URL = "http://localhost:11434"
-MAX_CHUNK_SIZE = 4000
+MAX_CHUNK_SIZE = 7000  # Restored original value
 UPLOAD_DIR = Path("uploads")
 OUTPUT_DIR = Path("outputs")
 STATIC_DIR = Path("static")
@@ -51,6 +61,12 @@ pipeline = None
 
 # Session storage
 processing_sessions: Dict[str, Dict] = {}
+
+# Pydantic model for LLM processing request
+class LLMProcessRequest(BaseModel):
+    transcript: str
+    prompt_key: str
+    custom_prompt: Optional[str] = None
 
 # Fallback prompts (if database not available)
 LLM_PROMPTS = {
@@ -119,30 +135,30 @@ tailscale_manager = TailscaleManager()
 async def lifespan(app: FastAPI):
     """Application lifespan events"""
     # Startup
-    print("🚀 Starting Enhanced Speech Diarization API...")
+    print("Starting Enhanced Speech Diarization API...")
     
     # Initialize database if available
     if DATABASE_AVAILABLE and db_manager:
         try:
             db_manager.create_tables()
             db_manager.init_default_prompts()
-            print("✅ Database initialized successfully")
+            print("Database initialized successfully")
         except Exception as e:
-            print(f"⚠️ Database initialization failed: {e}")
+            print(f"Database initialization failed: {e}")
     
     # Initialize AI pipeline
     global pipeline
     try:
-        print("🧠 Initializing Enhanced Speech Diarization Pipeline...")
-        from run import GDPRCompliantPipeline  # Fixed import name
+        print("Initializing Enhanced Speech Diarization Pipeline...")
+        from run import GDPRCompliantPipeline
         pipeline = GDPRCompliantPipeline(
-            whisper_model="base",  # Using smaller model for compatibility
+            whisper_model="base",
             device="auto",
             enable_preprocessing=True
         )
-        print("✅ AI Pipeline initialized successfully")
+        print("AI Pipeline initialized successfully")
     except Exception as e:
-        print(f"⚠️ AI Pipeline initialization failed: {e}")
+        print(f"AI Pipeline initialization failed: {e}")
         print("   Some features may not be available")
     
     # Display connection info
@@ -151,7 +167,7 @@ async def lifespan(app: FastAPI):
     yield
     
     # Shutdown
-    print("🔄 Shutting down...")
+    print("Shutting down...")
 
 # Create FastAPI app with lifespan
 app = FastAPI(
@@ -170,10 +186,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include prompt management routes
-if DATABASE_AVAILABLE and prompt_router:
-    app.include_router(prompt_router)
+# Include prompt management routes - FIXED
+if DATABASE_AVAILABLE and PROMPT_ROUTER_AVAILABLE and prompt_router:
+    app.include_router(prompt_router, tags=["prompts"])
     print("✅ Prompt management routes included")
+    print("🔗 Public endpoint: /api/prompts/public")
+    print("🔗 Admin endpoint: /api/prompts/")
+else:
+    print("❌ Prompt router not available")
+    if not DATABASE_AVAILABLE:
+        print("   - Database not available")
+    if not PROMPT_ROUTER_AVAILABLE:
+        print("   - Prompt router not imported")
+    if not prompt_router:
+        print("   - Prompt router is None")
 
 # Serve static files
 if STATIC_DIR.exists():
@@ -194,34 +220,35 @@ async def display_startup_info():
     if is_connected and tailscale_ip:
         print(f"Tailscale URL: http://{tailscale_ip}:8888")
         print(f"Tailscale IP: {tailscale_ip}")
-        print("✅ Tailscale connected - accessible from remote devices")
+        print("Tailscale connected - accessible from remote devices")
     else:
-        print("❌ Tailscale not connected - only local access available")
+        print("Tailscale not connected - only local access available")
     
-    print(f"📚 API Documentation: http://localhost:8888/docs")
-    print(f"🎯 Health Check: http://localhost:8888/health")
+    print(f"API Documentation: http://localhost:8888/docs")
+    print(f"Health Check: http://localhost:8888/health")
     
     # Database status
     if DATABASE_AVAILABLE:
-        print("🗄️ Database: Connected (SQLite)")
-        print("📝 Prompt Management: Available")
+        print("Database: Connected (SQLite)")
+        print("Prompt Management: Available")
     else:
-        print("⚠️ Database: Not available (using fallback prompts)")
+        print("Database: Not available (using fallback prompts)")
     
     # Ollama status
     if ollama_status["status"] == "connected":
-        print(f"🤖 Ollama LLM: Connected ({ollama_status['current_model']})")
+        print(f"Ollama LLM: Connected ({ollama_status['current_model']})")
         if not ollama_status["model_available"]:
-            print(f"⚠️  Model {DEFAULT_MODEL} not found. Available: {ollama_status['available_models']}")
+            print(f"Model {DEFAULT_MODEL} not found. Available: {ollama_status['available_models']}")
     else:
-        print("❌ Ollama LLM: Disconnected")
+        print("Ollama LLM: Disconnected")
         print("   Start Ollama: ollama serve")
         print(f"   Pull model: ollama pull {DEFAULT_MODEL}")
     
     print("=" * 80)
 
+# RESTORED: Legacy prompts function with proper format
 def get_prompts_from_database():
-    """Get prompts from database or fallback to hardcoded ones"""
+    """Get prompts from database or fallback to hardcoded ones - RESTORED FORMAT"""
     if not DATABASE_AVAILABLE or not db_manager:
         return LLM_PROMPTS
     
@@ -249,46 +276,34 @@ def get_prompts_from_database():
         logger.error(f"Database error when fetching prompts: {e}")
         return LLM_PROMPTS
 
+# RESTORED: Ollama status check function
 async def check_ollama_status():
-    """Check if Ollama is running and available"""
+    """Check if Ollama is running and available - RESTORED FROM OLD CODE"""
     try:
-        import httpx
         async with httpx.AsyncClient() as client:
-            # Check if Ollama is running
-            try:
-                response = await client.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=5.0)
-                if response.status_code == 200:
-                    models = response.json().get("models", [])
-                    model_names = [model["name"] for model in models]
-                    
-                    return {
-                        "status": "connected",
-                        "current_model": DEFAULT_MODEL,
-                        "available_models": model_names,
-                        "model_available": DEFAULT_MODEL in model_names
-                    }
-            except Exception:
-                pass
-                
-    except ImportError:
-        # Fallback to requests if httpx not available
-        try:
-            import requests
-            response = requests.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=5)
+            response = await client.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=5)
             if response.status_code == 200:
-                models = response.json().get("models", [])
-                model_names = [model["name"] for model in models]
-                
+                models_data = response.json()
+                models = [model['name'] for model in models_data.get('models', [])]
                 return {
+                    "available": True,
+                    "models": models,
+                    "default": DEFAULT_MODEL,
+                    "url": OLLAMA_BASE_URL,
                     "status": "connected",
                     "current_model": DEFAULT_MODEL,
-                    "available_models": model_names,
-                    "model_available": DEFAULT_MODEL in model_names
+                    "available_models": models,
+                    "model_available": DEFAULT_MODEL in models
                 }
-        except Exception:
-            pass
+    except Exception as e:
+        logger.error(f"Ollama connection error: {e}")
     
     return {
+        "available": False,
+        "models": [],
+        "default": DEFAULT_MODEL,
+        "url": OLLAMA_BASE_URL,
+        "error": "Ollama service not running",
         "status": "disconnected",
         "current_model": None,
         "available_models": [],
@@ -324,7 +339,6 @@ async def process_with_ollama(prompt: str, model: str = DEFAULT_MODEL) -> Dict[s
                 raise HTTPException(status_code=response.status_code, detail="LLM processing failed")
                 
     except ImportError:
-        # Fallback to requests
         try:
             import requests
             payload = {
@@ -439,7 +453,7 @@ async def upload_audio(
         "created_at": datetime.now(),
         "file_path": str(upload_path),
         "settings": {
-            "language": language if language else None,  # None for auto-detect
+            "language": language if language else None,
             "preprocessing": apply_preprocessing.lower() == "true",
             "num_speakers": int(num_speakers) if num_speakers.isdigit() else None
         }
@@ -455,62 +469,53 @@ async def upload_audio(
     }
 
 async def process_audio_background(session_id: str, file_path: Path):
-    """Background task for audio processing - FIXED to use correct method"""
+    """Background task for audio processing"""
     try:
         session = processing_sessions[session_id]
         settings = session["settings"]
         
-        # Update status
         session["status"] = "processing"
         session["progress"] = 10
         session["message"] = "Loading audio file..."
         
-        print(f"🎯 Starting audio processing for session {session_id}")
+        print(f"Starting audio processing for session {session_id}")
         print(f"   File: {file_path}")
         print(f"   Settings: {settings}")
         
-        # Update progress
         session["progress"] = 20
         session["message"] = "Processing with GDPR pipeline..."
         
-        # Use the correct method signature from GDPRCompliantPipeline
-        # The pipeline has 'process_audio' method that requires consent, 
-        # but for API use, we'll call it directly since consent is implied by upload
         results = pipeline.process_audio(
             audio_path=file_path,
-            language=settings["language"],  # Can be None for auto-detect
-            num_speakers=settings["num_speakers"],  # Can be None for auto-detect
+            language=settings["language"],
+            num_speakers=settings["num_speakers"],
             min_speakers=1,
             max_speakers=10,
             apply_preprocessing=settings["preprocessing"]
         )
         
-        # Save results
         output_dir = OUTPUT_DIR / session_id
         output_dir.mkdir(exist_ok=True)
         
         session["progress"] = 90
         session["message"] = "Saving results..."
         
-        # Save results to files
         await save_results_to_files(results, output_dir, session_id)
         
-        # Update session with completion
         session["status"] = "completed"
         session["progress"] = 100
         session["message"] = "Processing completed successfully"
         session["results"] = results
         session["output_dir"] = str(output_dir)
         
-        print(f"✅ Audio processing completed for session {session_id}")
+        print(f"Audio processing completed for session {session_id}")
         
-        # Clean up uploaded file
         if file_path.exists():
             file_path.unlink()
             
     except Exception as e:
         logger.error(f"Processing error for session {session_id}: {e}")
-        print(f"❌ Processing failed for session {session_id}: {e}")
+        print(f"Processing failed for session {session_id}: {e}")
         processing_sessions[session_id].update({
             "status": "failed",
             "progress": 0,
@@ -518,7 +523,7 @@ async def process_audio_background(session_id: str, file_path: Path):
             "error": str(e)
         })
         
-        # Clean up uploaded file even on failure
+        # Clean up file on error
         try:
             if file_path.exists():
                 file_path.unlink()
@@ -530,12 +535,10 @@ async def save_results_to_files(results: Dict, output_dir: Path, session_id: str
     try:
         import json
         
-        # Save JSON results
         json_file = output_dir / f"{session_id}_results.json"
         with open(json_file, 'w', encoding='utf-8') as f:
             json.dump(results, f, indent=2, ensure_ascii=False, default=str)
         
-        # Save transcript text
         if "segments" in results:
             txt_file = output_dir / f"{session_id}_transcript.txt"
             with open(txt_file, 'w', encoding='utf-8') as f:
@@ -590,56 +593,185 @@ async def get_results(session_id: str):
         "filename": session["filename"]
     }
 
+@app.get("/api/download/{session_id}/{filename}")
+async def download_file(session_id: str, filename: str):
+    """Download a file from session output"""
+    if session_id not in processing_sessions:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    session = processing_sessions[session_id]
+    output_dir = session.get("output_dir")
+    
+    if not output_dir:
+        raise HTTPException(status_code=404, detail="No output directory found")
+    
+    file_path = Path(output_dir) / filename
+    
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    return FileResponse(
+        path=str(file_path),
+        filename=filename,
+        media_type='application/octet-stream'
+    )
+
+# FIXED: LLM processing endpoint - now accepts JSON instead of Form data
 @app.post("/api/llm-process")
-async def process_with_llm(data: dict):
+async def process_with_llm(request: LLMProcessRequest):
     """Process transcript with LLM using specified prompt"""
-    transcript = data.get("transcript", "")
-    prompt_key = data.get("prompt_key", "summary")
-    
-    if not transcript:
-        raise HTTPException(status_code=400, detail="Transcript is required")
-    
-    # Get prompt from database or fallback
-    prompts = get_prompts_from_database()
-    
-    if prompt_key not in prompts:
-        raise HTTPException(status_code=404, detail=f"Prompt '{prompt_key}' not found")
-    
-    prompt_config = prompts[prompt_key]
-    prompt_template = prompt_config["prompt"]
-    
-    # Replace placeholder with actual transcript
-    full_prompt = prompt_template.replace("{transcript}", transcript)
-    
     try:
-        # Process with LLM
-        result = await process_with_ollama(full_prompt)
+        transcript = request.transcript
+        prompt_key = request.prompt_key
+        custom_prompt = request.custom_prompt
         
-        # Update usage count if database available
-        if DATABASE_AVAILABLE and db_manager:
-            try:
-                session = db_manager.get_session()
+        if not transcript or not transcript.strip():
+            raise HTTPException(status_code=400, detail="Transcript is required")
+        
+        if not prompt_key or not prompt_key.strip():
+            raise HTTPException(status_code=400, detail="Prompt key is required")
+        
+        # Handle custom analysis
+        if prompt_key == "custom_analysis":
+            if not custom_prompt or not custom_prompt.strip():
+                raise HTTPException(status_code=400, detail="Custom prompt is required for custom analysis")
+            
+            # Validate custom prompt contains transcript placeholder
+            if "{transcript}" not in custom_prompt:
+                # Auto-add transcript if not present
+                final_prompt = f"{custom_prompt}\n\nTranscript:\n{transcript}"
+            else:
+                # Replace placeholder with actual transcript
+                final_prompt = custom_prompt.replace("{transcript}", transcript)
+            
+            prompt_title = "Custom Analysis"
+            
+        else:
+            # Get predefined prompt from database or fallback
+            if DATABASE_AVAILABLE and db_manager:
                 try:
-                    prompt_obj = session.query(AnalysisPrompt).filter(AnalysisPrompt.key == prompt_key).first()
-                    if prompt_obj:
-                        prompt_obj.usage_count += 1
-                        session.commit()
+                    db = db_manager.get_session()
+                    try:
+                        prompt = db.query(AnalysisPrompt).filter(
+                            AnalysisPrompt.key == prompt_key,
+                            AnalysisPrompt.is_active == True
+                        ).first()
+                        
+                        if not prompt:
+                            raise HTTPException(status_code=404, detail=f"Prompt '{prompt_key}' not found or inactive")
+                        
+                        final_prompt = prompt.prompt_template.replace("{transcript}", transcript)
+                        prompt_title = prompt.title
+                        
+                    finally:
+                        db.close()
+                        
+                except Exception as e:
+                    logger.error(f"Database error: {e}")
+                    # Fallback to hardcoded prompts
+                    prompts = get_prompts_from_database()
+                    if prompt_key not in prompts:
+                        raise HTTPException(status_code=404, detail=f"Prompt '{prompt_key}' not found")
+                    
+                    final_prompt = prompts[prompt_key]["prompt"].replace("{transcript}", transcript)
+                    prompt_title = prompts[prompt_key]["name"]
+            else:
+                # Use fallback prompts
+                prompts = get_prompts_from_database()
+                if prompt_key not in prompts:
+                    raise HTTPException(status_code=404, detail=f"Prompt '{prompt_key}' not found")
+                
+                final_prompt = prompts[prompt_key]["prompt"].replace("{transcript}", transcript)
+                prompt_title = prompts[prompt_key]["name"]
+        
+        # Check Ollama status
+        ollama_status = await check_ollama_status()
+        if not ollama_status["available"]:
+            raise HTTPException(status_code=503, detail="LLM service not available")
+        
+        if not ollama_status["model_available"]:
+            raise HTTPException(status_code=503, detail=f"Model {DEFAULT_MODEL} not available")
+        
+        # Process with LLM
+        logger.info(f"Processing with LLM: {prompt_key} (length: {len(transcript)} chars)")
+        
+        async with httpx.AsyncClient() as client:
+            ollama_payload = {
+                "model": DEFAULT_MODEL,
+                "prompt": final_prompt,
+                "stream": False,
+                "options": {
+                    "temperature": 0.7,
+                    "top_p": 0.9,
+                    "num_predict": 4000
+                }
+            }
+            
+            response = await client.post(
+                f"{OLLAMA_BASE_URL}/api/generate",
+                json=ollama_payload,
+                timeout=300.0
+            )
+            
+            if response.status_code != 200:
+                logger.error(f"Ollama error: {response.status_code} - {response.text}")
+                raise HTTPException(status_code=503, detail="LLM processing failed")
+            
+            result = response.json()
+            
+            if "response" not in result:
+                logger.error(f"Invalid Ollama response: {result}")
+                raise HTTPException(status_code=503, detail="Invalid LLM response")
+            
+            llm_response = result["response"].strip()
+            
+            if not llm_response:
+                raise HTTPException(status_code=503, detail="LLM returned empty response")
+        
+        # Store result in database if available
+        if DATABASE_AVAILABLE and db_manager and prompt_key != "custom_analysis":
+            try:
+                db = db_manager.get_session()
+                try:
+                    analysis_result = AnalysisResult(
+                        session_id=f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                        prompt_key=prompt_key,
+                        prompt_title=prompt_title,
+                        response_text=llm_response,
+                        model_used=DEFAULT_MODEL,
+                        processing_time=result.get("total_duration", 0) / 1e9 if "total_duration" in result else 0,
+                        transcript_length=len(transcript),
+                        tokens_used=result.get("eval_count", 0)
+                    )
+                    
+                    db.add(analysis_result)
+                    db.commit()
+                    
+                except Exception as e:
+                    logger.error(f"Failed to store analysis result: {e}")
+                    db.rollback()
                 finally:
-                    session.close()
+                    db.close()
             except Exception as e:
-                logger.error(f"Failed to update usage count: {e}")
+                logger.error(f"Database error storing result: {e}")
+        
+        logger.info(f"LLM processing completed for {prompt_key}")
         
         return {
+            "result": llm_response,
+            "model": DEFAULT_MODEL,
             "prompt_key": prompt_key,
-            "prompt_title": prompt_config["name"],
-            "result": result.get("response", ""),
-            "model": result.get("model", DEFAULT_MODEL)
+            "prompt_title": prompt_title,
+            "processing_time": result.get("total_duration", 0) / 1e9 if "total_duration" in result else 0,
+            "tokens_used": result.get("eval_count", 0),
+            "success": True
         }
         
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"LLM processing failed: {str(e)}")
+        logger.error(f"LLM processing error: {e}")
+        raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}")
 
 @app.delete("/api/session/{session_id}")
 async def cleanup_session(session_id: str):
@@ -647,23 +779,111 @@ async def cleanup_session(session_id: str):
     if session_id in processing_sessions:
         session = processing_sessions[session_id]
         
-        # Clean up output directory
         output_dir = session.get("output_dir")
         if output_dir and Path(output_dir).exists():
             shutil.rmtree(output_dir)
         
-        # Remove from memory
         del processing_sessions[session_id]
         
         return {"message": "Session cleaned up successfully"}
     
     raise HTTPException(status_code=404, detail="Session not found")
 
+@app.post("/api/chat")
+async def chat_with_llm(data: dict):
+    """Chat with LLM - RESTORED FROM OLD CODE"""
+    try:
+        message = data.get("message", "")
+        model = data.get("model", DEFAULT_MODEL)
+        
+        if not message:
+            raise HTTPException(status_code=400, detail="Message is required")
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{OLLAMA_BASE_URL}/api/generate",
+                json={
+                    "model": model,
+                    "prompt": message,
+                    "stream": False,
+                    "options": {
+                        "temperature": 0.7,
+                        "top_p": 0.9,
+                        "top_k": 40
+                    }
+                },
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                return {
+                    "response": result.get("response", ""),
+                    "model": model,
+                    "success": True
+                }
+            else:
+                raise HTTPException(status_code=500, detail="Chat failed")
+    
+    except Exception as e:
+        logger.error(f"Chat error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# RESTORED: LLM model management endpoints
+@app.get("/api/llm/models")
+async def get_llm_models():
+    """Get available LLM models - RESTORED"""
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=10)
+            if response.status_code == 200:
+                models_data = response.json()
+                models = []
+                for model in models_data.get("models", []):
+                    models.append({
+                        "name": model.get("name"),
+                        "size": model.get("size", 0),
+                        "modified_at": model.get("modified_at"),
+                        "details": model.get("details", {})
+                    })
+                
+                return {
+                    "models": models,
+                    "default_model": DEFAULT_MODEL,
+                    "ollama_url": OLLAMA_BASE_URL,
+                    "status": "connected"
+                }
+            else:
+                raise HTTPException(status_code=503, detail="Ollama service unavailable")
+    
+    except Exception as e:
+        logger.error(f"Failed to get models: {e}")
+        raise HTTPException(status_code=503, detail=f"LLM service unavailable: {str(e)}")
+
+@app.get("/api/llm/status")
+async def get_llm_status():
+    """Get LLM service status - RESTORED"""
+    status = await check_ollama_status()
+    return status
+
+@app.post("/api/admin/init-prompts")
+async def init_default_prompts():
+    """Initialize default prompts - RESTORED"""
+    if not DATABASE_AVAILABLE or not db_manager:
+        raise HTTPException(status_code=503, detail="Database not available")
+    
+    try:
+        db_manager.init_default_prompts()
+        return {"message": "Default prompts initialized successfully"}
+    except Exception as e:
+        logger.error(f"Failed to initialize prompts: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to initialize prompts: {str(e)}")
+
 if __name__ == "__main__":
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
         port=8888,
-        reload=True,
+        reload=False,
         log_level="info"
     )

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Plus, 
+  Settings, 
   Search, 
   Filter,
   Save,
@@ -173,7 +174,9 @@ const AdminDashboard = () => {
     } catch (error) {
       console.error('Failed to update prompt:', error);
       
-      if (error.response?.status === 404) {
+      if (error.response?.status === 403) {
+        toast.error('Cannot modify system prompts');
+      } else if (error.response?.status === 404) {
         toast.error('Prompt not found');
       } else {
         toast.error('Failed to update prompt');
@@ -196,7 +199,9 @@ const AdminDashboard = () => {
     } catch (error) {
       console.error('Failed to delete prompt:', error);
       
-      if (error.response?.status === 404) {
+      if (error.response?.status === 403) {
+        toast.error('Cannot delete system prompts');
+      } else if (error.response?.status === 404) {
         toast.error('Prompt not found');
       } else {
         toast.error('Failed to delete prompt');
@@ -404,6 +409,11 @@ const AdminDashboard = () => {
                     </div>
                   </div>
                   <div className="flex items-center space-x-1">
+                    {prompt.is_system && (
+                      <div className="p-1 bg-white/20 rounded">
+                        <Settings className="w-3 h-3 text-white" />
+                      </div>
+                    )}
                     <div className={`p-1 rounded ${prompt.is_active ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
                       {prompt.is_active ? 
                         <Eye className="w-3 h-3 text-white" /> : 
@@ -449,13 +459,15 @@ const AdminDashboard = () => {
                       {prompt.is_active ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                     
-                    <button
-                      onClick={() => handleDeletePrompt(prompt)}
-                      className="p-2 text-gray-400 hover:text-red-600 transition-colors"
-                      title="Delete"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {!prompt.is_system && (
+                      <button
+                        onClick={() => handleDeletePrompt(prompt)}
+                        className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                   
                   <div className="text-xs text-gray-500">

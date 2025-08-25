@@ -1,9 +1,336 @@
-// src/contexts/BackendContext.jsx - Enhanced Backend Connection Management
+// BackendContext.jsx - Fixed Backend Context Provider - FIXED activeSessions data structure
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { backendApi } from '../services/api';
 import toast from 'react-hot-toast';
 
+// Create context
 const BackendContext = createContext();
+
+// Backend provider component
+export const BackendProvider = ({ children }) => {
+  // Connection state
+  const [isConnected, setIsConnected] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [systemInfo, setSystemInfo] = useState(null);
+  const [lastHealthCheck, setLastHealthCheck] = useState(null);
+  const [isLLMAvailable, setIsLLMAvailable] = useState(false);
+  
+  // ✅ CRITICAL FIX: Session management - Use Map instead of array to fix .has() error
+  const [activeSessions, setActiveSessions] = useState(new Map());
+  
+  // Navigation callback
+  const navigationCallback = useRef(null);
+  const healthCheckInterval = useRef(null);
+
+  // Health check function
+  const performHealthCheck = async () => {
+    try {
+      const response = await backendApi.health();
+      const healthData = response.data;
+      
+      setIsConnected(true);
+      setSystemInfo(healthData);
+      setLastHealthCheck(new Date());
+      setIsLLMAvailable(healthData.llm?.available || false);
+      
+      console.log('✅ Backend connection established');
+      return healthData;
+    } catch (error) {
+      console.error('❌ Backend health check failed:', error);
+      setIsConnected(false);
+      setSystemInfo(null);
+      setIsLLMAvailable(false);
+      throw error;
+    }
+  };
+
+  // Initialize connection on mount
+  useEffect(() => {
+    const initializeConnection = async () => {
+      setIsLoading(true);
+      try {
+        await performHealthCheck();
+        toast.success('Connected to backend server');
+      } catch (error) {
+        console.error('Failed to connect to backend:', error);
+        if (error.isNetworkError) {
+          toast.error('Backend server not reachable. Please start the server on port 8888.');
+        } else {
+          toast.error('Failed to connect to backend server');
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeConnection();
+  }, []);
+
+  // Set up periodic health checks
+  useEffect(() => {
+    if (isConnected && !healthCheckInterval.current) {
+      healthCheckInterval.current = setInterval(async () => {
+        try {
+          await performHealthCheck();
+        } catch (error) {
+          // Error handling is done in performHealthCheck
+        }
+      }, 30000); // Check every 30 seconds
+    }
+
+    return () => {
+      if (healthCheckInterval.current) {
+        clearInterval(healthCheckInterval.current);
+        healthCheckInterval.current = null;
+      }
+    };
+  }, [isConnected]);
+
+  // ✅ FIXED: Session management with Map data structure
+  const addSession = (sessionData) => {
+    setActiveSessions(prev => {
+      const newMap = new Map(prev);
+      newMap.set(sessionData.id, sessionData);
+      return newMap;
+    });
+    toast.success('New processing session started');
+  };
+
+  const updateSession = (sessionId, updates) => {
+    setActiveSessions(prev => {
+      const newMap = new Map(prev);
+      const existingSession = newMap.get(sessionId);
+      if (existingSession) {
+        newMap.set(sessionId, { ...existingSession, ...updates });
+      } else {
+        // Create new session if it doesn't exist
+        newMap.set(sessionId, { id: sessionId, ...updates });
+      }
+      return newMap;
+    });
+  };
+
+  const removeSession = (sessionId) => {
+    setActiveSessions(prev => {
+      const newMap = new Map(prev);
+      newMap.delete(sessionId);
+      return newMap;
+    });
+  };
+
+  const getProcessingSessions = () => {
+    return Array.from(activeSessions.values()).filter(session => session.status === 'processing');
+  };
+
+  // ✅ ADDED: Helper function to get session data
+  const getSession = (sessionId) => {
+    return activeSessions.get(sessionId);
+  };
+
+  // ✅ ADDED: Helper function to check if session exists
+  const hasSession = (sessionId) => {
+    return activeSessions.has(sessionId);
+  };
+
+  // Navigation callback registration
+  const registerNavigationCallback = (callback) => {
+    navigationCallback.current = callback;
+  };
+
+  const navigateToResults = (sessionId) => {
+    if (navigationCallback.current) {
+      navigationCallback.current(`/results?session=${sessionId}`);
+    }
+  };
+
+  // Manual refresh
+  const refreshConnection = async () => {
+    setIsLoading(true);
+    try {
+      await performHealthCheck();
+      toast.success('Connection refreshed');
+    } catch (error) {
+      toast.error('Failed to refresh connection');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // API methods with error handling
+  const uploadAudio = async (formData, onProgress) => {
+    try {
+      // Check if the method exists in our API service
+      if (typeof backendApi.uploadAudio === 'function') {
+        const response = await backendApi.uploadAudio(formData, onProgress);
+        return response.data;
+      } else {
+        // Fallback to direct API call
+        const response = await backendApi.post('/api/upload-audio', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+          onUploadProgress: onProgress
+        });
+        return response.data;
+      }
+    } catch (error) {
+      console.error('Upload failed:', error);
+      toast.error(error.userMessage || 'Upload failed');
+      throw error;
+    }
+  };
+
+  const processWithLLM = async (requestData) => {
+    try {
+      // Check if the method exists in our API service
+      if (typeof backendApi.llm?.processText === 'function') {
+        const response = await backendApi.llm.processText(requestData);
+        return response.data;
+      } else if (typeof backendApi.processWithLLM === 'function') {
+        const response = await backendApi.processWithLLM(requestData);
+        return response.data;
+      } else {
+        // Fallback to direct API call
+        const response = await backendApi.post('/api/process-llm', requestData);
+        return response.data;
+      }
+    } catch (error) {
+      console.error('LLM processing failed:', error);
+      toast.error(error.userMessage || 'LLM processing failed');
+      throw error;
+    }
+  };
+
+  // ✅ FIXED: Processing status function with correct endpoint
+  const getProcessingStatus = async (sessionId) => {
+    try {
+      // ✅ Use the correct endpoint that matches the backend API
+      const response = await backendApi.get(`/api/processing-status/${sessionId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Status check failed:', error);
+      // Don't show toast for status checks as they happen frequently
+      throw error;
+    }
+  };
+
+  const downloadFile = async (sessionId, filename) => {
+    try {
+      // Check if the method exists in our API service
+      if (typeof backendApi.downloadFile === 'function') {
+        const response = await backendApi.downloadFile(sessionId, filename);
+        return response;
+      } else {
+        // Fallback to direct API call
+        const response = await backendApi.get(`/api/download/${sessionId}/${filename}`, {
+          responseType: 'blob'
+        });
+        return response;
+      }
+    } catch (error) {
+      console.error('Download failed:', error);
+      toast.error(error.userMessage || 'Download failed');
+      throw error;
+    }
+  };
+
+  // Get transcripts
+  const getTranscripts = async (filters = {}) => {
+    try {
+      if (typeof backendApi.transcripts?.getAll === 'function') {
+        const response = await backendApi.transcripts.getAll(filters);
+        return response.data;
+      } else {
+        // Fallback to direct API call
+        const response = await backendApi.get('/api/transcripts', { params: filters });
+        return response.data;
+      }
+    } catch (error) {
+      console.error('Failed to get transcripts:', error);
+      toast.error(error.userMessage || 'Failed to get transcripts');
+      throw error;
+    }
+  };
+
+  // Get LLM models
+  const getLLMModels = async () => {
+    try {
+      if (typeof backendApi.llm?.getModels === 'function') {
+        const response = await backendApi.llm.getModels();
+        return response.data;
+      } else {
+        // Fallback to direct API call
+        const response = await backendApi.get('/api/llm/models');
+        return response.data;
+      }
+    } catch (error) {
+      console.error('Failed to get LLM models:', error);
+      toast.error(error.userMessage || 'Failed to get LLM models');
+      throw error;
+    }
+  };
+
+  // Get processing templates
+  const getProcessingTemplates = async () => {
+    try {
+      if (typeof backendApi.llm?.getTemplates === 'function') {
+        const response = await backendApi.llm.getTemplates();
+        return response.data;
+      } else {
+        // Fallback to direct API call
+        const response = await backendApi.get('/api/llm/templates');
+        return response.data;
+      }
+    } catch (error) {
+      console.error('Failed to get processing templates:', error);
+      toast.error(error.userMessage || 'Failed to get processing templates');
+      throw error;
+    }
+  };
+
+  // Context value
+  const contextValue = {
+    // Connection state
+    isConnected,
+    isLoading,
+    systemInfo,
+    lastHealthCheck,
+    isLLMAvailable,
+    
+    // Session management - ✅ FIXED: Provide both Map and helper functions
+    activeSessions,
+    addSession,
+    updateSession,
+    removeSession,
+    getProcessingSessions,
+    getSession,
+    hasSession,
+    
+    // Navigation
+    registerNavigationCallback,
+    navigateToResults,
+    
+    // API methods
+    uploadAudio,
+    processWithLLM,
+    getProcessingStatus,
+    downloadFile,
+    getTranscripts,
+    getLLMModels,
+    getProcessingTemplates,
+    
+    // Utility methods
+    refreshConnection,
+    performHealthCheck,
+    
+    // Backend API access for components that need it
+    api: backendApi
+  };
+
+  return (
+    <BackendContext.Provider value={contextValue}>
+      {children}
+    </BackendContext.Provider>
+  );
+};
 
 export const useBackend = () => {
   const context = useContext(BackendContext);
@@ -13,241 +340,4 @@ export const useBackend = () => {
   return context;
 };
 
-export const BackendProvider = ({ children }) => {
-  const [backendStatus, setBackendStatus] = useState({
-    connected: false,
-    loading: true,
-    info: null,
-    lastChecked: null
-  });
-
-  const [activeSessions, setActiveSessions] = useState(new Map());
-  const [processingNotifications, setProcessingNotifications] = useState(new Set());
-  
-  // Refs for background polling
-  const statusPollingIntervals = useRef(new Map());
-  const navigationCallbacks = useRef(new Map());
-
-  const checkBackendHealth = async () => {
-    try {
-      const response = await backendApi.checkHealth();
-      setBackendStatus({
-        connected: true,
-        loading: false,
-        info: response.data,
-        lastChecked: new Date()
-      });
-      return true;
-    } catch (error) {
-      setBackendStatus({
-        connected: false,
-        loading: false,
-        info: null,
-        lastChecked: new Date(),
-        error: error.message
-      });
-      return false;
-    }
-  };
-
-  const addSession = (sessionId, sessionData) => {
-    setActiveSessions(prev => new Map(prev.set(sessionId, sessionData)));
-    
-    // If this is a processing session, start background monitoring
-    if (sessionData.status === 'processing') {
-      startBackgroundPolling(sessionId);
-    }
-  };
-
-  const updateSessionStatus = (sessionId, status) => {
-    setActiveSessions(prev => {
-      const newSessions = new Map(prev);
-      const existingSession = newSessions.get(sessionId);
-      if (existingSession) {
-        newSessions.set(sessionId, { ...existingSession, ...status });
-      } else {
-        newSessions.set(sessionId, status);
-      }
-      return newSessions;
-    });
-
-    // Handle completion
-    if (status.status === 'completed') {
-      handleSessionCompletion(sessionId);
-    } else if (status.status === 'failed') {
-      handleSessionFailure(sessionId);
-    }
-  };
-
-  const removeSession = (sessionId) => {
-    setActiveSessions(prev => {
-      const newSessions = new Map(prev);
-      newSessions.delete(sessionId);
-      return newSessions;
-    });
-    
-    // Clean up background polling
-    stopBackgroundPolling(sessionId);
-  };
-
-  // Background polling for processing sessions
-  const startBackgroundPolling = (sessionId) => {
-    // Don't start if already polling
-    if (statusPollingIntervals.current.has(sessionId)) {
-      return;
-    }
-
-    console.log(`Starting background polling for session: ${sessionId}`);
-    
-    const interval = setInterval(async () => {
-      try {
-        const response = await backendApi.getProcessingStatus(sessionId);
-        const status = response.data;
-        
-        updateSessionStatus(sessionId, status);
-        
-        // Stop polling on completion or failure
-        if (status.status === 'completed' || status.status === 'failed') {
-          stopBackgroundPolling(sessionId);
-        }
-        
-      } catch (error) {
-        console.error(`Background polling error for ${sessionId}:`, error);
-        // Don't stop polling on network errors, might be temporary
-      }
-    }, 3000); // Poll every 3 seconds for background
-    
-    statusPollingIntervals.current.set(sessionId, interval);
-  };
-
-  const stopBackgroundPolling = (sessionId) => {
-    const interval = statusPollingIntervals.current.get(sessionId);
-    if (interval) {
-      clearInterval(interval);
-      statusPollingIntervals.current.delete(sessionId);
-      console.log(`Stopped background polling for session: ${sessionId}`);
-    }
-  };
-
-  // Handle session completion
-  const handleSessionCompletion = (sessionId) => {
-    // Show notification if not already shown
-    if (!processingNotifications.has(sessionId)) {
-      toast.success(`Processing completed for session ${sessionId.slice(0, 8)}!`, {
-        duration: 6000,
-        id: `completion-${sessionId}`
-      });
-      setProcessingNotifications(prev => new Set(prev).add(sessionId));
-    }
-
-    // Execute navigation callback if exists
-    const callback = navigationCallbacks.current.get(sessionId);
-    if (callback) {
-      callback(sessionId);
-      navigationCallbacks.current.delete(sessionId);
-    }
-  };
-
-  const handleSessionFailure = (sessionId) => {
-    const session = activeSessions.get(sessionId);
-    toast.error(`Processing failed for session ${sessionId.slice(0, 8)}: ${session?.message || 'Unknown error'}`, {
-      duration: 8000,
-      id: `failure-${sessionId}`
-    });
-    setProcessingNotifications(prev => new Set(prev).add(sessionId));
-  };
-
-  // Register navigation callback for when processing completes
-  const registerNavigationCallback = (sessionId, callback) => {
-    navigationCallbacks.current.set(sessionId, callback);
-  };
-
-  // Check for processing sessions on app load and resume monitoring
-  const resumeBackgroundProcessing = () => {
-    activeSessions.forEach((sessionData, sessionId) => {
-      if (sessionData.status === 'processing') {
-        startBackgroundPolling(sessionId);
-      }
-    });
-  };
-
-  // Get processing sessions
-  const getProcessingSessions = () => {
-    return Array.from(activeSessions.entries())
-      .filter(([_, sessionData]) => sessionData.status === 'processing')
-      .map(([sessionId, sessionData]) => ({ sessionId, ...sessionData }));
-  };
-
-  // Get completed sessions
-  const getCompletedSessions = () => {
-    return Array.from(activeSessions.entries())
-      .filter(([_, sessionData]) => sessionData.status === 'completed')
-      .map(([sessionId, sessionData]) => ({ sessionId, ...sessionData }));
-  };
-
-  // Initial health check
-  useEffect(() => {
-    checkBackendHealth();
-  }, []);
-
-  // Periodic health check (every 30 seconds)
-  useEffect(() => {
-    const interval = setInterval(checkBackendHealth, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Resume background processing on mount
-  useEffect(() => {
-    resumeBackgroundProcessing();
-  }, []);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      // Clear all polling intervals
-      statusPollingIntervals.current.forEach((interval) => {
-        clearInterval(interval);
-      });
-      statusPollingIntervals.current.clear();
-      navigationCallbacks.current.clear();
-    };
-  }, []);
-
-  // Show connection status changes
-  useEffect(() => {
-    if (backendStatus.lastChecked && !backendStatus.loading) {
-      if (backendStatus.connected) {
-        if (backendStatus.info?.llm?.status === 'connected') {
-          toast.success('Backend & LLM connected', { id: 'backend-status' });
-        } else {
-          toast.success('Backend connected (LLM offline)', { id: 'backend-status' });
-        }
-      } else {
-        toast.error('Backend disconnected', { id: 'backend-status' });
-      }
-    }
-  }, [backendStatus.connected, backendStatus.lastChecked]);
-
-  const value = {
-    backendStatus,
-    activeSessions,
-    processingNotifications,
-    checkBackendHealth,
-    addSession,
-    updateSessionStatus,
-    removeSession,
-    startBackgroundPolling,
-    stopBackgroundPolling,
-    registerNavigationCallback,
-    getProcessingSessions,
-    getCompletedSessions,
-    isConnected: backendStatus.connected,
-    isLLMAvailable: backendStatus.info?.llm?.status === 'connected'
-  };
-
-  return (
-    <BackendContext.Provider value={value}>
-      {children}
-    </BackendContext.Provider>
-  );
-};
+export default BackendContext;

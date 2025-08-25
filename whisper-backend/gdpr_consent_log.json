@@ -1,0 +1,30 @@
+[
+  {
+    "timestamp": "2025-08-17T14:32:23.527185",
+    "consent_granted": true,
+    "file_hash": null,
+    "ip_address": "localhost",
+    "consent_version": "1.0"
+  },
+  {
+    "timestamp": "2025-08-17T14:32:23.541723",
+    "consent_granted": true,
+    "file_hash": "1853eb143bf13e51",
+    "ip_address": "localhost",
+    "consent_version": "1.0"
+  },
+  {
+    "timestamp": "2025-08-17T14:37:26.575199",
+    "consent_granted": true,
+    "file_hash": null,
+    "ip_address": "localhost",
+    "consent_version": "1.0"
+  },
+  {
+    "timestamp": "2025-08-17T14:37:26.602954",
+    "consent_granted": true,
+    "file_hash": "1853eb143bf13e51",
+    "ip_address": "localhost",
+    "consent_version": "1.0"
+  }
+]

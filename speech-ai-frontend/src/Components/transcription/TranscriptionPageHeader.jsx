@@ -548,11 +548,11 @@ Attendees:
       {!hasSession && (
         <div className="bg-blue-100 border border-blue-200 rounded-lg p-4">
           <div className="flex items-center space-x-2">
-            <AlertCircle className="w-5 h-5 text-blue-600" />
-            <span className="text-blue-800 font-medium">Demo Mode</span>
+           
+            <span className="text-blue-800 font-medium"></span>
           </div>
           <p className="text-blue-700 text-sm mt-1">
-            You're viewing sample content. Upload an audio file on the Home page to see real results.
+             Upload an audio file on the Home page to see real results.
           </p>
         </div>
       )}

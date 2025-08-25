@@ -1,4 +1,4 @@
-// src/App.jsx - Updated with Admin Panel as separate page
+// Updated App.jsx with Enhanced Responsive Layout
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
@@ -6,87 +6,118 @@ import { Toaster } from 'react-hot-toast';
 // Import custom editor styles
 import './styles/EditorStyles.css';
 
-// Correct import paths based on your file structure - Fixed case sensitivity
-import { Header } from './Components/layout/Header';
-import { Sidebar } from './Components/layout/SideBar'; // Note: SideBar with capital B
-import HomePage from './pages/HomePage';
-import TranscriptionPage from './pages/TranscriptionPage'; // This is our ResultPage
-import SettingsPage from './pages/SettingsPage'; // Use the page version
-import AnalysisPage from './pages/AnalysisPage'; // New AI Analysis page
-import AdminDashboard from './pages/AdminPanel'; // Admin Panel as separate page
+// Context Providers
+import { AuthProvider } from './contexts/AuthContext';
 import { BackendProvider } from './contexts/BackendContext';
+
+// Components
 import ErrorBoundary from './Components/common/ErrorBoundary';
+import Header from './Components/layout/Header';
+import { Sidebar } from './Components/layout/Sidebar';
+
+// Auth Components
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import LoginPage from './pages/LoginPage';
+import AuthCallback from './pages/AuthCallback';
+
+// Pages
+import HomePage from './pages/HomePage';
+import TranscriptionPage from './pages/TranscriptionPage';
+import SettingsPage from './pages/SettingsPage';
+import AnalysisPage from './pages/AnalysisPage';
+import AdminDashboard from './pages/AdminPanel';
 
 const App = () => {
   const [showSidebar, setShowSidebar] = useState(true);
 
   useEffect(() => {
     const handleResize = () => {
-      setShowSidebar(window.innerWidth >= 640); // Hide sidebar below 640px (Tailwind's "sm")
+      // Show sidebar only on large screens (1024px and above)
+      setShowSidebar(window.innerWidth >= 1024);
     };
 
+    // Initial check
     handleResize();
+    
+    // Add event listener
     window.addEventListener('resize', handleResize);
 
+    // Cleanup
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   return (
     <ErrorBoundary>
-      <BackendProvider>
-        <Router
-          future={{
-            v7_startTransition: true,
-            v7_relativeSplatPath: true
-          }}
-        >
-          <div className="h-screen bg-gray-50 flex">
-            {/* Fixed Sidebar - only render above 640px */}
-            {showSidebar && (
-              <div
-                className={`
-                  fixed
-                  left-0
-                  top-0
-                  h-full
-                  z-40
-                  w-[5%]
-                  max-[1000px]:w-[6%]
-                  max-[850px]:w-[7.5%]
-                `}
-              >
-                <Sidebar />
-              </div>
-            )}
+      <AuthProvider>
+        <BackendProvider>
+          <Router
+            future={{
+              v7_startTransition: true,
+              v7_relativeSplatPath: true
+            }}
+          >
+            <Routes>
+              {/* Public Auth Routes */}
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route 
+                path="/auth/silent-callback" 
+                element={<div>Processing authentication...</div>} 
+              />
 
-            {/* Main content area */}
-            <div
-              className={`
-                flex flex-col
-                ${showSidebar ? 
-                  'ml-[5%] max-[1000px]:ml-[6%] max-[850px]:ml-[7.5%] w-[95%] max-[1000px]:w-[94%] max-[850px]:w-[92.5%]' : 'w-full'}
-              `}
-            >
-              <Header />
-              <main className="flex-1 overflow-auto">
-                <Routes>
-                  {/* HomePage - Audio Upload with Structure/Parameters */}
-                  <Route path="/" element={<HomePage />} />
-                  
-                  {/* ResultPage - Processing Status + Results Display */}
-                  <Route path="/results" element={<TranscriptionPage />} />
-                  
-                  {/* AnalysisPage - AI Analysis page */}
-                  <Route path="/analysis" element={<AnalysisPage />} />
-                  
-                  {/* AdminPage - Prompt Management Dashboard */}
-                  <Route path="/admin" element={<AdminDashboard />} />
-                  
-                  {/* SettingsPage - Application settings */}
-                  <Route path="/settings" element={<SettingsPage />} />
-                </Routes>
-              </main>
-            </div>
+              {/* Protected Routes with Responsive Layout */}
+              <Route 
+                path="/*" 
+                element={
+                  <ProtectedRoute>
+                    <div className="h-screen bg-gray-50 flex overflow-hidden">
+                      
+                      {/* Desktop Sidebar - Only visible on large screens */}
+                      {showSidebar && (
+                        <div className="hidden lg:flex lg:flex-shrink-0">
+                          <div className="flex flex-col w-20 xl:w-24">
+                            <Sidebar />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Main Content Area */}
+                      <div className="flex flex-col w-0 flex-1 overflow-hidden">
+                        {/* Header with Hamburger Menu */}
+                        <Header />
+                        
+                        {/* Main Content */}
+                        <main className="flex-1 relative overflow-y-auto focus:outline-none">
+                          <Routes>
+                            {/* HomePage - Audio Upload with Structure/Parameters */}
+                            <Route path="/" element={<HomePage />} />
+                            
+                            {/* ResultPage - Processing Status + Results Display */}
+                            <Route path="/results" element={<TranscriptionPage />} />
+                            
+                            {/* AnalysisPage - AI Analysis page */}
+                            <Route path="/analysis" element={<AnalysisPage />} />
+                            
+                            {/* AdminPage - Prompt Management Dashboard */}
+                            <Route 
+                              path="/admin" 
+                              element={
+                                <ProtectedRoute requireAdmin={true}>
+                                  <AdminDashboard />
+                                </ProtectedRoute>
+                              } 
+                            />
+                            
+                            {/* SettingsPage - Application settings */}
+                            <Route path="/settings" element={<SettingsPage />} />
+                          </Routes>
+                        </main>
+                      </div>
+                    </div>
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
 
             {/* Toast Notifications */}
             <Toaster
@@ -94,35 +125,28 @@ const App = () => {
               toastOptions={{
                 duration: 4000,
                 style: {
-                  background: '#1f2937', // gray-800
-                  color: '#f9fafb', // gray-50
-                  borderRadius: '12px',
-                  border: '1px solid #374151', // gray-700
-                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1)',
+                  background: '#363636',
+                  color: '#fff',
                 },
                 success: {
+                  duration: 3000,
                   iconTheme: {
-                    primary: '#06b6d4', // cyan-500
+                    primary: '#10B981',
                     secondary: '#fff',
                   },
                 },
                 error: {
+                  duration: 5000,
                   iconTheme: {
-                    primary: '#ef4444', // red-500
-                    secondary: '#fff',
-                  },
-                },
-                loading: {
-                  iconTheme: {
-                    primary: '#06b6d4', // cyan-500
+                    primary: '#EF4444',
                     secondary: '#fff',
                   },
                 },
               }}
             />
-          </div>
-        </Router>
-      </BackendProvider>
+          </Router>
+        </BackendProvider>
+      </AuthProvider>
     </ErrorBoundary>
   );
 };

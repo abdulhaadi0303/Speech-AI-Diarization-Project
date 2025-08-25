@@ -545,14 +545,6 @@ const LiveTranscriptEditor = forwardRef(({ results, hasSession }, ref) => {
             </div>
             
             <div className="flex flex-wrap gap-4">
-              <div className="flex-1 min-w-64 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-xs text-blue-700 font-medium">
-                  ℹ️ <strong>Downloads moved to header!</strong>
-                </p>
-                <p className="text-xs text-blue-600 mt-1">
-                  Use the enhanced download menu in the page header for all download options.
-                </p>
-              </div>
 
               {Object.keys(validationErrors).length > 0 && (
                 <div className="flex-1 min-w-64 p-3 bg-red-50 border border-red-200 rounded-lg">
@@ -567,11 +559,6 @@ const LiveTranscriptEditor = forwardRef(({ results, hasSession }, ref) => {
                 </div>
               )}
 
-              <div className="flex-1 min-w-64 p-3 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-xs text-green-700">
-                  🔧 <strong>Status:</strong> {Object.keys(currentMappings).length} speakers • Initialized: {isInitialized ? '✅' : '⏳'}
-                </p>
-              </div>
             </div>
           </div>
         </motion.div>

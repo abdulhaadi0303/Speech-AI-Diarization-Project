@@ -1,4 +1,5 @@
-// src/pages/TranscriptionPage.jsx - Updated to track current view state
+// src/pages/TranscriptionPage.jsx - DEBUG VERSION - Log results structure and fix validation
+
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
@@ -31,11 +32,113 @@ import TranscriptionPageHeader from '../Components/transcription/TranscriptionPa
 import ProcessingStatusSection from '../Components/transcription/ProcessingStatusSection';
 import TranscriptPanel from '../Components/transcription/TranscriptPanel';
 
-// ✅ FIXED: Main Component with Error Prevention & Refresh Handling
+// ✅ UTILITY: Comprehensive results structure validation
+const validateAndNormalizeResults = (fetchedData) => {
+  console.log('🔍 DEBUGGING Results Structure:', fetchedData);
+  console.log('🔍 Type:', typeof fetchedData);
+  console.log('🔍 Keys:', Object.keys(fetchedData || {}));
+  
+  if (!fetchedData) {
+    console.log('❌ No fetched data');
+    return null;
+  }
+
+  // Try different possible result structures
+  let segments = null;
+  let metadata = null;
+  let normalizedResults = null;
+
+  // Pattern 1: results.results.segments (expected)
+  if (fetchedData.results?.segments) {
+    console.log('✅ Found Pattern 1: fetchedData.results.segments');
+    segments = fetchedData.results.segments;
+    metadata = fetchedData.results.metadata;
+    normalizedResults = {
+      results: {
+        segments: segments,
+        metadata: metadata || {},
+        speaker_stats: fetchedData.results.speaker_stats || {}
+      }
+    };
+  }
+  // Pattern 2: results.segments (direct)
+  else if (fetchedData.segments) {
+    console.log('✅ Found Pattern 2: fetchedData.segments');
+    segments = fetchedData.segments;
+    metadata = fetchedData.metadata;
+    normalizedResults = {
+      results: {
+        segments: segments,
+        metadata: metadata || {},
+        speaker_stats: fetchedData.speaker_stats || {}
+      }
+    };
+  }
+  // Pattern 3: Direct array (segments only)
+  else if (Array.isArray(fetchedData)) {
+    console.log('✅ Found Pattern 3: Direct array');
+    segments = fetchedData;
+    normalizedResults = {
+      results: {
+        segments: segments,
+        metadata: {},
+        speaker_stats: {}
+      }
+    };
+  }
+  // Pattern 4: Nested in result property
+  else if (fetchedData.result?.segments) {
+    console.log('✅ Found Pattern 4: fetchedData.result.segments');
+    segments = fetchedData.result.segments;
+    metadata = fetchedData.result.metadata;
+    normalizedResults = {
+      results: {
+        segments: segments,
+        metadata: metadata || {},
+        speaker_stats: fetchedData.result.speaker_stats || {}
+      }
+    };
+  }
+  // Pattern 5: Check for any property containing segments
+  else {
+    for (const key in fetchedData) {
+      if (fetchedData[key]?.segments && Array.isArray(fetchedData[key].segments)) {
+        console.log(`✅ Found Pattern 5: fetchedData.${key}.segments`);
+        segments = fetchedData[key].segments;
+        metadata = fetchedData[key].metadata;
+        normalizedResults = {
+          results: {
+            segments: segments,
+            metadata: metadata || {},
+            speaker_stats: fetchedData[key].speaker_stats || {}
+          }
+        };
+        break;
+      }
+    }
+  }
+
+  if (segments && Array.isArray(segments) && segments.length > 0) {
+    console.log(`✅ VALID: Found ${segments.length} segments`);
+    console.log('🎯 Sample segment:', segments[0]);
+    console.log('✅ Normalized results:', normalizedResults);
+    return normalizedResults;
+  } else {
+    console.log('❌ INVALID: No valid segments found');
+    console.log('🔍 Searched patterns:');
+    console.log('  - fetchedData.results?.segments:', !!fetchedData.results?.segments);
+    console.log('  - fetchedData.segments:', !!fetchedData.segments);
+    console.log('  - Array.isArray(fetchedData):', Array.isArray(fetchedData));
+    console.log('  - fetchedData.result?.segments:', !!fetchedData.result?.segments);
+    return null;
+  }
+};
+
+// ✅ FIXED: Main Component with Enhanced Results Validation
 const TranscriptionPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isConnected, updateSessionStatus } = useBackend();
+  const { isConnected, updateSession } = useBackend();
   
   // ✅ ADDED: Ref for LiveTranscriptEditor to enable header downloads
   const editorRef = useRef(null);
@@ -57,6 +160,7 @@ const TranscriptionPage = () => {
 
   const statusPollingRef = useRef(null);
   const initializedRef = useRef(false);
+  const hasShownCompletionToast = useRef(false); // ✅ CRITICAL FIX: Prevent multiple completion toasts
 
   // ✅ NEW: Handle view changes from TranscriptPanel
   const handleViewChange = useCallback((view) => {
@@ -89,6 +193,9 @@ const TranscriptionPage = () => {
       console.log('📥 Receiving new session:', stateData.sessionId);
       console.log('📄 With file info:', stateData.fileInfo);
       
+      // Reset completion toast flag for new sessions
+      hasShownCompletionToast.current = false;
+      
       // Update session ID
       setCurrentSessionId(stateData.sessionId);
       
@@ -110,19 +217,26 @@ const TranscriptionPage = () => {
     }
   }, [location.state, setCurrentSessionId, setProcessingStatus, currentSessionId, results, processingStatus]);
 
-  // ✅ FIXED: Start polling with better session validation
+  // ✅ CRITICAL FIX: Start polling with better session validation and stop conditions
   useEffect(() => {
     const sessionToUse = currentSessionId;
     
+    // ✅ ENHANCED: Check if we have valid results with the new validation function
+    const hasValidResults = results && validateAndNormalizeResults(results);
+    
     // Don't start polling if:
     // 1. No session ID
-    // 2. Already completed (and we have results)
+    // 2. Already completed (and we have valid results) ✅ CRITICAL: This prevents infinite polling
     // 3. It's a temporary session ID
     // 4. Already polling
     if (!sessionToUse || 
-        (processingStatus?.status === 'completed' && results) ||
+        (processingStatus?.status === 'completed' && hasValidResults) ||
         sessionToUse.startsWith('temp_') ||
         statusPollingRef.current) {
+      
+      if (processingStatus?.status === 'completed' && hasValidResults) {
+        console.log('✅ Session already completed with valid results - skipping polling');
+      }
       return;
     }
 
@@ -130,7 +244,7 @@ const TranscriptionPage = () => {
     startStatusPolling(sessionToUse);
   }, [currentSessionId, processingStatus?.status, results]);
 
-  // ✅ FIXED: Polling with better error handling
+  // ✅ CRITICAL FIX: Polling with comprehensive results validation
   const startStatusPolling = useCallback((sessionId) => {
     if (statusPollingRef.current) {
       clearInterval(statusPollingRef.current);
@@ -142,7 +256,22 @@ const TranscriptionPage = () => {
 
     statusPollingRef.current = setInterval(async () => {
       try {
-        const response = await backendApi.getProcessingStatus(sessionId);
+        // ✅ CRITICAL: Check if we should stop polling before making request
+        const currentResults = useAppStore.getState().results;
+        const currentStatus = useAppStore.getState().processingStatus;
+        
+        // ✅ ENHANCED: Use the validation function to check results
+        const hasValidResults = currentResults && validateAndNormalizeResults(currentResults);
+        
+        if (currentStatus?.status === 'completed' && hasValidResults) {
+          console.log('🛑 Stopping polling - session already completed with valid results');
+          clearInterval(statusPollingRef.current);
+          statusPollingRef.current = null;
+          return;
+        }
+
+        // ✅ FIXED: Use direct API call
+        const response = await backendApi.get(`/api/processing-status/${sessionId}`);
         const status = response.data;
         
         // Reset error counter on successful request
@@ -150,10 +279,17 @@ const TranscriptionPage = () => {
         
         console.log('📊 Backend status:', status.status, status.progress || 'no progress');
         
-        updateSessionStatus(sessionId, status);
+        // ✅ FIXED: Use correct function name - updateSession instead of updateSessionStatus
+        if (updateSession) {
+          updateSession(sessionId, status);
+        }
 
         if (status.status === 'completed') {
           console.log('✅ Backend processing completed');
+          
+          // ✅ CRITICAL FIX: Stop polling IMMEDIATELY to prevent infinite loop
+          clearInterval(statusPollingRef.current);
+          statusPollingRef.current = null;
           
           // Set completion status
           const currentStatus = useAppStore.getState().processingStatus;
@@ -166,18 +302,31 @@ const TranscriptionPage = () => {
             sessionId: sessionId
           });
           
-          // Fetch results
+          // ✅ ENHANCED: Fetch results with comprehensive validation
           try {
-            const resultsResponse = await backendApi.getResults(sessionId);
-            setResults(resultsResponse.data);
-            toast.success('Transcription completed!');
+            const resultsResponse = await backendApi.get(`/api/results/${sessionId}`);
+            console.log('📦 Fetched results:', resultsResponse.data);
+            
+            // ✅ CRITICAL: Use the validation function to normalize results
+            const normalizedResults = validateAndNormalizeResults(resultsResponse.data);
+            
+            if (normalizedResults) {
+              setResults(normalizedResults);
+              console.log('✅ Results set successfully with normalized structure');
+              
+              // ✅ FIXED: Only show toast once per session
+              if (!hasShownCompletionToast.current) {
+                toast.success('Transcription completed!');
+                hasShownCompletionToast.current = true;
+              }
+            } else {
+              console.error('❌ Could not validate or normalize results structure');
+              toast.error('Results received but data structure is invalid');
+            }
           } catch (resultError) {
             console.error('Failed to fetch results:', resultError);
-            // Don't show error toast if the main processing completed
+            toast.error('Processing completed but failed to fetch results');
           }
-          
-          clearInterval(statusPollingRef.current);
-          statusPollingRef.current = null;
           
         } else if (status.status === 'failed') {
           console.log('❌ Backend processing failed');
@@ -236,8 +385,8 @@ const TranscriptionPage = () => {
           // Don't update status or show error - might be temporary network issue
         }
       }
-    }, 3000); // Poll every 3 seconds (slightly slower to reduce load)
-  }, [setProcessingStatus, setResults, updateSessionStatus]);
+    }, 3000); // Poll every 3 seconds
+  }, [setProcessingStatus, setResults, updateSession]);
 
   // ✅ Handle session reset
   const handleReset = useCallback(() => {
@@ -245,6 +394,8 @@ const TranscriptionPage = () => {
       clearInterval(statusPollingRef.current);
       statusPollingRef.current = null;
     }
+    // Reset completion toast flag
+    hasShownCompletionToast.current = false;
     // Clear all session state
     setCurrentSessionId(null);
     setProcessingStatus(null);
@@ -252,18 +403,19 @@ const TranscriptionPage = () => {
     navigate('/');
   }, [navigate, setCurrentSessionId, setProcessingStatus, setResults]);
 
-  // ✅ Cleanup on unmount
+  // ✅ CRITICAL FIX: Cleanup on unmount
   useEffect(() => {
     return () => {
       if (statusPollingRef.current) {
+        console.log('🧹 Cleaning up status polling on unmount');
         clearInterval(statusPollingRef.current);
         statusPollingRef.current = null;
       }
     };
   }, []);
 
-
-  const hasSession = !!currentSessionId;
+  // ✅ FIXED: hasSession logic - should be true when we have a session, false when we don't
+  const hasSession = Boolean(currentSessionId);
 
   return (
     <div className="min-h-screen bg-gray-800 overflow-auto">
@@ -280,7 +432,7 @@ const TranscriptionPage = () => {
           currentView={currentView}
         />
 
-        {/* Component 2: Processing Status and Stats */}
+        {/* Component 2: Processing Status and Stats - ✅ FIXED: Hide progress when completed with results */}
         <ProcessingStatusSection 
           hasSession={hasSession}
           processingStatus={processingStatus}

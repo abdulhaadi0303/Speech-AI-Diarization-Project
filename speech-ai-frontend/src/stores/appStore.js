@@ -1,4 +1,4 @@
-// src/stores/appStore.js - Enhanced Store with Complete Analysis State Management
+// src/stores/appStore.js - Enhanced Store with Editor State Management
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -49,14 +49,14 @@ const useAppStore = create(
       parameters: defaultParameters,
       setParameters: (parameters) => set({ parameters }),
 
-      // TranscriptionPage state - PERSIST PROCESSING & RESULTS
+      // TranscriptionPage state - PERSIST PROCESSING RESULTS
       currentSessionId: null,
       setCurrentSessionId: (sessionId) => set({ currentSessionId: sessionId }),
       
       processingStatus: null,
       setProcessingStatus: (status) => set({ processingStatus: status }),
       
-      results: null,
+      results: null, // ✅ This will persist processing results
       setResults: (results) => set({ results }),
       
       expandedSummary: false,
@@ -65,36 +65,42 @@ const useAppStore = create(
       expandedTranscript: false,
       setExpandedTranscript: (expanded) => set({ expandedTranscript: expanded }),
 
-      // ✅ NEW: Editor State Management (Session-specific)
-      transcriptEditorContent: {}, // { sessionId: content }
-      speakerMappings: {}, // { sessionId: mappings }
-      editorHasUnsavedChanges: {}, // { sessionId: boolean }
+      // ✅ NEW: Live Editor State Management
+      transcriptEditorContent: {},
+      setTranscriptEditorContent: (sessionId, content) => set((state) => ({
+        transcriptEditorContent: {
+          ...state.transcriptEditorContent,
+          [sessionId]: content
+        }
+      })),
+      
+      speakerMappings: {},
+      setSpeakerMappings: (sessionId, mappings) => set((state) => ({
+        speakerMappings: {
+          ...state.speakerMappings,
+          [sessionId]: mappings
+        }
+      })),
+      
+      editorHasUnsavedChanges: {},
+      setEditorHasUnsavedChanges: (sessionId, hasChanges) => set((state) => ({
+        editorHasUnsavedChanges: {
+          ...state.editorHasUnsavedChanges,
+          [sessionId]: hasChanges
+        }
+      })),
 
-      setTranscriptEditorContent: (sessionId, content) => 
-        set((state) => ({
-          transcriptEditorContent: {
-            ...state.transcriptEditorContent,
-            [sessionId]: content
-          }
-        })),
+      // ✅ Helper functions for editor state
+      getEditorState: (sessionId) => {
+        const state = get();
+        return {
+          content: state.transcriptEditorContent[sessionId] || '',
+          speakers: state.speakerMappings[sessionId] || {},
+          hasUnsavedChanges: state.editorHasUnsavedChanges[sessionId] || false
+        };
+      },
 
-      setSpeakerMappings: (sessionId, mappings) => 
-        set((state) => ({
-          speakerMappings: {
-            ...state.speakerMappings,
-            [sessionId]: mappings
-          }
-        })),
-
-      setEditorHasUnsavedChanges: (sessionId, hasChanges) => 
-        set((state) => ({
-          editorHasUnsavedChanges: {
-            ...state.editorHasUnsavedChanges,
-            [sessionId]: hasChanges
-          }
-        })),
-
-      updateEditorState: (sessionId, editorData) => {
+      saveEditorState: (sessionId, editorData) => {
         const { setTranscriptEditorContent, setSpeakerMappings, setEditorHasUnsavedChanges } = get();
         
         if (editorData.content !== undefined) {
@@ -126,122 +132,30 @@ const useAppStore = create(
         });
       },
 
-      // ✅ ENHANCED: AnalysisPage state - FULL MIGRATION TO ZUSTAND
-      // Analysis prompts and data
-      analysisPrompts: [], // ✅ Migrated from local state
-      setAnalysisPrompts: (prompts) => set({ analysisPrompts: prompts }),
-      
-      analysisSearchTerm: '', // ✅ Migrated from local state
-      setAnalysisSearchTerm: (term) => set({ analysisSearchTerm: term }),
-      
-      analysisSelectedCategory: 'all', // ✅ Migrated from local state
-      setAnalysisSelectedCategory: (category) => set({ analysisSelectedCategory: category }),
-      
-      analysisLoadingPromptData: false, // ✅ Migrated from local state
-      setAnalysisLoadingPromptData: (loading) => set({ analysisLoadingPromptData: loading }),
-      
-      analysisCustomPrompt: '', // ✅ Already existed, keeping
-      setAnalysisCustomPrompt: (prompt) => set({ analysisCustomPrompt: prompt }),
-      
-      analysisShowCustomAnalysis: false, // ✅ Migrated from local state
-      setAnalysisShowCustomAnalysis: (show) => set({ analysisShowCustomAnalysis: show }),
-      
-      // Analysis results and progress - PERSIST ACROSS NAVIGATION
-      analysisResults: {}, // ✅ Already existed - session-specific results
-      setAnalysisResults: (results) => set({ analysisResults: results }),
-      
-      analysisProgress: {}, // ✅ Already existed - session-specific progress
-      setAnalysisProgress: (progress) => set({ analysisProgress: progress }),
-      
-      // Loading states
-      analysisLoadingPrompts: [], // ✅ Migrated from Set to Array for persistence
-      setAnalysisLoadingPrompts: (prompts) => set({ analysisLoadingPrompts: prompts }),
-      
-      addAnalysisLoadingPrompt: (promptKey) => set((state) => ({
-        analysisLoadingPrompts: [...new Set([...state.analysisLoadingPrompts, promptKey])]
-      })),
-      
-      removeAnalysisLoadingPrompt: (promptKey) => set((state) => ({
-        analysisLoadingPrompts: state.analysisLoadingPrompts.filter(p => p !== promptKey)
-      })),
-      
-      // ✅ NEW: Polling metadata for background continuation
-      analysisPollingIntervals: {}, // ✅ Store polling metadata, not actual intervals
-      setAnalysisPollingIntervals: (intervals) => set({ analysisPollingIntervals: intervals }),
-      
-      addAnalysisPollingInterval: (promptKey, metadata) => set((state) => ({
-        analysisPollingIntervals: {
-          ...state.analysisPollingIntervals,
-          [promptKey]: {
-            ...metadata,
-            lastCheck: new Date().toISOString()
-          }
-        }
-      })),
-      
-      removeAnalysisPollingInterval: (promptKey) => set((state) => {
-        const newIntervals = { ...state.analysisPollingIntervals };
-        delete newIntervals[promptKey];
-        return { analysisPollingIntervals: newIntervals };
-      }),
-      
-      // History modal state
-      analysisShowHistoryModal: false, // ✅ Already existed, keeping
-      setAnalysisShowHistoryModal: (show) => set({ analysisShowHistoryModal: show }),
-
-      // ✅ NEW: Analysis action methods
-      clearAnalysisHistory: () => {
-        set({
-          analysisResults: {},
-          analysisProgress: {},
-          analysisPollingIntervals: {},
-          analysisLoadingPrompts: []
-        });
-      },
-      
-      // Update analysis result
-      updateAnalysisResult: (promptKey, result) => set((state) => ({
-        analysisResults: {
-          ...state.analysisResults,
-          [promptKey]: result
-        }
-      })),
-      
-      // Update analysis progress
-      updateAnalysisProgress: (promptKey, progress) => set((state) => ({
-        analysisProgress: {
-          ...state.analysisProgress,
-          [promptKey]: progress
-        }
-      })),
-
-      // Legacy compatibility fields (for existing components)
+      // AnalysisPage state - UPDATED for persistence
       selectedAnalysisSession: '', // ✅ Kept for compatibility
       setSelectedAnalysisSession: (sessionId) => set({ selectedAnalysisSession: sessionId }),
       
       sessionData: null, // ✅ Kept for compatibility  
       setSessionData: (data) => set({ sessionData: data }),
       
-      customPrompt: '', // ✅ Legacy alias for analysisCustomPrompt
-      setCustomPrompt: (prompt) => set({ 
-        customPrompt: prompt,
-        analysisCustomPrompt: prompt // Keep both in sync
-      }),
+      customPrompt: '', // ✅ Persisted
+      setCustomPrompt: (prompt) => set({ customPrompt: prompt }),
       
-      loadingPrompts: [], // ✅ Legacy alias for analysisLoadingPrompts
-      setLoadingPrompts: (prompts) => set({ 
-        loadingPrompts: prompts,
-        analysisLoadingPrompts: prompts // Keep both in sync
-      }),
+      analysisResults: {}, // ✅ Persisted - survives navigation
+      setAnalysisResults: (results) => set({ analysisResults: results }),
+      
+      analysisProgress: {}, // ✅ Persisted - survives navigation
+      setAnalysisProgress: (progress) => set({ analysisProgress: progress }),
+      
+      loadingPrompts: [], // ✅ Kept for compatibility
+      setLoadingPrompts: (prompts) => set({ loadingPrompts: prompts }),
       
       backgroundPolling: [], // ✅ Kept for compatibility
       setBackgroundPolling: (polling) => set({ backgroundPolling: polling }),
       
-      showHistoryModal: false, // ✅ Legacy alias for analysisShowHistoryModal
-      setShowHistoryModal: (show) => set({ 
-        showHistoryModal: show,
-        analysisShowHistoryModal: show // Keep both in sync
-      }),
+      showHistoryModal: false, // ✅ Persisted
+      setShowHistoryModal: (show) => set({ showHistoryModal: show }),
 
       // ChatPage state
       selectedChatSession: '',
@@ -262,7 +176,7 @@ const useAppStore = create(
       isLoading: false,
       setChatLoading: (loading) => set({ isLoading: loading }),
 
-      // ✅ ENHANCED: "Add New" - Reset with Complete Analysis Cleanup
+      // ✅ ENHANCED: "Add New" - Reset with Editor Cleanup
       resetAllState: () => {
         const currentSessionId = get().currentSessionId;
         
@@ -285,22 +199,12 @@ const useAppStore = create(
           results: null,
           expandedSummary: false,
           expandedTranscript: false,
-          // ✅ COMPLETE ANALYSIS STATE RESET
-          analysisPrompts: [],
-          analysisSearchTerm: '',
-          analysisSelectedCategory: 'all',
-          analysisLoadingPromptData: false,
-          analysisCustomPrompt: '',
-          analysisShowCustomAnalysis: false,
-          analysisResults: {},
-          analysisProgress: {},
-          analysisLoadingPrompts: [],
-          analysisPollingIntervals: {},
-          analysisShowHistoryModal: false,
-          // Legacy compatibility
+          // ✅ Clear analysis state on reset
           selectedAnalysisSession: '',
           sessionData: null,
           customPrompt: '',
+          analysisResults: {},
+          analysisProgress: {},
           loadingPrompts: [],
           backgroundPolling: [],
           showHistoryModal: false,
@@ -310,17 +214,6 @@ const useAppStore = create(
           chatMessages: [],
           isLoading: false,
           // ✅ Note: Editor state is cleared above with clearEditorState
-        });
-      },
-
-      // ✅ NEW: Refresh Analysis State - Clear only analysis data, keep UI state
-      refreshAnalysisState: () => {
-        set({
-          analysisResults: {},
-          analysisProgress: {},
-          analysisPollingIntervals: {},
-          analysisLoadingPrompts: [],
-          // Keep UI state: searchTerm, selectedCategory, customPrompt, etc.
         });
       },
     }),

@@ -1,0 +1,4 @@
+# Set this to Device B's IP address or Tailscale IP
+# VITE_BACKEND_URL=http://100.124.198.103:8888
+# Or for Tailscale:
+# VITE_BACKEND_URL=http://100.124.198.103:8888

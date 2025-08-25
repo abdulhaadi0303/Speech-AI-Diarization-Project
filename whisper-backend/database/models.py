@@ -1,4 +1,4 @@
-# database/models.py - Database Models for Analysis Prompts
+# database/models.py - Database Models for Analysis Prompts (FIXED ENCODING)
 
 from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, Float, create_engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -18,7 +18,7 @@ class AnalysisPrompt(Base):
     description = Column(Text)  # Brief description
     prompt_template = Column(Text, nullable=False)  # The actual prompt with {transcript} placeholder
     icon = Column(String(50), default="Brain")  # Lucide icon name
-    emoji = Column(String(10), default="🤖")  # Emoji for display
+    emoji = Column(String(10), default="🤖")  # FIXED: Proper UTF-8 emoji
     category = Column(String(50), default="general")  # Category (general, meeting, content, etc.)
     gradient_from = Column(String(20), default="cyan-500")  # Tailwind gradient start
     gradient_to = Column(String(20), default="cyan-600")  # Tailwind gradient end
@@ -101,9 +101,9 @@ class DatabaseManager:
         """Create all tables"""
         try:
             Base.metadata.create_all(bind=self.engine)
-            print("✅ Database tables created successfully")
+            print("Database tables created successfully")
         except Exception as e:
-            print(f"❌ Error creating database tables: {e}")
+            print(f"Error creating database tables: {e}")
             raise
         
     def get_session(self):
@@ -117,7 +117,7 @@ class DatabaseManager:
             # Check if prompts already exist
             existing_count = session.query(AnalysisPrompt).count()
             if existing_count > 0:
-                print(f"📊 Database already has {existing_count} prompts")
+                print(f"Database already has {existing_count} prompts")
                 return
                 
             default_prompts = [
@@ -137,7 +137,7 @@ Please provide:
 
 Format your response clearly with headers and bullet points.""",
                     "icon": "FileText",
-                    "emoji": "📋",
+                    "emoji": "📋",  # FIXED: Proper UTF-8 emoji
                     "category": "general",
                     "gradient_from": "cyan-500",
                     "gradient_to": "cyan-600",
@@ -161,7 +161,7 @@ Provide:
 
 Be specific and actionable.""",
                     "icon": "CheckSquare",
-                    "emoji": "✅",
+                    "emoji": "✅",  # FIXED: Proper UTF-8 emoji
                     "category": "productivity",
                     "gradient_from": "green-500",
                     "gradient_to": "green-600",
@@ -185,7 +185,7 @@ Provide:
 
 Be objective and provide specific examples.""",
                     "icon": "Heart",
-                    "emoji": "😊",
+                    "emoji": "😊",  # FIXED: Proper UTF-8 emoji
                     "category": "analysis",
                     "gradient_from": "pink-500",
                     "gradient_to": "pink-600",
@@ -209,7 +209,7 @@ Identify:
 
 Focus on the most valuable and actionable insights.""",
                     "icon": "Lightbulb",
-                    "emoji": "🔍",
+                    "emoji": "💡",  # FIXED: Proper UTF-8 emoji
                     "category": "analysis",
                     "gradient_from": "yellow-500",
                     "gradient_to": "yellow-600",
@@ -235,7 +235,7 @@ Structure as:
 
 Use professional formatting suitable for distribution.""",
                     "icon": "Calendar",
-                    "emoji": "📝",
+                    "emoji": "📝",  # FIXED: Proper UTF-8 emoji
                     "category": "meeting",
                     "gradient_from": "blue-500",
                     "gradient_to": "blue-600",
@@ -262,7 +262,7 @@ Include:
 
 Focus on substantive questions and answers, not small talk.""",
                     "icon": "HelpCircle",
-                    "emoji": "❓",
+                    "emoji": "❓",  # FIXED: Proper UTF-8 emoji
                     "category": "content",
                     "gradient_from": "purple-500",
                     "gradient_to": "purple-600",
@@ -276,11 +276,11 @@ Focus on substantive questions and answers, not small talk.""",
                 session.add(prompt)
                 
             session.commit()
-            print(f"✅ Initialized {len(default_prompts)} default prompts")
+            print(f"Initialized {len(default_prompts)} default prompts")
             
         except Exception as e:
             session.rollback()
-            print(f"❌ Error initializing prompts: {e}")
+            print(f"Error initializing prompts: {e}")
             raise
         finally:
             session.close()
