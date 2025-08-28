@@ -171,18 +171,18 @@ const HomePage = () => {
   const canProcess = selectedFile && !isProcessing;
 
   return (
-    <div className="min-h-screen bg-gray-900 overflow-auto">
+    <div className="min-h-screen bg-gradient-to-br from-psycon-light-teal/20 via-white to-psycon-lavender/30 overflow-auto">
       <div className="p-6 max-w-5xl mx-auto"> {/* Made wider: max-w-4xl -> max-w-5xl */}
         
         {/* Page Header with Title */}
         <PageHeader />
-
+  
         {/* Processing Banner - Shows active sessions */}
         <ProcessingBanner 
           processingSessions={processingSessions}
           onViewSession={handleViewSession}
         />
-
+  
         {/* Main Content */}
         <div className="max-w-3xl mx-auto space-y-6"> {/* Made wider: max-w-2xl -> max-w-3xl */}
           
@@ -191,7 +191,12 @@ const HomePage = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
+            className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-psycon-mint/30 p-6 text-gray-800"
           >
+            <div className="mb-4">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-2">Audio Upload</h2>
+              <p className="text-gray-600">Upload your audio file to begin analysis</p>
+            </div>
             <AudioUploader 
               onFileUpload={handleFileUpload}
               selectedFile={selectedFile}
@@ -206,7 +211,12 @@ const HomePage = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
+            className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-psycon-purple/30 p-6 text-gray-800"
           >
+            <div className="mb-4">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-2">Processing Settings</h2>
+              <p className="text-gray-600">Configure language and speaker detection</p>
+            </div>
             <AudioVisualizationSection 
               isProcessing={isProcessing}
               language={language}
@@ -222,6 +232,7 @@ const HomePage = () => {
       </div>
     </div>
   );
+  
 };
 
 export default HomePage;

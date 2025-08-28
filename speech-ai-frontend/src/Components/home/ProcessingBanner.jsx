@@ -9,16 +9,16 @@ const ProcessingBanner = ({ processingSessions, onViewSession }) => {
     <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mb-6 bg-gradient-to-r from-cyan-500 to-cyan-600 rounded-xl p-4 text-white"
+      className="mb-6 bg-gradient-to-r from-psycon-mint to-psycon-purple rounded-xl p-4 text-white shadow-lg border border-psycon-mint/20"
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <Loader2 className="w-5 h-5 animate-spin" />
+          <Loader2 className="w-5 h-5 animate-spin text-white" />
           <div>
-            <h3 className="font-semibold">
+            <h3 className="font-semibold text-white">
               {processingSessions.length} Session{processingSessions.length > 1 ? 's' : ''} Processing
             </h3>
-            <p className="text-cyan-100 text-sm">
+            <p className="text-white/80 text-sm">
               Processing continues in background. You'll be notified when complete.
             </p>
           </div>
@@ -28,18 +28,19 @@ const ProcessingBanner = ({ processingSessions, onViewSession }) => {
             <button
               key={session.sessionId}
               onClick={() => onViewSession(session.sessionId)}
-              className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-lg text-sm transition-colors"
+              className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-lg text-sm transition-colors text-white"
             >
               View {session.sessionId.slice(0, 8)}...
             </button>
           ))}
           {processingSessions.length > 2 && (
-            <span className="text-cyan-100 text-sm">+{processingSessions.length - 2} more</span>
+            <span className="text-white/80 text-sm">+{processingSessions.length - 2} more</span>
           )}
         </div>
       </div>
     </motion.div>
   );
+
 };
 
 export default ProcessingBanner;

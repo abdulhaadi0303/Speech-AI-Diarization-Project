@@ -20,6 +20,7 @@ const ProcessingSettingsPanel = ({
   onParameterToggle,
   showStructuresAndParameters = false
 }) => {
+  
   return (
     <div className="space-y-6">
       {/* Audio Visualization Section */}
@@ -47,6 +48,7 @@ const ProcessingSettingsPanel = ({
       )}
     </div>
   );
+
 };
 
 export default ProcessingSettingsPanel;

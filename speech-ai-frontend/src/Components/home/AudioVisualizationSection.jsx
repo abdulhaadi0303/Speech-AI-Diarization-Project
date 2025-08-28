@@ -35,17 +35,17 @@ const AudioVisualizationSection = ({
   ];
 
   return (
-    <div className="bg-gray-100 p-6 rounded-lg">
-      <h3 className="text-cyan-400 text-lg font-semibold mb-4">Processing Settings</h3>
+    <div className="bg-gray-50/70 p-6 rounded-lg border border-gray-200/50">
+      <h3 className="text-psycon-purple text-lg font-semibold mb-4">Processing Settings</h3>
       
       {/* Audio Visualization */}
       <div className="mb-6">
-        <div className="bg-gray-800 rounded-lg p-4 mb-4">
+        <div className="bg-gradient-to-r from-gray-800 to-gray-900 rounded-lg p-4 mb-4">
           <div className="flex items-center justify-center space-x-1">
             {[...Array(20)].map((_, i) => (
               <div
                 key={i}
-                className={`bg-cyan-400 rounded transition-all duration-300 ${
+                className={`bg-gradient-to-t from-psycon-mint to-psycon-purple rounded transition-all duration-300 ${
                   isProcessing ? 'animate-pulse' : ''
                 }`}
                 style={{
@@ -66,7 +66,7 @@ const AudioVisualizationSection = ({
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
               disabled={isProcessing}
-              className="w-full bg-gray-800 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400"
+              className="w-full bg-white border border-gray-300 text-gray-800 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-psycon-mint focus:border-psycon-mint"
             >
               {languages.map((lang) => (
                 <option key={lang.code} value={lang.code}>
@@ -82,7 +82,7 @@ const AudioVisualizationSection = ({
               value={speakers}
               onChange={(e) => setSpeakers(e.target.value)}
               disabled={isProcessing}
-              className="w-full bg-gray-800 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400"
+              className="w-full bg-white border border-gray-300 text-gray-800 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-psycon-mint focus:border-psycon-mint"
             >
               {speakerOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -93,7 +93,7 @@ const AudioVisualizationSection = ({
           </div>
         </div>
       </div>
-
+  
       {/* Buttons Section */}
       <div className="space-y-3">
         {/* Start Processing Button */}
@@ -102,8 +102,8 @@ const AudioVisualizationSection = ({
           disabled={!canProcess || isProcessing}
           className={`w-full py-3 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2 ${
             canProcess && !isProcessing
-              ? 'bg-cyan-400 text-white hover:bg-cyan-500'
-              : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+              ? 'bg-gradient-to-r from-psycon-mint to-psycon-purple text-white hover:from-psycon-mint/90 hover:to-psycon-purple/90 shadow-md'
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
           }`}
         >
           {isProcessing ? (
@@ -115,7 +115,7 @@ const AudioVisualizationSection = ({
             <span>Start Processing File</span>
           )}
         </button>
-
+  
         {/* Add New Button - Same style */}
         <div className="w-full">
           <AddNewButton />
@@ -123,6 +123,7 @@ const AudioVisualizationSection = ({
       </div>
     </div>
   );
+
 };
 
 export default AudioVisualizationSection;
