@@ -418,52 +418,107 @@ const TranscriptionPage = () => {
   const hasSession = Boolean(currentSessionId);
 
   return (
-    <div className="min-h-screen bg-gray-800 overflow-auto">
+    <div className="min-h-screen bg-gradient-to-br from-psycon-light-teal/10 via-white to-psycon-lavender/15 overflow-auto">
       <div className="p-6 max-w-7xl mx-auto">
         
-        {/* Component 1: Header Section - ✅ UPDATED: Pass editorRef and currentView */}
-        <TranscriptionPageHeader 
-          currentSessionId={currentSessionId}
-          results={results}
-          structures={structures}
-          parameters={parameters}
-          hasSession={hasSession}
-          editorRef={editorRef}
-          currentView={currentView}
-        />
-
-        {/* Component 2: Processing Status and Stats - ✅ FIXED: Hide progress when completed with results */}
-        <ProcessingStatusSection 
-          hasSession={hasSession}
-          processingStatus={processingStatus}
-          onReset={handleReset}
-          results={results}
-          metadata={results?.results?.metadata}
-          speakerStats={results?.results?.speaker_stats}
-        />
-
-        {/* Component 3: Centered Transcript Panel - ✅ FIXED: 1.6x height increase */}
-        <div className="flex justify-center" style={{ height: 'calc(160vh - 480px)', minHeight: '960px' }}>
+        {/* Component 1: Header Section */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <TranscriptionPageHeader 
+            currentSessionId={currentSessionId}
+            results={results}
+            structures={structures}
+            parameters={parameters}
+            hasSession={hasSession}
+            editorRef={editorRef}
+            currentView={currentView}
+          />
+        </motion.div>
+  
+        {/* Component 2: Processing Status and Stats */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          <ProcessingStatusSection 
+            hasSession={hasSession}
+            processingStatus={processingStatus}
+            onReset={handleReset}
+            results={results}
+            metadata={results?.results?.metadata}
+            speakerStats={results?.results?.speaker_stats}
+          />
+        </motion.div>
+  
+        {/* Component 3: Main Transcript Panel - Vibrant & Welcoming Design */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="flex justify-center mt-8" 
+          style={{ height: 'calc(160vh - 480px)', minHeight: '960px' }}
+        >
           <div 
-            className="border-4 border-cyan-400 rounded-3xl p-2 w-full max-w-5xl overflow-hidden" 
+            className="relative w-full max-w-5xl overflow-hidden group"
             style={{ 
               maxWidth: 'calc(64rem + 100px)',
               height: '100%'
             }}
           >
-            <TranscriptPanel 
-              results={results}
-              isExpanded={expandedTranscript}
-              onToggleExpand={() => setExpandedTranscript(!expandedTranscript)}
-              hasSession={hasSession}
-              editorRef={editorRef}
-              onViewChange={handleViewChange}
-            />
+            {/* Animated Gradient Border */}
+            <div className="absolute inset-0 bg-gradient-to-r from-psycon-mint via-psycon-purple to-psycon-yellow p-1 rounded-3xl opacity-80 group-hover:opacity-100 transition-opacity duration-300">
+              <div className="w-full h-full bg-white rounded-3xl"></div>
+            </div>
+            
+            {/* Glowing Effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-psycon-mint/20 via-psycon-purple/20 to-psycon-yellow/20 rounded-3xl blur-xl opacity-50 group-hover:opacity-75 transition-opacity duration-500"></div>
+            
+            {/* Content Container */}
+            <div className="relative bg-white/95 backdrop-blur-sm rounded-3xl border border-psycon-mint/20 shadow-2xl overflow-hidden h-full">
+              {/* Decorative Top Bar */}
+              <div className="h-2 bg-gradient-to-r from-psycon-mint via-psycon-purple to-psycon-yellow"></div>
+              
+              {/* Main Content */}
+              <div className="h-full pb-2">
+                <TranscriptPanel 
+                  results={results}
+                  isExpanded={expandedTranscript}
+                  onToggleExpand={() => setExpandedTranscript(!expandedTranscript)}
+                  hasSession={hasSession}
+                  editorRef={editorRef}
+                  onViewChange={handleViewChange}
+                />
+              </div>
+            </div>
+  
+            {/* Corner Accent Decorations */}
+            <div className="absolute top-4 left-4 w-6 h-6 bg-gradient-to-br from-psycon-mint to-transparent rounded-full opacity-60"></div>
+            <div className="absolute top-4 right-4 w-6 h-6 bg-gradient-to-bl from-psycon-purple to-transparent rounded-full opacity-60"></div>
+            <div className="absolute bottom-4 left-4 w-6 h-6 bg-gradient-to-tr from-psycon-yellow to-transparent rounded-full opacity-60"></div>
+            <div className="absolute bottom-4 right-4 w-6 h-6 bg-gradient-to-tl from-psycon-mint to-transparent rounded-full opacity-60"></div>
           </div>
-        </div>
+        </motion.div>
+  
+        {/* Floating Success Indicator */}
+        {results?.results?.segments && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, delay: 0.8, type: "spring" }}
+            className="fixed bottom-6 right-6 bg-gradient-to-r from-psycon-mint to-psycon-purple text-white px-4 py-2 rounded-full shadow-lg flex items-center space-x-2 z-30"
+          >
+            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+            <span className="text-sm font-medium">Transcript Ready</span>
+          </motion.div>
+        )}
       </div>
     </div>
   );
+
 };
 
 export default TranscriptionPage;

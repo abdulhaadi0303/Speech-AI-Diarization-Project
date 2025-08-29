@@ -417,143 +417,95 @@ Attendees:
 
   return (
     <div className="mb-6">
-      {/* Main Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-4">
-          <Link 
-            to="/" 
-            className="flex items-center space-x-2 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-500 transition-colors"
+      {/* Back Button and Title Section */}
+      <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 mb-6">
+        {/* Left Side - Back Button and Title */}
+        <div className="flex items-center space-x-6">
+          <Link
+            to="/"
+            className="flex items-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Back</span>
+            <span className="font-medium">Back</span>
           </Link>
+          
           <div>
-            <h1 className="text-3xl font-bold text-white">
-              Exploration & <span className="text-cyan-400">Interviews</span>
-            </h1>
-            {currentSessionId ? (
-              <p className="text-gray-400">Active Session</p>
-            ) : (
-              <p className="text-gray-400">No active session - showing demo content</p>
-            )}
+            <h1 className="text-3xl font-bold text-psycon-mint mb-1">Interviews</h1>
+            <p className="text-gray-600 text-sm">Active Session</p>
           </div>
         </div>
-        
-        {/* Enhanced Download Options - Single Dropdown Only */}
-        {results && (
-          <div className="flex items-center space-x-3">
-            {/* Single Download Dropdown with all options */}
-            <div className="relative">
-              <button
-                onClick={() => setShowDownloadMenu(!showDownloadMenu)}
-                className="flex items-center space-x-2 px-4 py-2 bg-green-500 text-white hover:bg-green-600 rounded-lg transition-colors"
-              >
-                <Download className="w-4 h-4" />
-                <span>Download</span>
-                <ChevronDown className="w-3 h-3" />
-              </button>
-              
-              {showDownloadMenu && (
-                <div className="absolute right-0 top-full mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                  <div className="p-2">
-                    <div className="text-xs text-gray-500 font-medium mb-2 px-2">
-                      Professional Formats • From: {currentView === 'editor' ? 'Live Editor' : 'Original View'}
+  
+        {/* Right Side - Download Button (Responsive Position) */}
+        <div className="relative sm:ml-auto">
+          <button
+            onClick={() => setShowDownloadMenu(!showDownloadMenu)}
+            disabled={!hasSession}
+            className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-colors w-full sm:w-auto ${
+              hasSession
+                ? 'bg-green-500 text-white hover:bg-green-600'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
+          >
+            <Download className="w-4 h-4" />
+            <span>Download</span>
+            <ChevronDown className="w-4 h-4" />
+          </button>
+  
+          {/* Download Dropdown Menu - Corrected Function Names */}
+          {showDownloadMenu && hasSession && (
+            <>
+              <div 
+                className="fixed inset-0 z-10" 
+                onClick={() => setShowDownloadMenu(false)}
+              />
+              <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-20">
+                <div className="p-2">
+                  <button
+                    onClick={downloadProfessionalTxt}
+                    className="flex items-center space-x-3 w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors rounded-lg"
+                  >
+                    <FileText className="w-4 h-4" />
+                    <div className="flex-1 text-left">
+                      <div className="font-medium">Professional TXT</div>
+                      <div className="text-xs text-gray-500">Formatted transcript with headers</div>
                     </div>
-                    
-                    <button
-                      onClick={downloadProfessionalTxt}
-                      className="w-full flex items-center space-x-3 px-3 py-2 text-left hover:bg-gray-50 rounded-md transition-colors"
-                    >
-                      <FileText className="w-4 h-4 text-blue-600" />
-                      <div>
-                        <div className="font-medium text-sm">Professional Transcript</div>
-                        <div className="text-xs text-gray-500">Formatted with metadata & stats</div>
-                      </div>
-                    </button>
-                    
-                    <button
-                      onClick={downloadMeetingMinutes}
-                      className="w-full flex items-center space-x-3 px-3 py-2 text-left hover:bg-gray-50 rounded-md transition-colors"
-                    >
-                      <File className="w-4 h-4 text-green-600" />
-                      <div>
-                        <div className="font-medium text-sm">Meeting Minutes</div>
-                        <div className="text-xs text-gray-500">Business-ready format</div>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={downloadPDF}
-                      className="w-full flex items-center space-x-3 px-3 py-2 text-left hover:bg-gray-50 rounded-md transition-colors"
-                    >
-                      <FileText className="w-4 h-4 text-red-600" />
-                      <div>
-                        <div className="font-medium text-sm">PDF Document</div>
-                        <div className="text-xs text-gray-500">Professional PDF format</div>
-                      </div>
-                    </button>
-                    
-                    <button
-                      onClick={downloadCSV}
-                      className="w-full flex items-center space-x-3 px-3 py-2 text-left hover:bg-gray-50 rounded-md transition-colors"
-                    >
-                      <FileText className="w-4 h-4 text-purple-600" />
-                      <div>
-                        <div className="font-medium text-sm">Data Export (CSV)</div>
-                        <div className="text-xs text-gray-500">For analysis & spreadsheets</div>
-                      </div>
-                    </button>
-                    
-                    <div className="border-t border-gray-100 my-2"></div>
-                    <div className="text-xs text-gray-500 font-medium mb-2 px-2">Basic Formats</div>
-                    
-                    <button
-                      onClick={downloadSimpleTranscript}
-                      className="w-full flex items-center space-x-3 px-3 py-2 text-left hover:bg-gray-50 rounded-md transition-colors"
-                    >
-                      <FileText className="w-4 h-4 text-gray-600" />
-                      <div>
-                        <div className="font-medium text-sm">Simple Text</div>
-                        <div className="text-xs text-gray-500">Plain transcript only</div>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={downloadJSON}
-                      className="w-full flex items-center space-x-3 px-3 py-2 text-left hover:bg-gray-50 rounded-md transition-colors"
-                    >
-                      <FileText className="w-4 h-4 text-indigo-600" />
-                      <div>
-                        <div className="font-medium text-sm">JSON Data</div>
-                        <div className="text-xs text-gray-500">Complete results data</div>
-                      </div>
-                    </button>
-                  </div>
+                  </button>
+                  
+                  <button
+                    onClick={downloadSimpleTranscript}
+                    className="flex items-center space-x-3 w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors rounded-lg"
+                  >
+                    <FileText className="w-4 h-4" />
+                    <div className="flex-1 text-left">
+                      <div className="font-medium">Simple Transcript</div>
+                      <div className="text-xs text-gray-500">Clean text without formatting</div>
+                    </div>
+                  </button>
+                  
+                  <button
+                    onClick={downloadPDF}
+                    className="flex items-center space-x-3 w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors rounded-lg"
+                  >
+                    <File className="w-4 h-4" />
+                    <div className="flex-1 text-left">
+                      <div className="font-medium">PDF Document</div>
+                      <div className="text-xs text-gray-500">Professional PDF format</div>
+                    </div>
+                  </button>
                 </div>
-              )}
-            </div>
-          </div>
-        )}
+              </div>
+            </>
+          )}
+        </div>
       </div>
-
-      {/* Close dropdown when clicking outside */}
-      {showDownloadMenu && (
-        <div 
-          className="fixed inset-0 z-40" 
-          onClick={() => setShowDownloadMenu(false)}
-        />
-      )}
-
-      {/* Demo Mode Notice */}
+  
+      {/* Session Warning - Only show if no session */}
       {!hasSession && (
-        <div className="bg-blue-100 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-center space-x-2">
-           
-            <span className="text-blue-800 font-medium"></span>
+        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className="flex items-center space-x-2 text-yellow-700">
+            <AlertCircle className="w-5 h-5" />
+            <span>No active session found. Please upload and process audio first.</span>
           </div>
-          <p className="text-blue-700 text-sm mt-1">
-             Upload an audio file on the Home page to see real results.
-          </p>
         </div>
       )}
     </div>

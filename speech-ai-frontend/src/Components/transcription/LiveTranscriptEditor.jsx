@@ -611,6 +611,7 @@ const LiveTranscriptEditor = forwardRef(({ results, hasSession }, ref) => {
       </div>
     </div>
   );
+  
 });
 
 LiveTranscriptEditor.displayName = 'LiveTranscriptEditor';

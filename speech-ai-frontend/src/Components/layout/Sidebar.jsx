@@ -117,7 +117,7 @@ export function Sidebar() {
         <Link to="/" className="group">
           <div className="w-12 h-12 bg-gradient-to-br from-psycon-mint to-psycon-purple rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-105">
             <img 
-              src="/HorizontalLogo.png" 
+              src="/Logo.png" 
               alt="PsyConTech" 
               className="h-6 w-auto filter brightness-0 invert"
             />
