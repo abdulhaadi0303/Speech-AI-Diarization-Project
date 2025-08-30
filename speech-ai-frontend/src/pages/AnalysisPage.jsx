@@ -30,15 +30,19 @@ import useAppStore from '../stores/appStore';
 const AnalysisPageHeader = ({ isValidSession, currentSessionId }) => {
   return (
     <div className="mb-8">
-      <h1 className="text-3xl font-bold mb-2 flex items-center">
-        <Brain className="w-8 h-8 text-cyan-400 mr-3" />
+      <h1 className="text-3xl font-bold mb-2 flex items-center text-gray-900">
+        {/* Using brand's mint teal color for the brain icon */}
+        <Brain className="w-8 h-8 mr-3" style={{ color: '#5AE8C7' }} />
         AI Analysis Dashboard
       </h1>
       
-      {/* Session Status Warning */}
+      {/* Session Status Warning - Using brand's soft yellow for warnings */}
       {!isValidSession && (
-        <div className="mt-4 p-4 bg-yellow-900/20 border border-yellow-700 rounded-lg">
-          <div className="flex items-center space-x-2 text-yellow-400">
+        <div className="mt-4 p-4 border rounded-lg" style={{ 
+          backgroundColor: '#FFF3B0', 
+          borderColor: '#FFC700' 
+        }}>
+          <div className="flex items-center space-x-2" style={{ color: '#B8860B' }}>
             <AlertTriangle className="w-5 h-5" />
             <span>No active session found. Please upload and process audio first.</span>
           </div>
@@ -60,125 +64,134 @@ const CustomAnalysisPanel = ({
   analysisProgress, 
   isValidSession 
 }) => {
-  return (
-    <div className="lg:col-span-1">
-      <h2 className="text-xl font-semibold text-white mb-4">Custom Analysis</h2>
-      
-      <div className="bg-gray-800 rounded-xl border border-gray-700 p-6">
-        <div className="flex items-center space-x-2 mb-4">
-          <Sparkles className="w-5 h-5 text-yellow-400" />
-          <h3 className="font-medium text-white">Create Custom Prompt</h3>
-        </div>
-        
-        <div className="mb-4">
-          <p className="text-gray-400 text-sm mb-4">
-            Write your own analysis prompt. Use {'{transcript}'} to reference the conversation.
-          </p>
-        </div>
-        
-        <textarea
-          value={customPrompt}
-          onChange={(e) => setCustomPrompt(e.target.value)}
-          placeholder="Example: Analyze the key decisions made in this conversation and identify any risks or concerns mentioned..."
-          className="w-full h-32 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 resize-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
-        />
-        
-        <button
-          onClick={() => {
-            console.log(`🎯 Custom analysis button clicked, runAnalysis type:`, typeof runAnalysis);
-            runAnalysis('custom_analysis');
-          }}
-          disabled={!isValidSession || !customPrompt.trim() || loadingPrompts.has('custom_analysis')}
-          className={`w-full mt-4 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center space-x-2 ${
-            isValidSession && customPrompt.trim() && !loadingPrompts.has('custom_analysis')
-              ? 'bg-gradient-to-r from-cyan-500 to-cyan-600 text-white hover:from-cyan-600 hover:to-cyan-700'
-              : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-          }`}
-        >
-          {loadingPrompts.has('custom_analysis') ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              <span>Processing Custom Analysis...</span>
-            </>
-          ) : (
-            <>
-              <Zap className="w-5 h-5" />
-              <span>Run Custom Analysis</span>
-            </>
-          )}
-        </button>
-
-        {/* Custom Analysis Results */}
-        {analysisResults['custom_analysis'] && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            className="mt-4 border-t border-gray-700 pt-4"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center space-x-2 text-sm text-gray-400">
-                <CheckCircle className="w-4 h-4 text-green-400" />
-                <span>Custom analysis completed</span>
-                {analysisResults['custom_analysis'].processing_time && (
-                  <>
-                    <span>•</span>
-                    <span>{analysisResults['custom_analysis'].processing_time.toFixed(1)}s</span>
-                  </>
-                )}
-              </div>
-              <button
-                onClick={() => {
-                  const result = analysisResults['custom_analysis'];
-                  if (result?.response || result?.result) {
-                    const blob = new Blob([result.response || result.result], { type: 'text/plain' });
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = `custom_analysis.txt`;
-                    link.click();
-                    URL.revokeObjectURL(url);
-                    toast.success('Custom analysis downloaded');
-                  }
-                }}
-                className="flex items-center space-x-1 px-3 py-1 m-2 bg-cyan-600 hover:bg-cyan-700 text-white text-sm rounded transition-colors"
-              >
-                <Sparkles className="w-3 h-3"  />
-                <span>Download</span>
-              </button>
-            </div>
-            <div className="bg-gray-700 rounded-lg p-3 max-h-64 overflow-y-auto">
-              <div className="text-gray-300 text-sm whitespace-pre-wrap">
-                {analysisResults['custom_analysis']?.response || 
-                 analysisResults['custom_analysis']?.result || 
-                 'No content available'}
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Custom Analysis Progress */}
-        {analysisProgress['custom_analysis'] && (
-          <div className="mt-4">
-            {analysisProgress['custom_analysis'].status === 'processing' && (
-              <div className="flex items-center space-x-2 text-blue-400">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span className="text-sm">Processing custom analysis...</span>
-              </div>
-            )}
-            
-            {analysisProgress['custom_analysis'].status === 'failed' && (
-              <div className="flex items-center space-x-2 text-red-400">
-                <AlertTriangle className="w-4 h-4" />
-                <span className="text-sm">
-                  {analysisProgress['custom_analysis'].error || 'Custom analysis failed'}
-                </span>
-              </div>
-            )}
-          </div>
-        )}
+// CustomAnalysisPanel Component - Light Theme Return Section
+return (
+  <div className="lg:col-span-1">
+    <h2 className="text-xl font-semibold text-gray-900 mb-4">Custom Analysis</h2>
+    
+    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+      <div className="flex items-center space-x-2 mb-4">
+        <Sparkles className="w-5 h-5" style={{ color: '#FFC700' }} />
+        <h3 className="font-medium text-gray-900">Create Custom Prompt</h3>
       </div>
+      
+      <div className="mb-4">
+        <p className="text-gray-600 text-sm mb-4">
+          Write your own analysis prompt. Use {'{transcript}'} to reference the conversation.
+        </p>
+      </div>
+      
+      <textarea
+        value={customPrompt}
+        onChange={(e) => setCustomPrompt(e.target.value)}
+        placeholder="Example: Analyze the key decisions made in this conversation and identify any risks or concerns mentioned..."
+        className="w-full h-32 px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 resize-none focus:ring-2 focus:border-transparent"
+        style={{ 
+          '--tw-ring-color': '#5AE8C7'
+        }}
+      />
+      
+      <button
+        onClick={() => {
+          console.log(`🎯 Custom analysis button clicked, runAnalysis type:`, typeof runAnalysis);
+          runAnalysis('custom_analysis');
+        }}
+        disabled={!isValidSession || !customPrompt.trim() || loadingPrompts.has('custom_analysis')}
+        className={`w-full mt-4 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center space-x-2 shadow-md ${
+          isValidSession && customPrompt.trim() && !loadingPrompts.has('custom_analysis')
+            ? 'text-white hover:opacity-90'
+            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+        }`}
+        style={isValidSession && customPrompt.trim() && !loadingPrompts.has('custom_analysis') 
+          ? { background: 'linear-gradient(to right, #5AE8C7, #DF72E8)' }
+          : {}
+        }
+      >
+        {loadingPrompts.has('custom_analysis') ? (
+          <>
+            <Loader2 className="w-5 h-5 animate-spin" />
+            <span>Processing Custom Analysis...</span>
+          </>
+        ) : (
+          <>
+            <Zap className="w-5 h-5" />
+            <span>Run Custom Analysis</span>
+          </>
+        )}
+      </button>
+
+      {/* Custom Analysis Results */}
+      {analysisResults['custom_analysis'] && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          className="mt-4 border-t border-gray-200 pt-4"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <CheckCircle className="w-4 h-4" style={{ color: '#5AE8C7' }} />
+              <span>Custom analysis completed</span>
+              {analysisResults['custom_analysis'].processing_time && (
+                <>
+                  <span>•</span>
+                  <span>{analysisResults['custom_analysis'].processing_time.toFixed(1)}s</span>
+                </>
+              )}
+            </div>
+            <button
+              onClick={() => {
+                const result = analysisResults['custom_analysis'];
+                if (result?.response || result?.result) {
+                  const blob = new Blob([result.response || result.result], { type: 'text/plain' });
+                  const url = URL.createObjectURL(blob);
+                  const link = document.createElement('a');
+                  link.href = url;
+                  link.download = `custom_analysis.txt`;
+                  link.click();
+                  URL.revokeObjectURL(url);
+                  toast.success('Custom analysis downloaded');
+                }
+              }}
+              className="flex items-center space-x-1 px-3 py-1 m-2 text-white text-sm rounded transition-colors shadow-sm hover:opacity-90"
+              style={{ backgroundColor: '#5AE8C7' }}
+            >
+              <Sparkles className="w-3 h-3" />
+              <span>Download</span>
+            </button>
+          </div>
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 max-h-64 overflow-y-auto">
+            <div className="text-gray-700 text-sm whitespace-pre-wrap">
+              {analysisResults['custom_analysis']?.response || 
+               analysisResults['custom_analysis']?.result || 
+               'No content available'}
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Custom Analysis Progress */}
+      {analysisProgress['custom_analysis'] && (
+        <div className="mt-4">
+          {analysisProgress['custom_analysis'].status === 'processing' && (
+            <div className="flex items-center space-x-2" style={{ color: '#5AE8C7' }}>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span className="text-sm">Processing custom analysis...</span>
+            </div>
+          )}
+          
+          {analysisProgress['custom_analysis'].status === 'failed' && (
+            <div className="flex items-center space-x-2 text-red-500">
+              <AlertTriangle className="w-4 h-4" />
+              <span className="text-sm">
+                {analysisProgress['custom_analysis'].error || 'Custom analysis failed'}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
     </div>
-  );
+  </div>
+);
 };
 
 // ================================
@@ -200,113 +213,119 @@ const AnalysisMain = ({
 }) => {
   const categories = ['all', 'general', 'meeting', 'content', 'analysis', 'productivity'];
 
-  return (
-    <div className="lg:col-span-2">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-white">Analysis Tools</h2>
-        <button
-          onClick={() => window.location.reload()}
-          className="flex items-center space-x-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
-        >
-          <RefreshCw className="w-4 h-4" />
-          <span>Refresh</span>
-        </button>
-      </div>
-
-      {/* Search and Filter Section */}
-      <div className="mb-6 space-y-4">
-        {/* Search Input */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <input
-            type="text"
-            placeholder="Search analysis tools..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
-          />
-        </div>
-
-        {/* Category Filter Buttons */}
-        <div className="flex flex-wrap gap-2">
-          {categories.map(category => (
-            <button
-              key={category}
-              onClick={() => setSelectedCategory(category)}
-              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                selectedCategory === category
-                  ? 'bg-cyan-500 text-white'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-              }`}
-            >
-              {category.charAt(0).toUpperCase() + category.slice(1)}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Prompts Grid Section */}
-      {loadingPromptData ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-cyan-400" />
-          <span className="ml-2 text-gray-400">Loading analysis tools...</span>
-        </div>
-      ) : filteredPrompts.length === 0 ? (
-        <div className="text-center py-12 bg-gray-800 rounded-xl border border-gray-700">
-          <Brain className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-          <p className="text-gray-400 mb-2">No analysis prompts available</p>
-          <p className="text-gray-500 text-sm">
-            {prompts.length === 0 
-              ? 'No prompts loaded from server' 
-              : 'Try adjusting your search or filter criteria'
-            }
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {filteredPrompts.map((prompt) => {
-            // Debug logging for each card render
-            console.log(`🃏 RENDERING CARD for ${prompt.key}:`, {
-              promptKey: prompt.key,
-              onRunAnalysisType: typeof runAnalysis,
-              onRunAnalysisExists: !!runAnalysis
-            });
-            
-            return (
-              <div key={prompt.key} className="w-full">
-                <UnifiedAnalysisCard
-                  prompt={prompt}
-                  selectedSession={currentSessionId}
-                  analysisResults={analysisResults}
-                  analysisProgress={analysisProgress}
-                  isLoading={loadingPrompts.has(prompt.key)}
-                  onRunAnalysis={runAnalysis}
-                  onDownload={(promptKey) => {
-                    console.log('📥 Download requested for:', promptKey);
-                    const result = analysisResults[promptKey];
-                    if (result?.response || result?.result) {
-                      const blob = new Blob([result.response || result.result], { type: 'text/plain' });
-                      const url = URL.createObjectURL(blob);
-                      const link = document.createElement('a');
-                      link.href = url;
-                      link.download = `analysis_${promptKey}.txt`;
-                      link.click();
-                      URL.revokeObjectURL(url);
-                      toast.success('Analysis downloaded');
-                    } else {
-                      toast.error('No result to download');
-                    }
-                  }}
-                  showUsageStats={false}
-                  isAdminView={false}
-                />
-              </div>
-            );
-          })}
-        </div>
-      )}
+  // AnalysisMain Component - Light Theme Return Section
+return (
+  <div className="lg:col-span-2">
+    <div className="flex items-center justify-between mb-6">
+      <h2 className="text-xl font-semibold text-gray-900">Analysis Tools</h2>
+      <button
+        onClick={() => window.location.reload()}
+        className="flex items-center space-x-2 px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors text-gray-700 shadow-sm"
+      >
+        <RefreshCw className="w-4 h-4" />
+        <span>Refresh</span>
+      </button>
     </div>
-  );
+
+    {/* Search and Filter Section */}
+    <div className="mb-6 space-y-4">
+      {/* Search Input */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+        <input
+          type="text"
+          placeholder="Search analysis tools..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:border-transparent shadow-sm"
+          style={{ 
+            '--tw-ring-color': '#5AE8C7'
+          }}
+        />
+      </div>
+
+      {/* Category Filter Buttons */}
+      <div className="flex flex-wrap gap-2">
+        {categories.map(category => (
+          <button
+            key={category}
+            onClick={() => setSelectedCategory(category)}
+            className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+              selectedCategory === category
+                ? 'text-white shadow-md'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300'
+            }`}
+            style={selectedCategory === category ? { backgroundColor: '#5AE8C7' } : {}}
+          >
+            {category.charAt(0).toUpperCase() + category.slice(1)}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    {/* Prompts Grid Section */}
+    {loadingPromptData ? (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#5AE8C7' }} />
+        <span className="ml-2 text-gray-600">Loading analysis tools...</span>
+      </div>
+    ) : filteredPrompts.length === 0 ? (
+      <div className="text-center py-12 bg-white rounded-xl border border-gray-200 shadow-sm">
+        <Brain className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+        <p className="text-gray-600 mb-2">No analysis prompts available</p>
+        <p className="text-gray-500 text-sm">
+          {prompts.length === 0 
+            ? 'No prompts loaded from server' 
+            : 'Try adjusting your search or filter criteria'
+          }
+        </p>
+      </div>
+    ) : (
+      <div className="space-y-4">
+        {filteredPrompts.map((prompt) => {
+          // Debug logging for each card render
+          console.log(`🃏 RENDERING CARD for ${prompt.key}:`, {
+            promptKey: prompt.key,
+            onRunAnalysisType: typeof runAnalysis,
+            onRunAnalysisExists: !!runAnalysis
+          });
+          
+          return (
+            <div key={prompt.key} className="w-full">
+              <UnifiedAnalysisCard
+                prompt={prompt}
+                selectedSession={currentSessionId}
+                analysisResults={analysisResults}
+                analysisProgress={analysisProgress}
+                isLoading={loadingPrompts.has(prompt.key)}
+                onRunAnalysis={runAnalysis}
+                onDownload={(promptKey) => {
+                  console.log('📥 Download requested for:', promptKey);
+                  const result = analysisResults[promptKey];
+                  if (result?.response || result?.result) {
+                    const blob = new Blob([result.response || result.result], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `analysis_${promptKey}.txt`;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                    toast.success('Analysis downloaded');
+                  } else {
+                    toast.error('No result to download');
+                  }
+                }}
+                showUsageStats={false}
+                isAdminView={false}
+              />
+            </div>
+          );
+        })}
+      </div>
+    )}
+  </div>
+);
+
 };
 
 // ================================
@@ -582,46 +601,51 @@ const AnalysisPage = () => {
 
   const isValidSession = currentSessionId && results;
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
-      <div className="container mx-auto px-4 py-8">
-        {/* 1. HEADER SECTION */}
-        <AnalysisPageHeader 
-          isValidSession={isValidSession}
+// Updated return section for AnalysisPage - Light Theme with PsyConTech Brand Colors
+
+
+return (
+  <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 text-gray-900">
+    <div className="container mx-auto px-4 py-8">
+      {/* 1. HEADER SECTION */}
+      <AnalysisPageHeader 
+        isValidSession={isValidSession}
+        currentSessionId={currentSessionId}
+      />
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* 2. MAIN ANALYSIS SECTION (Left 2/3) */}
+        <AnalysisMain 
+          prompts={prompts}
+          loadingPromptData={loadingPromptData}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+          filteredPrompts={filteredPrompts}
           currentSessionId={currentSessionId}
+          analysisResults={analysisResults}
+          analysisProgress={analysisProgress}
+          loadingPrompts={loadingPrompts}
+          runAnalysis={runAnalysis}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* 2. MAIN ANALYSIS SECTION (Left 2/3) */}
-          <AnalysisMain 
-            prompts={prompts}
-            loadingPromptData={loadingPromptData}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            selectedCategory={selectedCategory}
-            setSelectedCategory={setSelectedCategory}
-            filteredPrompts={filteredPrompts}
-            currentSessionId={currentSessionId}
-            analysisResults={analysisResults}
-            analysisProgress={analysisProgress}
-            loadingPrompts={loadingPrompts}
-            runAnalysis={runAnalysis}
-          />
-
-          {/* 3. CUSTOM ANALYSIS PANEL (Right 1/3) */}
-          <CustomAnalysisPanel 
-            customPrompt={customPrompt}
-            setCustomPrompt={setCustomPrompt}
-            runAnalysis={runAnalysis}
-            loadingPrompts={loadingPrompts}
-            analysisResults={analysisResults}
-            analysisProgress={analysisProgress}
-            isValidSession={isValidSession}
-          />
-        </div>
+        {/* 3. CUSTOM ANALYSIS PANEL (Right 1/3) */}
+        <CustomAnalysisPanel 
+          customPrompt={customPrompt}
+          setCustomPrompt={setCustomPrompt}
+          runAnalysis={runAnalysis}
+          loadingPrompts={loadingPrompts}
+          analysisResults={analysisResults}
+          analysisProgress={analysisProgress}
+          isValidSession={isValidSession}
+        />
       </div>
     </div>
-  );
+  </div>
+);
+
+
 };
 
 export default AnalysisPage;
