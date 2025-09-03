@@ -255,48 +255,106 @@ export const AuthProvider = ({ children }) => {
   }, [updateUserPermissions]);
 
   // Logout function
-  const logout = useCallback(async () => {
-    try {
-      console.log('🔄 Logging out...');
-      
-      // Clear local storage
-      localStorage.removeItem('auth_user');
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-      
-      // Clear state
-      setUser(null);
-      setIsAuthenticated(false);
-      setPermissions({});
-      
-      // Redirect to home
-      window.location.href = '/';
-      
-    } catch (error) {
-      console.error('❌ Logout failed:', error);
-      // Force redirect even if logout fails
-      window.location.href = '/';
+ // Enhanced logout function for AuthContext.jsx
+// Simple default logout function that always requires credentials next time
+// Fixed logout function that properly redirects to login page
+const logout = useCallback(async () => {
+  try {
+    console.log('🔄 Logging out from Speech App...');
+    
+    // 1. Get the current access token BEFORE clearing storage
+    const currentToken = localStorage.getItem('access_token');
+    
+    // 2. Call backend logout first (while we still have the token)
+    if (currentToken) {
+      try {
+        await fetch(`${import.meta.env.VITE_BACKEND_URL}/auth/logout`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${currentToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ all_sessions: false })
+        });
+        console.log('✅ Backend logout successful');
+      } catch (error) {
+        console.warn('Backend logout call failed:', error);
+        // Continue with logout even if backend call fails
+      }
     }
-  }, []);
+    
+    // 3. Clear all local authentication data
+    localStorage.removeItem('auth_user');
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('auth_state');
+    localStorage.removeItem('auth_return_url');
+    
+    // Also clear session storage
+    sessionStorage.removeItem('auth_user');
+    sessionStorage.removeItem('access_token');
+    sessionStorage.removeItem('refresh_token');
+    
+    // 4. Clear app state immediately
+    setUser(null);
+    setIsAuthenticated(false);
+    setPermissions({});
+    
+    // 5. Clear axios authorization header
+    if (window.backendApi?.setAuthToken) {
+      window.backendApi.setAuthToken(null);
+    }
+    
+    // 6. Simple approach: Just navigate to login page
+    // This will clear the app session but keep SSO session active
+    console.log('🔄 Redirecting to login page...');
+    window.location.replace('/login');
+    
+    // Alternative: If you want to force SSO logout (uncomment the lines below)
+    /*
+    const authentikLogoutUrl = `${authConfig.authentikUrl}/application/o/speech-analysis/end-session/`;
+    const returnUrl = `${window.location.origin}/login`;
+    const fullLogoutUrl = `${authentikLogoutUrl}?post_logout_redirect_uri=${encodeURIComponent(returnUrl)}`;
+    
+    console.log('🔒 Redirecting to full SSO logout...');
+    window.location.href = fullLogoutUrl;
+    */
+    
+  } catch (error) {
+    console.error('❌ Logout failed:', error);
+    
+    // Fallback: Force cleanup and go to login page
+    localStorage.clear();
+    sessionStorage.clear();
+    
+    // Clear state
+    setUser(null);
+    setIsAuthenticated(false);
+    setPermissions({});
+    
+    // Navigate to login page
+    window.location.replace('/login');
+  }
+}, [authConfig.authentikUrl]);
 
-  const value = {
-    user,
-    isLoading,
-    isAuthenticated,
-    permissions,
-    authConfig,
-    login,
-    logout,
-    handleLoginCallback,
-    // Additional convenience properties
-    isAdmin: permissions.isAdmin || false,
-    isSuperAdmin: permissions.isSuperAdmin || false,
-    userRole: permissions.role,
-    userGroups: permissions.groups || [],
-    userName: user?.name || user?.username,
-    userEmail: user?.email
-  };
-
+// Export the simple logout function
+const value = {
+  user,
+  isLoading,
+  isAuthenticated,
+  permissions,
+  authConfig,
+  login,
+  logout, // Simple, default logout that always requires credentials
+  handleLoginCallback,
+  // Additional convenience properties
+  isAdmin: permissions.isAdmin || false,
+  isSuperAdmin: permissions.isSuperAdmin || false,
+  userRole: permissions.role,
+  userGroups: permissions.groups || [],
+  userName: user?.name || user?.username,
+  userEmail: user?.email
+};
   return (
     <AuthContext.Provider value={value}>
       {children}

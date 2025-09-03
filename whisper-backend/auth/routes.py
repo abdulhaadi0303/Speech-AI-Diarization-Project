@@ -77,6 +77,28 @@ def create_auth_router(db_manager: DatabaseManager) -> APIRouter:
             "logout_url": f"{auth_settings.AUTHENTIK_ISSUER_URL}/application/o/logout/"
         }
     
+    @router.get("/profile")
+    async def get_user_profile(current_user: User = Depends(get_current_user)):
+        """Get current user's profile information for display"""
+        
+        # Smart name logic (as discussed)
+        name = None
+        if current_user.full_name and current_user.full_name.strip():
+            name = current_user.full_name.strip()
+        else:
+            name_parts = []
+            if current_user.first_name and current_user.first_name.strip():
+                name_parts.append(current_user.first_name.strip())
+            if current_user.last_name and current_user.last_name.strip():
+                name_parts.append(current_user.last_name.strip())
+            
+            if name_parts:
+                name = " ".join(name_parts)
+        
+        return {
+            "name": name,
+            "email": current_user.email
+        }
     @router.post("/login")
     async def login(request: Request, login_data: LoginRequest):
         """Exchange authorization code for JWT tokens"""
@@ -206,7 +228,33 @@ def create_auth_router(db_manager: DatabaseManager) -> APIRouter:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Token refresh failed"
             )
-    
+        
+    @router.get("/profile")
+    async def get_current_user_profile(current_user: User = Depends(get_current_user)):
+
+        """Get current user's profile information for display"""
+        
+        # Smart name logic (Option A as discussed)
+        name = None
+        if current_user.full_name and current_user.full_name.strip():
+            name = current_user.full_name.strip()
+        else:
+            # Combine first_name + last_name
+            name_parts = []
+            if current_user.first_name and current_user.first_name.strip():
+                name_parts.append(current_user.first_name.strip())
+            if current_user.last_name and current_user.last_name.strip():
+                name_parts.append(current_user.last_name.strip())
+            
+            if name_parts:
+                name = " ".join(name_parts)
+            # else: name stays None (no fake fallbacks)
+        
+        return {
+            "name": name,
+            "email": current_user.email
+        }
+
     @router.post("/logout")
     async def logout(
         request: Request, 
@@ -512,6 +560,10 @@ def create_auth_router(db_manager: DatabaseManager) -> APIRouter:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to get audit logs"
             )
+        
+
+
+        
     
     @router.delete("/admin/users/{user_id}")
     async def deactivate_user(

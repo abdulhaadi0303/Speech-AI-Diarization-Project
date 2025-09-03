@@ -17,6 +17,7 @@ from .config import auth_settings, SECURITY_HEADERS
 from database.models import DatabaseManager
 
 
+
 # Security scheme
 security = HTTPBearer(auto_error=False)
 
@@ -99,14 +100,23 @@ class AuthMiddleware:
 
 
 def get_current_user(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
-    db_manager: DatabaseManager = Depends(lambda: None)  # Will be injected
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
 ) -> Optional[User]:
     """Dependency to get current authenticated user"""
     if not credentials:
-        return None
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     
     try:
+        # Import db_manager directly (fixes the dependency issue)
+        from database.models import db_manager
+        
+        # Import TokenService
+        from .service import TokenService, AuthenticationError, get_auth_services
+        
         # Verify JWT token
         payload = TokenService.verify_token(credentials.credentials, "access")
         user_id = int(payload["sub"])
@@ -127,25 +137,15 @@ def get_current_user(
         if not user or not user.is_active:
             raise AuthenticationError("User not found or inactive")
         
-        # Update user activity
-        user.update_activity()
-        
         return user
         
-    except AuthenticationError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
     except Exception as e:
+        print(f"🔍 Authentication error: {e}")  # Debug logging
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication failed",
             headers={"WWW-Authenticate": "Bearer"},
         )
-
-
 def require_auth(
     user: User = Depends(get_current_user)
 ) -> User:

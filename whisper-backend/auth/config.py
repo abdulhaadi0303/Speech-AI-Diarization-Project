@@ -15,8 +15,13 @@ class AuthSettings:
         self.AUTHENTIK_REDIRECT_URI = os.getenv("AUTHENTIK_REDIRECT_URI", "http://localhost:3000/auth/callback")
         self.AUTHENTIK_SCOPE = os.getenv("AUTHENTIK_SCOPE", "openid profile email groups")
         
-        # JWT Configuration
+        # DELETE THESE 2 LINES:
+        # self.authentik_token_url = f"{self.AUTHENTIK_ISSUER_URL}/token/"
+        # self.authentik_userinfo_url = f"{self.AUTHENTIK_ISSUER_URL}/userinfo/"
+        
+    
         self.JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-super-secret-jwt-key-change-in-production")
+     
         self.JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
         self.JWT_ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
         self.JWT_REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("JWT_REFRESH_TOKEN_EXPIRE_DAYS", "7"))

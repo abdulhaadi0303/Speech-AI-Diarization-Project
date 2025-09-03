@@ -1,5 +1,5 @@
-// Enhanced Header.jsx with Hamburger Menu Integration
-import React, { useState } from 'react';
+// Enhanced Header.jsx with Fixed API Integration and Logout
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBackend } from '../../contexts/BackendContext';
+import { backendApi } from '../../services/api';
 import { HamburgerMenu } from './Sidebar';
 import UserProfile from '../auth/UserProfile';
 import toast from 'react-hot-toast';
@@ -20,14 +21,9 @@ const Header = () => {
   const location = useLocation();
   const { 
     isAuthenticated, 
-    user, 
-    userProfile, 
-    username, 
-    email, 
-    avatar, 
-    role, 
-    isAdmin,
-    logout 
+    user,
+    logout: authLogout,
+    accessToken 
   } = useAuth();
   
   const { 
@@ -36,8 +32,57 @@ const Header = () => {
     systemInfo 
   } = useBackend();
 
+  // Local state for profile data from /auth/profile endpoint
+  const [profileData, setProfileData] = useState({ 
+    name: null, 
+    email: null 
+  });
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+
+  // Fetch user profile data from /auth/profile endpoint
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!isAuthenticated || !accessToken) {
+        setProfileData({ name: null, email: null });
+        return;
+      }
+
+      setIsLoadingProfile(true);
+      try {
+        const response = await backendApi.get('/auth/profile', {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.data) {
+          setProfileData({
+            name: response.data.name,
+            email: response.data.email
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch user profile:', error);
+        
+        // Fallback to user data from auth context if profile endpoint fails
+        if (user) {
+          setProfileData({
+            name: user.full_name || user.username || null,
+            email: user.email || null
+          });
+        }
+        
+        toast.error('Failed to load user profile');
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, [isAuthenticated, accessToken, user]);
 
   const getRoleBadgeColor = (userRole) => {
     switch (userRole) {
@@ -50,15 +95,44 @@ const Header = () => {
     }
   };
 
-  // Handle logout
+  // Enhanced logout function with proper API calls
   const handleLogout = async () => {
+    setShowUserMenu(false);
+    
     try {
-      await logout();
-      setShowUserMenu(false);
+      // Show loading toast
+      const loadingToast = toast.loading('Logging out...');
+      
+      // Call backend logout endpoint if available
+      if (accessToken) {
+        try {
+          await backendApi.post('/auth/logout', {
+            all_sessions: false // Only logout current session
+          }, {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'application/json'
+            }
+          });
+        } catch (backendError) {
+          // If backend logout fails, continue with frontend logout
+          console.warn('Backend logout failed, continuing with frontend logout:', backendError);
+        }
+      }
+
+      // Clear local profile data
+      setProfileData({ name: null, email: null });
+      
+      // Call auth context logout (this should clear tokens and redirect)
+      await authLogout();
+      
+      // Dismiss loading toast and show success
+      toast.dismiss(loadingToast);
       toast.success('Logged out successfully');
+      
     } catch (error) {
       console.error('Logout failed:', error);
-      toast.error('Logout failed');
+      toast.error('Logout failed. Please try again.');
     }
   };
 
@@ -90,6 +164,28 @@ const Header = () => {
     </div>
   );
 
+  // Get display name with fallback logic
+  const getDisplayName = () => {
+    if (isLoadingProfile) return 'Loading...';
+    return profileData.name || profileData.email || user?.username || user?.email || 'User';
+  };
+
+  // Get user email for display
+  const getUserEmail = () => {
+    return profileData.email || user?.email || '';
+  };
+
+  // Get user role from context
+  const getUserRole = () => {
+    return user?.role || 'user';
+  };
+
+  // Check if user is admin
+  const isAdmin = () => {
+    const role = getUserRole();
+    return role === 'admin' || role === 'superadmin';
+  };
+
   return (
     <>
       <header className="bg-white border-b border-gray-300 shadow-sm sticky top-0 z-30">
@@ -104,19 +200,25 @@ const Header = () => {
               </div>
               
               {/* Logo */}
-              <Link to="/" className="flex items-center ">
+              <Link to="/" className="flex items-center">
                 <img 
                   src="/Logo.png" 
                   alt="PsyConTech" 
                   className="h-14 w-auto"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                  }}
                 />
               </Link>
 
-              <Link to="/" className="flex items-center ">
+              <Link to="/" className="flex items-center">
                 <img 
                   src="/Text.png" 
                   alt="PsyConTech" 
                   className="h-11 w-auto"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                  }}
                 />
               </Link>
             </div>
@@ -152,20 +254,28 @@ const Header = () => {
                     <button
                       onClick={() => setShowUserMenu(!showUserMenu)}
                       className="flex items-center space-x-3 p-2 rounded-lg hover:bg-psycon-light-teal/10 transition-colors focus:outline-none focus:ring-2 focus:ring-psycon-mint"
+                      disabled={isLoadingProfile}
                     >
                       <div className="w-8 h-8 bg-gradient-to-br from-psycon-mint to-psycon-purple rounded-full flex items-center justify-center">
-                        {avatar ? (
-                          <img src={avatar} alt="Avatar" className="w-8 h-8 rounded-full" />
+                        {user?.avatar_url ? (
+                          <img 
+                            src={user.avatar_url} 
+                            alt="Avatar" 
+                            className="w-8 h-8 rounded-full"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                            }}
+                          />
                         ) : (
                           <User className="w-5 h-5 text-white" />
                         )}
                       </div>
                       <div className="hidden sm:block text-left">
                         <div className="text-sm font-medium text-gray-900">
-                          {username || email || 'User'}
+                          {getDisplayName()}
                         </div>
                         <div className="text-xs text-gray-500 capitalize">
-                          {role || 'user'}
+                          {getUserRole()}
                         </div>
                       </div>
                       <ChevronDown className="w-4 h-4 text-gray-400" />
@@ -185,25 +295,25 @@ const Header = () => {
                         >
                           <div className="p-4 border-b border-gray-100">
                             <div className="text-sm font-medium text-gray-900">
-                              {username || email}
+                              {getDisplayName()}
                             </div>
                             <div className="text-xs text-gray-500">
-                              {email}
+                              {getUserEmail()}
                             </div>
-                            <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mt-2 border ${getRoleBadgeColor(role)}`}>
-                              {role === 'superadmin' && (
+                            <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mt-2 border ${getRoleBadgeColor(getUserRole())}`}>
+                              {getUserRole() === 'superadmin' && (
                                 <>
                                   <Shield className="w-3 h-3 mr-1" />
                                   Super Admin
                                 </>
                               )}
-                              {role === 'admin' && (
+                              {getUserRole() === 'admin' && (
                                 <>
                                   <Shield className="w-3 h-3 mr-1" />
                                   Admin
                                 </>
                               )}
-                              {!role || role === 'user' && (
+                              {getUserRole() === 'user' && (
                                 <>
                                   <User className="w-3 h-3 mr-1" />
                                   User
@@ -233,7 +343,7 @@ const Header = () => {
                               <span>Settings</span>
                             </Link>
   
-                            {isAdmin && (
+                            {isAdmin() && (
                               <Link
                                 to="/admin"
                                 className="flex items-center space-x-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-psycon-light-teal/10 transition-colors"
@@ -281,7 +391,6 @@ const Header = () => {
       )}
     </>
   );
-
 };
 
 export default Header;

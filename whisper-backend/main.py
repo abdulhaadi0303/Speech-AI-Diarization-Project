@@ -1,4 +1,6 @@
 # main.py - Enhanced Speech Diarization API with Database Integration (FIXED + RESTORED ENDPOINTS)
+from dotenv import load_dotenv
+load_dotenv()
 
 import os
 import shutil
@@ -39,6 +41,15 @@ except ImportError as e:
     print(f"Prompt router not available: {e}")
     PROMPT_ROUTER_AVAILABLE = False
     prompt_router = None
+
+# Auth router import - NEW
+try:
+    from auth.routes import create_auth_router
+    AUTH_ROUTER_AVAILABLE = True
+    print("Auth router imported successfully")
+except ImportError as e:
+    print(f"Auth router not available: {e}")
+    AUTH_ROUTER_AVAILABLE = False
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -187,19 +198,26 @@ app.add_middleware(
 )
 
 # Include prompt management routes - FIXED
+# Include prompt management routes - FIXED
 if DATABASE_AVAILABLE and PROMPT_ROUTER_AVAILABLE and prompt_router:
     app.include_router(prompt_router, tags=["prompts"])
     print("✅ Prompt management routes included")
-    print("🔗 Public endpoint: /api/prompts/public")
-    print("🔗 Admin endpoint: /api/prompts/")
 else:
     print("❌ Prompt router not available")
+
+if DATABASE_AVAILABLE and AUTH_ROUTER_AVAILABLE and db_manager:
+    auth_router = create_auth_router(db_manager)
+    app.include_router(auth_router)
+    print("✅ Authentication routes included")
+    print("🔗 Login: /auth/login")
+    print("🔗 Profile: /auth/me") 
+    print("🔗 Admin: /auth/admin/users")
+else:
+    print("❌ Auth router not available")
     if not DATABASE_AVAILABLE:
         print("   - Database not available")
-    if not PROMPT_ROUTER_AVAILABLE:
-        print("   - Prompt router not imported")
-    if not prompt_router:
-        print("   - Prompt router is None")
+    if not AUTH_ROUTER_AVAILABLE:
+        print("   - Auth router not imported")
 
 # Serve static files
 if STATIC_DIR.exists():
@@ -275,6 +293,7 @@ def get_prompts_from_database():
     except Exception as e:
         logger.error(f"Database error when fetching prompts: {e}")
         return LLM_PROMPTS
+
 
 # RESTORED: Ollama status check function
 async def check_ollama_status():
@@ -404,6 +423,12 @@ async def health_check():
         },
         "llm": ollama_status
     }
+
+
+@app.get("/profile1")
+async def get_profile():
+    return {"message": "Hello World"}
+
 
 @app.get("/api/llm-prompts")
 async def get_llm_prompts():
