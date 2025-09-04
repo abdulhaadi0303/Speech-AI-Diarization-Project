@@ -1,10 +1,10 @@
-// Enhanced Sidebar.jsx with PsyConTech Branding & Light Theme
+// src/Components/layout/Sidebar.jsx - Portal-Based Tooltip Solution
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Home, BarChart3, Brain, Settings, Shield } from 'lucide-react';
 
-// Updated navigation data with proper icons
 const navigationItems = [
   { 
     id: 'home', 
@@ -33,21 +33,59 @@ const navigationItems = [
     path: '/admin', 
     icon: Shield,
     description: 'Prompt Management & Settings'
-  },
-  // { 
-  //   id: 'settings', 
-  //   label: 'Settings', 
-  //   path: '/settings', 
-  //   icon: Settings,
-  //   description: 'Application Settings'
-  // }
+  }
 ];
+
+// Portal Tooltip Component
+const PortalTooltip = ({ isVisible, position, item }) => {
+  if (!isVisible || !position) return null;
+
+  return createPortal(
+    <div
+      className="fixed px-3 py-3 bg-white text-gray-800 text-sm rounded-xl transition-opacity duration-300 whitespace-nowrap pointer-events-none shadow-xl border border-gray-200"
+      style={{
+        left: `${position.x}px`,
+        top: `${position.y}px`,
+        zIndex: 999999, // Extremely high z-index
+        opacity: isVisible ? 1 : 0,
+      }}
+    >
+      <div className="font-semibold text-gray-900">{item.label}</div>
+      <div className="text-xs text-gray-400 mt-1">{item.description}</div>
+      {/* Arrow */}
+      <div className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-full">
+        <div className="w-0 h-0 border-t-4 border-b-4 border-r-4 border-transparent border-r-white"></div>
+      </div>
+    </div>,
+    document.body
+  );
+};
 
 // Desktop Navigation Item Component
 const NavItem = ({ item, isMobile = false, onClick }) => {
   const location = useLocation();
   const isActive = location.pathname === item.path;
   const IconComponent = item.icon;
+  
+  // Tooltip state
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState(null);
+
+  const handleMouseEnter = (e) => {
+    if (isMobile) return;
+    
+    const rect = e.currentTarget.getBoundingClientRect();
+    setTooltipPosition({
+      x: rect.right + 12,
+      y: rect.top + (rect.height / 2) - 40
+    });
+    setShowTooltip(true);
+  };
+
+  const handleMouseLeave = () => {
+    setShowTooltip(false);
+    setTooltipPosition(null);
+  };
 
   if (isMobile) {
     return (
@@ -75,59 +113,40 @@ const NavItem = ({ item, isMobile = false, onClick }) => {
   }
 
   return (
-    <Link
-      to={item.path}
-      className={`flex items-center justify-center p-3 rounded-xl transition-all duration-300 group relative ${
-        isActive 
-          ? 'bg-gradient-to-r from-psycon-yellow-200 to-psycon-purple text-white shadow-md transform scale-105' 
-          : 'text-gray-600 hover:bg-psycon-light-teal/20 hover:text-psycon-mint hover:scale-105'
-      }`}
-      title={item.label}
-    >
-      <IconComponent className="w-6 h-6" />
-      
-      {/* Enhanced Tooltip */}
-      <div className="absolute left-full ml-3 px-4 py-3 bg-white text-gray-800 text-sm rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300 z-50 whitespace-nowrap pointer-events-none shadow-lg border border-gray-200">
-        <div className="font-semibold text-gray-900">{item.label}</div>
-        <div className="text-xs text-gray-500 mt-1">{item.description}</div>
-        {/* Arrow */}
-        <div className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-full">
-          <div className="w-0 h-0 border-t-4 border-b-4 border-r-4 border-transparent border-r-white"></div>
-        </div>
-      </div>
+    <>
+      <Link
+        to={item.path}
+        className={`flex items-center justify-center p-3 rounded-xl transition-all duration-300 group relative ${
+          isActive 
+            ? 'bg-gradient-to-r from-psycon-yellow-200 to-psycon-purple text-white shadow-md transform scale-105' 
+            : 'text-gray-600 hover:bg-psycon-light-teal/20 hover:text-psycon-mint hover:scale-105'
+        }`}
+        title={item.label}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        <IconComponent className="w-6 h-6" />
 
-      {/* Active indicator */}
-      {isActive && (
-        <motion.div
-          layoutId="activeTab"
-          className="absolute -right-1 top-1 transform -translate-y-1/2 w-1 h-9 bg-gradient-to-b from-psycon-yellow-500 to-psycon-purple-500 rounded-l-full"
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        />
-      )}
-    </Link>
+
+      </Link>
+
+      {/* Portal Tooltip */}
+      <PortalTooltip 
+        isVisible={showTooltip}
+        position={tooltipPosition}
+        item={item}
+      />
+    </>
   );
 };
 
 // Desktop Sidebar Component
 export function Sidebar() {
   return (
-    <aside className="bg-psycon-mint-300 border-r border-gray-200 flex flex-col h-full py-6 shadow-sm backdrop-blur-sm">
-      {/* Logo/Brand Area */}
-      <div className="flex items-center justify-center mb-8">
-        <Link to="/" className="group">
-          <div className="w-12 h-12 bg-gradient-to-br from-psycon-mint to-psycon-purple rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-105">
-            <img 
-              src="/Logo.png" 
-              alt="PsyConTech" 
-              className="h-6 w-auto filter brightness-0 invert"
-            />
-          </div>
-        </Link>
-      </div>
-
+    <aside className="bg-psycon-mint-300 border-r border-gray-200 flex flex-col h-full py-10 shadow-sm backdrop-blur-sm">
       {/* Sidebar Navigation */}
-      <nav className="flex-1 px-3">
-        <div className="space-y-2">
+      <nav className="flex-1 px-3 pt-6">
+        <div className="space-y-5">
           {navigationItems.map((item, index) => (
             <motion.div
               key={item.id}
@@ -143,7 +162,7 @@ export function Sidebar() {
 
       {/* Status Indicator */}
       <div className="px-3 mt-auto">
-        <div className="bg-gradient-to-r from-psycon-mint/10 to-psycon-purple/10 rounded-lg p-3 border border-psycon-mint/20">
+        <div className="bg-gradient-to-r from-psycon-mint/10 to-psycon-purple/10 rounded-lg p-2 border border-psycon-mint/20">
           <div className="flex items-center justify-center space-x-2">
             <div className="w-2 h-2 bg-gradient-to-r from-psycon-mint to-psycon-purple rounded-full animate-pulse"></div>
             <span className="text-xs font-medium text-gray-600">System Online</span>
@@ -154,7 +173,7 @@ export function Sidebar() {
   );
 }
 
-// Enhanced Hamburger Menu Component
+// Enhanced Hamburger Menu Component (unchanged from previous version)
 export function HamburgerMenu({ className = "" }) {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
@@ -264,62 +283,45 @@ export function HamburgerMenu({ className = "" }) {
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-psycon-mint to-psycon-purple rounded-xl flex items-center justify-center shadow-md">
                   <img 
-                    src="/HorizontalLogo.png" 
+                    src="/Logo.png" 
                     alt="PsyConTech" 
                     className="h-5 w-auto filter brightness-0 invert"
                   />
                 </div>
                 <div>
-                  <h2 className="text-gray-900 text-lg font-semibold">Navigation</h2>
-                  <p className="text-gray-500 text-sm">Speech Analysis Platform</p>
+                  <h2 className="text-lg font-semibold text-gray-900">Menu</h2>
+                  <p className="text-xs text-gray-500">Navigate your workspace</p>
                 </div>
               </div>
               <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setIsOpen(false);
-                }}
-                className="text-gray-600 hover:bg-gray-100 rounded-lg p-2 transition-colors focus:outline-none focus:ring-2 focus:ring-psycon-mint"
-                type="button"
-                aria-label="Close navigation menu"
+                onClick={() => setIsOpen(false)}
+                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5" />
               </button>
             </div>
-            
-            {/* Menu Items */}
-            <nav className="p-6">
+
+            {/* Mobile Navigation */}
+            <nav className="flex-1 px-6 py-4 overflow-y-auto">
               <div className="space-y-2">
                 {navigationItems.map((item, index) => (
                   <motion.div
                     key={item.id}
-                    initial={{ x: -50, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ 
-                      delay: index * 0.05,
-                      duration: 0.3 
-                    }}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: (index * 0.1) + 0.2 }}
                   >
-                    <NavItem 
-                      item={item} 
-                      isMobile={true}
-                      onClick={handleLinkClick}
-                    />
+                    <NavItem item={item} isMobile={true} onClick={handleLinkClick} />
                   </motion.div>
                 ))}
               </div>
             </nav>
 
-            {/* Menu Footer */}
-            <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-200 bg-gradient-to-r from-psycon-mint/5 to-psycon-purple/5">
-              <div className="text-center">
-                <div className="text-gray-700 text-sm font-medium">PsyConTech Platform</div>
-                <div className="text-gray-500 text-xs mt-1">v1.0.0</div>
-                <div className="flex items-center justify-center mt-3">
-                  <div className="w-2 h-2 bg-gradient-to-r from-psycon-mint to-psycon-purple rounded-full animate-pulse mr-2"></div>
-                  <span className="text-gray-600 text-xs">System Online</span>
-                </div>
+            {/* Mobile Footer */}
+            <div className="p-6 border-t border-gray-200 bg-gradient-to-r from-psycon-mint/5 to-psycon-purple/5">
+              <div className="flex items-center justify-center space-x-2 text-sm text-gray-600">
+                <div className="w-2 h-2 bg-gradient-to-r from-psycon-mint to-psycon-purple rounded-full animate-pulse"></div>
+                <span>System Online</span>
               </div>
             </div>
           </motion.div>
@@ -327,9 +329,4 @@ export function HamburgerMenu({ className = "" }) {
       </AnimatePresence>
     </>
   );
-}
-
-// Legacy Mobile Breadcrumb (kept for backward compatibility)
-export function MobileBreadcrumb() {
-  return <HamburgerMenu />;
 }

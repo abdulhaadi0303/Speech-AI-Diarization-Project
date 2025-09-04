@@ -179,6 +179,7 @@ const Header = () => {
   const getUserRole = () => {
     return user?.role || 'user';
   };
+  
 
   // Check if user is admin
   const isAdmin = () => {
@@ -188,7 +189,7 @@ const Header = () => {
 
   return (
     <>
-      <header className="bg-white border-b border-gray-300 shadow-sm sticky top-0 z-30">
+      <header className="bg-white border-b border-gray-300 shadow-sm sticky top-0 py-1 z-30">
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             
@@ -204,18 +205,18 @@ const Header = () => {
                 <img 
                   src="/Logo.png" 
                   alt="PsyConTech" 
-                  className="h-14 w-auto"
+                  className="h-16 w-auto"
                   onError={(e) => {
                     e.target.style.display = 'none';
                   }}
                 />
               </Link>
 
-              <Link to="/" className="flex items-center">
+              <Link to="/" className="flex items-center ml-2">
                 <img 
                   src="/Text.png" 
                   alt="PsyConTech" 
-                  className="h-11 w-auto"
+                  className="h-12 w-auto"
                   onError={(e) => {
                     e.target.style.display = 'none';
                   }}

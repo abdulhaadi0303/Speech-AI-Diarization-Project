@@ -65,27 +65,28 @@ const App = () => {
                 element={<div>Processing authentication...</div>} 
               />
 
-              {/* Protected Routes with Responsive Layout */}
+              {/* Protected Routes with NEW Layout Structure */}
               <Route 
                 path="/*" 
                 element={
                   <ProtectedRoute>
-                    <div className="h-screen bg-gray-50 flex overflow-hidden">
+                    <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
                       
-                      {/* Desktop Sidebar - Only visible on large screens */}
-                      {showSidebar && (
-                        <div className="hidden lg:flex lg:flex-shrink-0">
-                          <div className="flex flex-col w-20 xl:w-24">
-                            <Sidebar />
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Main Content Area */}
-                      <div className="flex flex-col w-0 flex-1 overflow-hidden">
-                        {/* Header with Hamburger Menu */}
-                        <Header />
+                      {/* Header - Full Width on Top */}
+                      <Header />
+                      
+                      {/* Content Area Below Header */}
+                      <div className="flex flex-1 overflow-hidden">
                         
+                        {/* Desktop Sidebar - Only visible on large screens */}
+                        {showSidebar && (
+                          <div className="hidden lg:flex lg:flex-shrink-0">
+                            <div className="flex flex-col w-20 xl:w-24">
+                              <Sidebar />
+                            </div>
+                          </div>
+                        )}
+
                         {/* Main Content */}
                         <main className="flex-1 relative overflow-y-auto focus:outline-none">
                           <Routes>
@@ -112,6 +113,7 @@ const App = () => {
                             <Route path="/settings" element={<SettingsPage />} />
                           </Routes>
                         </main>
+                        
                       </div>
                     </div>
                   </ProtectedRoute>
