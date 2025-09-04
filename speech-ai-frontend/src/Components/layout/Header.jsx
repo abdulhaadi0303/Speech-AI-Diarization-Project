@@ -211,7 +211,7 @@ const Header = () => {
                   }}
                 />
               </Link>
-
+              
               <Link to="/" className="flex items-center ml-2">
                 <img 
                   src="/Text.png" 
@@ -335,14 +335,14 @@ const Header = () => {
                               <span>Profile Details</span>
                             </button>
   
-                            <Link
+                            {/* <Link
                               to="/settings"
                               className="flex items-center space-x-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-psycon-light-teal/10 transition-colors"
                               onClick={() => setShowUserMenu(false)}
                             >
                               <Settings className="w-4 h-4" />
                               <span>Settings</span>
-                            </Link>
+                            </Link> */}
   
                             {isAdmin() && (
                               <Link
