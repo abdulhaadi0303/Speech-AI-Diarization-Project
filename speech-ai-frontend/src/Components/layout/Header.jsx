@@ -216,7 +216,7 @@ const Header = () => {
                 <img 
                   src="/Text.png" 
                   alt="PsyConTech" 
-                  className="h-12 w-auto"
+                  className="h-14 w-auto"
                   onError={(e) => {
                     e.target.style.display = 'none';
                   }}

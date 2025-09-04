@@ -143,9 +143,9 @@ const NavItem = ({ item, isMobile = false, onClick }) => {
 // Desktop Sidebar Component
 export function Sidebar() {
   return (
-    <aside className="bg-psycon-mint-300 border-r border-gray-200 flex flex-col h-full py-10 shadow-sm backdrop-blur-sm">
+    <aside className="bg-psycon-mint-300 border-r border-gray-200 flex flex-col h-full py-5 shadow-sm backdrop-blur-sm">
       {/* Sidebar Navigation */}
-      <nav className="flex-1 px-3 pt-6">
+      <nav className="flex-1 px-2 pt-6">
         <div className="space-y-5">
           {navigationItems.map((item, index) => (
             <motion.div
