@@ -430,7 +430,7 @@ Attendees:
           </Link>
           
           <div>
-            <h1 className="text-3xl font-bold text-psycon-mint mb-1">Interviews</h1>
+            <h1 className="text-3xl font-bold text-psycon-mint mb-1">Results</h1>
             <p className="text-gray-600 text-sm">Active Session</p>
           </div>
         </div>

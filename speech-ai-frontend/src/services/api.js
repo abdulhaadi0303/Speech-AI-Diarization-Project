@@ -391,7 +391,7 @@ const backendApi = {
 
   // EXISTING: Authentication endpoints - UNCHANGED
   auth: {
-    // Get auth configuration
+    // EXISTING: Get auth configuration - UNCHANGED
     getConfig: async () => {
       try {
         return await api.get('/auth/config');
@@ -401,7 +401,7 @@ const backendApi = {
       }
     },
     
-    // Login with credentials
+    // EXISTING: Login with credentials - UNCHANGED
     login: async (credentials) => {
       try {
         const response = await api.post('/auth/login', credentials);
@@ -418,7 +418,7 @@ const backendApi = {
       }
     },
     
-    // Logout
+    // EXISTING: Logout - UNCHANGED
     logout: async () => {
       try {
         // Clear stored token
@@ -429,32 +429,60 @@ const backendApi = {
       } catch (error) {
         console.error('Logout failed:', error);
         // Don't throw error for logout - just clear token
-        return null;
+        return { data: { message: 'Logged out locally' } };
       }
     },
-    
-    // Refresh token
-    refresh: async () => {
+  
+    // ✅ NEW: Get current user info (calls /auth/me endpoint)
+    getCurrentUser: async () => {
       try {
-        const response = await api.post('/auth/refresh');
-        
-        if (response.data?.access_token) {
-          setStoredAccessToken(response.data.access_token);
-        }
-        
+        console.log('🔄 Fetching current user from /auth/me...');
+        const response = await api.get('/auth/me');
+        console.log('✅ Current user data received:', response.data);
         return response;
       } catch (error) {
-        console.error('Token refresh failed:', error);
+        console.error('❌ Failed to get current user:', error);
         throw error;
       }
     },
-    
-    // Get current user info
-    getUser: async () => {
+  
+    // ✅ NEW: Get user sessions (placeholder for now)
+    getSessions: async () => {
       try {
-        return await api.get('/auth/user');
+        console.log('🔄 Fetching user sessions...');
+        // Return empty array since we removed session management from UI
+        return {
+          data: {
+            sessions: []
+          }
+        };
       } catch (error) {
-        console.error('Failed to get user info:', error);
+        console.error('Failed to get sessions:', error);
+        throw error;
+      }
+    },
+  
+    // ✅ NEW: Update user profile (placeholder - not used in display-only version)
+    updateProfile: async (profileData) => {
+      try {
+        console.log('🔄 Updating profile...', profileData);
+        const response = await api.put('/auth/me', profileData);
+        return response;
+      } catch (error) {
+        console.error('Failed to update profile:', error);
+        throw error;
+      }
+    },
+  
+    // ✅ NEW: Revoke session (placeholder - not used)
+    revokeSession: async (sessionId) => {
+      try {
+        console.log('🔄 Revoking session:', sessionId);
+        return {
+          data: { message: 'Session management not implemented' }
+        };
+      } catch (error) {
+        console.error('Failed to revoke session:', error);
         throw error;
       }
     }

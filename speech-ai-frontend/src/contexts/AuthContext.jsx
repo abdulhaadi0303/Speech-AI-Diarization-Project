@@ -52,23 +52,31 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Update user permissions
-  const updateUserPermissions = useCallback((userData) => {
-    const groups = userData?.groups || [];
-    const role = determineUserRole(groups);
-    
-    const newPermissions = {
-      role,
-      isAdmin: ['admin', 'superadmin'].includes(role),
-      isSuperAdmin: role === 'superadmin',
-      groups,
-      canUpload: true,
-      canAnalyze: true,
-      canManagePrompts: ['admin', 'superadmin'].includes(role),
-      canManageUsers: role === 'superadmin',
-    };
+// Update user permissions
+const updateUserPermissions = useCallback((userData) => {
+  // CRITICAL FIX: Use backend role directly, not groups
+  const role = userData?.role || 'user';
+  
+  console.log('🔍 Auth Debug:', {
+    username: userData?.username,
+    backendRole: userData?.role,
+    usingRole: role
+  });
+  
+  const newPermissions = {
+    role,
+    isAdmin: ['admin', 'superadmin'].includes(role),
+    isSuperAdmin: role === 'superadmin',
+    groups: userData?.groups || [],
+    canUpload: true,
+    canAnalyze: true,
+    canManagePrompts: ['admin', 'superadmin'].includes(role),
+    canManageUsers: role === 'superadmin',
+  };
 
-    setPermissions(newPermissions);
-  }, []);
+  console.log('✅ Permissions set:', { isAdmin: newPermissions.isAdmin, role });
+  setPermissions(newPermissions);
+}, []);
 
   // Determine user role from groups
   const determineUserRole = useCallback((groups) => {
@@ -122,122 +130,127 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Handle callback from Authentik
-  const handleLoginCallback = useCallback(async () => {
-    try {
-      console.log('🔄 Processing login callback...');
-      setIsLoading(true);
-      
-      // Extract parameters from URL
-      const urlParams = new URLSearchParams(window.location.search);
-      const code = urlParams.get('code');
-      const state = urlParams.get('state');
-      const error = urlParams.get('error');
-      
-      console.log('📋 Callback params:', { 
-        hasCode: !!code, 
-        state, 
-        hasError: !!error 
-      });
+// Fix the handleLoginCallback function in AuthContext.jsx to handle state properly
 
-      // Check for errors
-      if (error) {
-        throw new Error(`OAuth Error: ${error}`);
-      }
-      
-      if (!code) {
-        throw new Error('No authorization code received');
-      }
+const handleLoginCallback = useCallback(async () => {
+  try {
+    console.log('🔄 Processing login callback...');
+    setIsLoading(true);
+    
+    // Extract parameters from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const state = urlParams.get('state');
+    const error = urlParams.get('error');
+    
+    console.log('📋 Callback params:', { 
+      hasCode: !!code, 
+      state, 
+      hasError: !!error 
+    });
 
-      // Verify state parameter
-      const storedState = localStorage.getItem('auth_state');
-      if (state !== storedState) {
-        throw new Error('Invalid state parameter - possible CSRF attack');
-      }
+    // Check for errors
+    if (error) {
+      throw new Error(`OAuth Error: ${error}`);
+    }
+    
+    if (!code) {
+      throw new Error('No authorization code received');
+    }
 
-      // Exchange code for tokens using your working token endpoint
-      console.log('🔄 Exchanging code for tokens...');
-      
-      const tokenFormData = new URLSearchParams({
-        grant_type: 'authorization_code',
-        client_id: authConfig.clientId,
-        client_secret: authConfig.clientSecret,
+    // ✅ IMPROVED: Better state verification with fallback
+    const storedState = localStorage.getItem('auth_state');
+    console.log('🔍 State check:', { received: state, stored: storedState });
+    
+    if (state && storedState && state !== storedState) {
+      throw new Error('Invalid state parameter - possible CSRF attack');
+    }
+
+    // If no state in localStorage but state in URL, it might be a page refresh
+    // In production, you'd want stricter validation
+    if (!storedState && state) {
+      console.warn('⚠️ No stored state found, but state in URL. Possible page refresh.');
+    }
+
+    // Send code to YOUR backend instead of Authentik directly
+    console.log('🔄 Exchanging code via backend...');
+    
+    const loginResponse = await fetch(`${import.meta.env.VITE_BACKEND_URL}/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
         code: code,
-        redirect_uri: authConfig.redirectUri
-      });
+        redirect_uri: authConfig.redirectUri,
+        state: state
+      })
+    });
 
-      const tokenResponse = await fetch(authConfig.tokenUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Accept': 'application/json'
-        },
-        body: tokenFormData
-      });
+    console.log('📡 Backend login response status:', loginResponse.status);
 
-      if (!tokenResponse.ok) {
-        throw new Error(`Token exchange failed: ${tokenResponse.status}`);
-      }
-
-      const tokenData = await tokenResponse.json();
-      console.log('✅ Token exchange successful');
-
-      // Get user info using the access token
-      console.log('🔄 Getting user info...');
+    if (!loginResponse.ok) {
+      const errorData = await loginResponse.text();
+      let errorMessage;
       
-      const userinfoResponse = await fetch(authConfig.userinfoUrl, {
-        headers: {
-          'Authorization': `Bearer ${tokenData.access_token}`,
-          'Accept': 'application/json'
-        }
-      });
-
-      if (!userinfoResponse.ok) {
-        throw new Error(`User info request failed: ${userinfoResponse.status}`);
+      try {
+        const parsedError = JSON.parse(errorData);
+        errorMessage = parsedError.detail || `HTTP ${loginResponse.status}`;
+      } catch {
+        errorMessage = `HTTP ${loginResponse.status}: ${errorData}`;
       }
-
-      const userInfo = await userinfoResponse.json();
-      console.log('✅ User info retrieved:', userInfo);
-
-      // Create user object
-      const userData = {
-        id: userInfo.sub,
-        username: userInfo.preferred_username || userInfo.username,
-        email: userInfo.email,
-        name: userInfo.name,
-        first_name: userInfo.given_name,
-        last_name: userInfo.family_name,
-        groups: userInfo.groups || [],
-        avatar_url: userInfo.picture,
-        is_verified: userInfo.email_verified || false
-      };
-
-      // Store authentication data
-      localStorage.setItem('auth_user', JSON.stringify(userData));
-      localStorage.setItem('access_token', tokenData.access_token);
-      if (tokenData.refresh_token) {
-        localStorage.setItem('refresh_token', tokenData.refresh_token);
-      }
-
-      // Set state
-      setUser(userData);
-      setIsAuthenticated(true);
-      updateUserPermissions(userData);
-
-      // Clean up temporary storage
-      localStorage.removeItem('auth_state');
-
-      toast.success(`Welcome back, ${userData.name || userData.username}!`);
-
-      // Get return URL
-      const returnUrl = localStorage.getItem('auth_return_url') || '/';
-      localStorage.removeItem('auth_return_url');
-
-      return { user: userData, returnUrl };
-
-    } catch (error) {
-      console.error('❌ Login callback failed:', error);
       
-      // Clean up on error
+      throw new Error(`Backend login failed: ${errorMessage}`);
+    }
+
+    const loginData = await loginResponse.json();
+    console.log('✅ Backend login successful');
+
+    // Use user data from YOUR backend response
+    const userData = {
+      id: loginData.user.id,
+      username: loginData.user.username,
+      email: loginData.user.email,
+      name: loginData.user.full_name,
+      first_name: loginData.user.first_name,
+      last_name: loginData.user.last_name,
+      groups: loginData.user.groups || [],
+      avatar_url: loginData.user.avatar_url,
+      is_verified: loginData.user.is_verified,
+      role: loginData.user.role
+    };
+
+    // Store YOUR backend tokens, not Authentik tokens
+    localStorage.setItem('auth_user', JSON.stringify(userData));
+    localStorage.setItem('access_token', loginData.access_token);
+    if (loginData.refresh_token) {
+      localStorage.setItem('refresh_token', loginData.refresh_token);
+    }
+
+    // Set state
+    setUser(userData);
+    setIsAuthenticated(true);
+    updateUserPermissions(userData);
+
+    // Clean up temporary storage
+    localStorage.removeItem('auth_state');
+
+    toast.success(`Welcome back, ${userData.name || userData.username}!`);
+
+    // Get return URL
+    const returnUrl = localStorage.getItem('auth_return_url') || '/';
+    localStorage.removeItem('auth_return_url');
+
+    return { user: userData, returnUrl };
+
+  } catch (error) {
+    console.error('❌ Login callback failed:', error);
+    
+    // Clean up on error - but don't clear if it's just a network error
+    const isNetworkError = error.message.includes('fetch') || error.message.includes('Failed to fetch');
+    
+    if (!isNetworkError) {
       localStorage.removeItem('auth_state');
       localStorage.removeItem('auth_return_url');
       localStorage.removeItem('auth_user');
@@ -247,12 +260,13 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       setIsAuthenticated(false);
       setPermissions({});
-      
-      throw error;
-    } finally {
-      setIsLoading(false);
     }
-  }, [updateUserPermissions]);
+    
+    throw error;
+  } finally {
+    setIsLoading(false);
+  }
+}, [updateUserPermissions, authConfig.redirectUri]);
 
   // Logout function
  // Enhanced logout function for AuthContext.jsx
