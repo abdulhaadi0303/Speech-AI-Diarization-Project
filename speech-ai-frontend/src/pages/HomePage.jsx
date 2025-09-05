@@ -11,7 +11,7 @@ import PageHeader from '../Components/home/PageHeader';
 import ProcessingBanner from '../Components/home/ProcessingBanner';
 import AudioUploader from '../Components/home/AudioUploader';
 import AudioVisualizationSection from '../Components/home/AudioVisualizationSection';
-import QueueStatusDisplay from '../Components/home/QueueStatusDisplay';
+
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -214,8 +214,6 @@ const HomePage = () => {
         {/* Main Content */}
         <div className="max-w-3xl mx-auto space-y-6">
 
-          {/* Queue Status Display */}
-          <QueueStatusDisplay />
           
           {/* Audio Uploader Section */}
           <motion.div 

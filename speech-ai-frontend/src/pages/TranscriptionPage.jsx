@@ -31,6 +31,7 @@ import toast from 'react-hot-toast';
 import TranscriptionPageHeader from '../Components/transcription/TranscriptionPageHeader';
 import ProcessingStatusSection from '../Components/transcription/ProcessingStatusSection';
 import TranscriptPanel from '../Components/transcription/TranscriptPanel';
+import QueueStatusDisplay from '../Components/transcription/QueueStatusDisplay';
 
 // ✅ UTILITY: Comprehensive results structure validation
 const validateAndNormalizeResults = (fetchedData) => {
@@ -438,8 +439,11 @@ const TranscriptionPage = () => {
           />
         </motion.div>
   
+        <QueueStatusDisplay />
+
+
         {/* Component 2: Processing Status and Stats */}
-        <motion.div
+        {/* <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
@@ -453,7 +457,9 @@ const TranscriptionPage = () => {
             speakerStats={results?.results?.speaker_stats}
           />
         </motion.div>
-  
+   */}
+
+   
         {/* Component 3: Main Transcript Panel - Vibrant & Welcoming Design */}
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
