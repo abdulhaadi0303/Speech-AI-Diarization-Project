@@ -83,6 +83,43 @@ class AnalysisResult(Base):
             "created_at": self.created_at.isoformat() if self.created_at else None
         }
 
+
+class AudioQueue(Base):
+    """Model for managing audio processing queue"""
+    __tablename__ = "audio_queue"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(String(100), unique=True, index=True, nullable=False)
+    user_id = Column(Integer, nullable=False)
+    user_email = Column(String(255), nullable=False)
+    filename = Column(String(500), nullable=False)
+    file_path = Column(String(1000), nullable=False)
+    file_size = Column(Integer, default=0)
+    status = Column(String(20), default="QUEUED", index=True)  # QUEUED, PROCESSING, COMPLETED, FAILED
+    queue_position = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    started_processing_at = Column(DateTime, nullable=True)
+    completed_at = Column(DateTime, nullable=True)
+    error_message = Column(Text, nullable=True)
+    processing_settings = Column(Text, nullable=True)  # JSON string
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "session_id": self.session_id,
+            "user_id": self.user_id,
+            "user_email": self.user_email,
+            "filename": self.filename,
+            "status": self.status,
+            "queue_position": self.queue_position,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "started_processing_at": self.started_processing_at.isoformat() if self.started_processing_at else None,
+            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+            "error_message": self.error_message
+        }
+    
+
+    
 # Database setup
 class DatabaseManager:
     def __init__(self, database_url: str = None):

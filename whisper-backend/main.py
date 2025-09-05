@@ -2,6 +2,11 @@
 from dotenv import load_dotenv
 load_dotenv()
 
+# Add these imports after the existing ones
+from queue_manager import AudioQueueManager
+from auth.middleware import get_current_user
+from auth.models import User
+
 import os
 import shutil
 import uuid
@@ -12,6 +17,9 @@ from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Optional, Any
 
+import concurrent.futures
+from functools import partial
+
 import uvicorn
 import httpx
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks, Depends
@@ -20,6 +28,8 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from pydantic import BaseModel
+
+
 
 # Database imports - FIXED
 try:
@@ -69,6 +79,8 @@ for directory in [UPLOAD_DIR, OUTPUT_DIR, STATIC_DIR]:
 
 # Initialize components
 pipeline = None
+queue_manager = None
+thread_pool = None
 
 # Session storage
 processing_sessions: Dict[str, Dict] = {}
@@ -172,6 +184,25 @@ async def lifespan(app: FastAPI):
         print(f"AI Pipeline initialization failed: {e}")
         print("   Some features may not be available")
     
+    # Initialize Queue Manager
+    global queue_manager
+    if DATABASE_AVAILABLE and db_manager:
+        try:
+            queue_manager = AudioQueueManager(db_manager, max_concurrent=5)
+            print("✅ Queue manager initialized")
+        except Exception as e:
+            print(f"❌ Queue manager initialization failed: {e}")
+    else:
+        print("❌ Queue manager not available - database required")
+
+    # Initialize Thread Pool
+    global thread_pool
+    try:
+        thread_pool = concurrent.futures.ThreadPoolExecutor(max_workers=5)
+        print("✅ Thread pool initialized with 5 workers")
+    except Exception as e:
+        print(f"❌ Thread pool initialization failed: {e}")
+
     # Display connection info
     await display_startup_info()
     
@@ -179,6 +210,7 @@ async def lifespan(app: FastAPI):
     
     # Shutdown
     print("Shutting down...")
+
 
 # Create FastAPI app with lifespan
 app = FastAPI(
@@ -450,11 +482,15 @@ async def upload_audio(
     file: UploadFile = File(...),
     language: str = Form(""),
     apply_preprocessing: str = Form("true"),
-    num_speakers: str = Form("")
+    num_speakers: str = Form(""),
+    current_user: User = Depends(get_current_user)  # NEW: Require authentication
 ):
-    """Upload and process audio file"""
+    """Upload and process audio file with queue management"""
     if not pipeline:
         raise HTTPException(status_code=503, detail="Pipeline not available")
+    
+    if not queue_manager:
+        raise HTTPException(status_code=503, detail="Queue system not available")
     
     # Generate session ID
     session_id = str(uuid.uuid4())
@@ -468,40 +504,85 @@ async def upload_audio(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to save file: {str(e)}")
     
-    # Initialize session
-    processing_sessions[session_id] = {
-        "id": session_id,
-        "filename": file.filename,
-        "status": "processing",
-        "progress": 0,
-        "message": "Starting audio processing...",
-        "created_at": datetime.now(),
-        "file_path": str(upload_path),
-        "settings": {
-            "language": language if language else None,
-            "preprocessing": apply_preprocessing.lower() == "true",
-            "num_speakers": int(num_speakers) if num_speakers.isdigit() else None
+    # Get file size
+    file_size = upload_path.stat().st_size
+    
+    # Prepare processing settings
+    processing_settings = {
+        "language": language if language else None,
+        "preprocessing": apply_preprocessing.lower() == "true",
+        "num_speakers": int(num_speakers) if num_speakers.isdigit() else None
+    }
+    
+    # Add to queue
+    try:
+        queue_position = await queue_manager.add_to_queue(
+            user_id=current_user.id,
+            user_email=current_user.email,
+            session_id=session_id,
+            filename=file.filename,
+            file_path=str(upload_path),
+            file_size=file_size,
+            processing_settings=processing_settings
+        )
+        
+        # Try to start processing if slot available
+        if await queue_manager.can_process_now():
+            next_item = await queue_manager.get_next_queued_item()
+            if next_item and next_item.session_id == session_id:
+                await queue_manager.start_processing(session_id)
+                # Start background processing
+                background_tasks.add_task(process_audio_background, session_id, upload_path)
+                
+                return {
+                    "session_id": session_id,
+                    "status": "processing",
+                    "queue_position": 0,
+                    "message": "Processing started immediately"
+                }
+        
+        # If not processing immediately, return queue position
+        return {
+            "session_id": session_id,
+            "status": "queued",
+            "queue_position": queue_position,
+            "message": f"Your audio is at position {queue_position} in the queue"
         }
-    }
+        
+    except Exception as e:
+        # Clean up file if queue addition fails
+        if upload_path.exists():
+            upload_path.unlink()
+        raise HTTPException(status_code=500, detail=f"Failed to add to queue: {str(e)}")
     
-    # Start background processing
-    background_tasks.add_task(process_audio_background, session_id, upload_path)
-    
-    return {
-        "session_id": session_id,
-        "status": "processing",
-        "message": "Audio processing started"
-    }
+
 
 async def process_audio_background(session_id: str, file_path: Path):
-    """Background task for audio processing"""
+    """Background task for audio processing - now with queue management"""
     try:
+        # Get processing settings from queue if available
+        processing_settings = {}
+        if queue_manager:
+            queue_status = await queue_manager.get_queue_status(session_id)
+            if queue_status and queue_status.get("processing_settings"):
+                import json
+                processing_settings = json.loads(queue_status["processing_settings"])
+        
+        # Initialize session in old system for progress tracking
+        # Find this section in process_audio_background and update:
+        processing_sessions[session_id] = {
+            "id": session_id,
+            "filename": file_path.name,  # ADD THIS LINE
+            "status": "processing",
+            "progress": 10,
+            "message": "Loading audio file...",
+            "created_at": datetime.now(),
+            "file_path": str(file_path),
+            "settings": processing_settings
+        }
+        
         session = processing_sessions[session_id]
         settings = session["settings"]
-        
-        session["status"] = "processing"
-        session["progress"] = 10
-        session["message"] = "Loading audio file..."
         
         print(f"Starting audio processing for session {session_id}")
         print(f"   File: {file_path}")
@@ -509,16 +590,23 @@ async def process_audio_background(session_id: str, file_path: Path):
         
         session["progress"] = 20
         session["message"] = "Processing with GDPR pipeline..."
-        
-        results = pipeline.process_audio(
-            audio_path=file_path,
-            language=settings["language"],
-            num_speakers=settings["num_speakers"],
-            min_speakers=1,
-            max_speakers=10,
-            apply_preprocessing=settings["preprocessing"]
+
+    # Run CPU-intensive processing in thread pool (NON-BLOCKING)
+        loop = asyncio.get_event_loop()
+        results = await loop.run_in_executor(
+            thread_pool,
+            partial(
+                pipeline.process_audio,
+                audio_path=file_path,
+                language=settings.get("language"),
+                num_speakers=settings.get("num_speakers"),
+                min_speakers=1,
+                max_speakers=10,
+                apply_preprocessing=settings.get("preprocessing", True)
+            )
         )
-        
+
+
         output_dir = OUTPUT_DIR / session_id
         output_dir.mkdir(exist_ok=True)
         
@@ -535,18 +623,30 @@ async def process_audio_background(session_id: str, file_path: Path):
         
         print(f"Audio processing completed for session {session_id}")
         
+        # Notify queue manager of completion
+        if queue_manager:
+            await queue_manager.complete_processing(session_id)
+        
+        # Clean up uploaded file
         if file_path.exists():
             file_path.unlink()
             
     except Exception as e:
         logger.error(f"Processing error for session {session_id}: {e}")
         print(f"Processing failed for session {session_id}: {e}")
-        processing_sessions[session_id].update({
-            "status": "failed",
-            "progress": 0,
-            "message": f"Processing failed: {str(e)}",
-            "error": str(e)
-        })
+        
+        # Update session status
+        if session_id in processing_sessions:
+            processing_sessions[session_id].update({
+                "status": "failed",
+                "progress": 0,
+                "message": f"Processing failed: {str(e)}",
+                "error": str(e)
+            })
+        
+        # Notify queue manager of failure
+        if queue_manager:
+            await queue_manager.fail_processing(session_id, str(e))
         
         # Clean up file on error
         try:
@@ -554,6 +654,17 @@ async def process_audio_background(session_id: str, file_path: Path):
                 file_path.unlink()
         except:
             pass
+
+
+
+async def start_queued_processing(session_id: str, file_path: str):
+    """Start processing for a queued item"""
+    background_tasks = BackgroundTasks()
+    background_tasks.add_task(process_audio_background, session_id, Path(file_path))
+    # Execute the background task
+    await background_tasks()
+
+
 
 async def save_results_to_files(results: Dict, output_dir: Path, session_id: str):
     """Save processing results to files"""
@@ -585,9 +696,83 @@ async def save_results_to_files(results: Dict, output_dir: Path, session_id: str
         logger.error(f"Error saving results for session {session_id}: {e}")
         raise
 
+
+@app.get("/api/queue/stats")
+async def get_queue_stats():
+    """Get queue statistics"""
+    if not queue_manager:
+        raise HTTPException(status_code=503, detail="Queue system not available")
+    
+    try:
+        stats = await queue_manager.get_queue_stats()
+        return {
+            "queue_stats": stats,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get queue stats: {str(e)}")
+    
+
+
 @app.get("/api/processing-status/{session_id}")
 async def get_processing_status(session_id: str):
-    """Get processing status for a session"""
+    """Get processing status for a session - now with queue support"""
+    
+    # First check queue system if available
+    if queue_manager:
+        try:
+            queue_status = await queue_manager.get_queue_status(session_id)
+            if queue_status:
+                # If in queue system, return queue-based status
+                if queue_status["status"] == "QUEUED":
+                    return {
+                        "session_id": session_id,
+                        "status": "queued",
+                        "queue_position": queue_status["queue_position"],
+                        "message": f"Your position in queue: #{queue_status['queue_position']}",
+                        "created_at": queue_status["created_at"]
+                    }
+                elif queue_status["status"] == "PROCESSING":
+                    # Check if we have progress info in old system
+                    if session_id in processing_sessions:
+                        session = processing_sessions[session_id]
+                        return {
+                            "session_id": session_id,
+                            "status": "processing", 
+                            "progress": session.get("progress", 0),
+                            "message": session.get("message", "Processing..."),
+                            "created_at": queue_status["created_at"]
+                        }
+                    else:
+                        return {
+                            "session_id": session_id,
+                            "status": "processing",
+                            "progress": 0,
+                            "message": "Processing in progress...",
+                            "created_at": queue_status["created_at"]
+                        }
+                elif queue_status["status"] == "COMPLETED":
+                    return {
+                        "session_id": session_id,
+                        "status": "completed",
+                        "progress": 100,
+                        "message": "Processing completed successfully",
+                        "created_at": queue_status["created_at"],
+                        "completed_at": queue_status["completed_at"]
+                    }
+                elif queue_status["status"] == "FAILED":
+                    return {
+                        "session_id": session_id,
+                        "status": "failed",
+                        "progress": 0,
+                        "message": queue_status.get("error_message", "Processing failed"),
+                        "created_at": queue_status["created_at"],
+                        "completed_at": queue_status["completed_at"]
+                    }
+        except Exception as e:
+            print(f"Error getting queue status: {e}")
+    
+    # Fallback to old system for backward compatibility
     if session_id not in processing_sessions:
         raise HTTPException(status_code=404, detail="Session not found")
     
@@ -602,21 +787,59 @@ async def get_processing_status(session_id: str):
 
 @app.get("/api/results/{session_id}")
 async def get_results(session_id: str):
-    """Get processing results for a session"""
-    if session_id not in processing_sessions:
-        raise HTTPException(status_code=404, detail="Session not found")
+    """Get processing results for a session - updated for queue compatibility"""
     
-    session = processing_sessions[session_id]
+    # First check if we have results in the old system
+    if session_id in processing_sessions:
+        session = processing_sessions[session_id]
+        
+        if session["status"] != "completed":
+            raise HTTPException(status_code=400, detail="Processing not completed yet")
+        
+        if "results" not in session:
+            raise HTTPException(status_code=404, detail="Results not found")
+        
+        # Get filename from different possible sources
+        filename = session.get("filename") or session.get("file_path", "").split("/")[-1] or "audio_file"
+        
+        return {
+            "session_id": session_id,
+            "status": session["status"],
+            "filename": filename,
+            "results": session["results"],
+            "created_at": session["created_at"].isoformat(),
+            "output_dir": session.get("output_dir")
+        }
     
-    if session["status"] != "completed":
-        raise HTTPException(status_code=400, detail="Processing not completed")
+    # Check queue system for completed items
+    if queue_manager:
+        try:
+            queue_status = await queue_manager.get_queue_status(session_id)
+            if queue_status and queue_status["status"] == "COMPLETED":
+                # Try to load results from file system
+                output_dir = OUTPUT_DIR / session_id
+                results_file = output_dir / f"{session_id}_results.json"
+                
+                if results_file.exists():
+                    import json
+                    with open(results_file, 'r', encoding='utf-8') as f:
+                        results = json.load(f)
+                    
+                    return {
+                        "session_id": session_id,
+                        "status": "completed",
+                        "filename": queue_status["filename"],
+                        "results": results,
+                        "created_at": queue_status["created_at"],
+                        "output_dir": str(output_dir)
+                    }
+                else:
+                    raise HTTPException(status_code=404, detail="Results files not found")
+        except Exception as e:
+            print(f"Error getting results from queue: {e}")
     
-    return {
-        "session_id": session_id,
-        "results": session.get("results", {}),
-        "status": session["status"],
-        "filename": session["filename"]
-    }
+    raise HTTPException(status_code=404, detail="Session not found")
+
 
 @app.get("/api/download/{session_id}/{filename}")
 async def download_file(session_id: str, filename: str):
