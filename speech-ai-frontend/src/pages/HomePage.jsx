@@ -54,7 +54,7 @@ const HomePage = () => {
       toast.error('Please select a file and ensure backend is connected');
       return;
     }
-
+  
     try {
       const formData = new FormData();
       formData.append('file', selectedFile);
@@ -67,40 +67,61 @@ const HomePage = () => {
       
       formData.append('structures', JSON.stringify(enabledStructures));
       formData.append('parameters', JSON.stringify(enabledParameters));
-
+  
       setIsProcessing(true);
       toast.loading('Starting transcription...', { id: 'upload' });
-
-      // Set up processing status immediately with file info
-      const tempSessionId = `temp_${Date.now()}`;
-      setCurrentSession(tempSessionId);
-
-      // NEW: Initialize queue session
+  
+      // ✅ FIXED: Wait for backend response first, then navigate
+      const response = await backendApi.uploadAudio(formData);
+      const uploadResult = response.data;
+      const realSessionId = uploadResult.session_id;
+  
+      // ✅ Set up processing status with real session ID
+      setCurrentSession(realSessionId);
+      useAppStore.getState().setCurrentSessionId(realSessionId);
+  
+      // ✅ Initialize queue session with real session ID
       const { setCurrentQueueSession } = useAppStore.getState();
       setCurrentQueueSession({
-        sessionId: tempSessionId, // Will be updated with real sessionId
+        sessionId: realSessionId, // Real session ID from start
         fileName: selectedFile.name,
-        status: 'uploading',
-        queuePosition: 0,
-        message: 'Uploading file...'
+        status: uploadResult.status, // 'queued' or 'processing'
+        queuePosition: uploadResult.queue_position || 0,
+        message: uploadResult.message || 'Processing started'
       });
       
-      // Initialize processing status immediately with file info
+      // ✅ Initialize processing status with real session ID
       setProcessingStatus({ 
-        status: 'processing', 
-        progress: 5, 
-        message: 'Starting audio processing...',
+        status: uploadResult.status || 'processing', 
+        progress: 10, 
+        message: uploadResult.message || 'Processing started...',
+        sessionId: realSessionId, // Track session ID
         fileInfo: {
           name: selectedFile.name,
           size: selectedFile.size,
           type: selectedFile.type
         }
       });
-
-      // Navigate immediately to results page
+  
+      // ✅ Add session to backend context
+      addSession(realSessionId, {
+        status: uploadResult.status || 'processing',
+        progress: 10,
+        structures: enabledStructures,
+        parameters: enabledParameters,
+        filename: selectedFile.name,
+        startTime: new Date()
+      });
+  
+      // ✅ Register navigation callback
+      registerNavigationCallback(realSessionId, (completedSessionId) => {
+        console.log('Processing completed for session:', completedSessionId);
+      });
+  
+      // ✅ Navigate AFTER getting real session ID
       navigate('/results', {
         state: {
-          sessionId: tempSessionId,
+          sessionId: realSessionId, // Real session ID from start
           structures: enabledStructures,
           parameters: enabledParameters,
           fromUpload: true,
@@ -111,72 +132,23 @@ const HomePage = () => {
           }
         }
       });
-
-      // Start upload in background after navigation
-      setTimeout(async () => {
-        try {
-          const response = await backendApi.uploadAudio(formData);
-          const uploadResult = response.data;
-          
-          // Update to real session ID
-          setCurrentSession(uploadResult.session_id);
-          useAppStore.getState().setCurrentSessionId(uploadResult.session_id);
-
-          // NEW: Update queue session with real session ID and status
-          if (uploadResult.session_id) {
-            setCurrentQueueSession({
-              sessionId: uploadResult.session_id,
-              fileName: selectedFile.name,
-              status: uploadResult.status, // 'queued' or 'processing'
-              queuePosition: uploadResult.queue_position || 0,
-              message: uploadResult.message || 'Processing started'
-            });
-          }
-          
-          addSession(uploadResult.session_id, {
-            status: 'processing',
-            progress: 10,
-            structures: enabledStructures,
-            parameters: enabledParameters,
-            filename: selectedFile.name,
-            startTime: new Date()
-          });
-
-          registerNavigationCallback(uploadResult.session_id, (completedSessionId) => {
-            console.log('Processing completed for session:', completedSessionId);
-          });
-
-          toast.success('Upload successful! Processing in progress...', { 
-            id: 'upload',
-            duration: 3000 
-          });
-          
-        } catch (error) {
-          console.error('Upload error:', error);
-          toast.error(error.userMessage || 'Upload failed', { id: 'upload' });
-          
-          // Update status to failed
-          setProcessingStatus({
-            status: 'failed',
-            message: error.userMessage || 'Upload failed'
-          });
-
-          // Update queue session to failed
-          setCurrentQueueSession({
-            sessionId: tempSessionId,
-            fileName: selectedFile.name,
-            status: 'failed',
-            queuePosition: 0,
-            message: error.userMessage || 'Upload failed'
-          });
-        } finally {
-          setIsProcessing(false);
-        }
-      }, 100);
-      
+  
+      toast.success('Upload successful! Processing in progress...', { 
+        id: 'upload',
+        duration: 3000 
+      });
+  
     } catch (error) {
-      console.error('Processing start error:', error);
-      toast.error('Failed to start processing', { id: 'upload' });
+      console.error('Upload error:', error);
+      toast.error(error.userMessage || 'Upload failed', { id: 'upload' });
+      
+      // ✅ Handle error without temp session
+      setProcessingStatus({
+        status: 'failed',
+        message: error.userMessage || 'Upload failed'
+      });
+  
+    } finally {
       setIsProcessing(false);
     }
   }, [selectedFile, isConnected, language, speakers, structures, parameters, addSession, registerNavigationCallback, navigate, setIsProcessing, setCurrentSession, setProcessingStatus]);

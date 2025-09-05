@@ -1,4 +1,4 @@
-// src/pages/TranscriptionPage.jsx - DEBUG VERSION - Log results structure and fix validation
+// src/pages/TranscriptionPage.jsx - Updated with Single Session Flow
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -161,7 +161,7 @@ const TranscriptionPage = () => {
 
   const statusPollingRef = useRef(null);
   const initializedRef = useRef(false);
-  const hasShownCompletionToast = useRef(false); // ✅ CRITICAL FIX: Prevent multiple completion toasts
+  const hasShownCompletionToast = useRef(false);
 
   // ✅ NEW: Handle view changes from TranscriptPanel
   const handleViewChange = useCallback((view) => {
@@ -209,7 +209,7 @@ const TranscriptionPage = () => {
           progress: 5, 
           message: 'Starting audio processing...',
           fileInfo: stateData.fileInfo,
-          sessionId: stateData.sessionId // Track which session this status belongs to
+          sessionId: stateData.sessionId
         });
         console.log('🎯 Initialized processing status for session:', stateData.sessionId);
       } else {
@@ -218,7 +218,7 @@ const TranscriptionPage = () => {
     }
   }, [location.state, setCurrentSessionId, setProcessingStatus, currentSessionId, results, processingStatus]);
 
-  // ✅ CRITICAL FIX: Start polling with better session validation and stop conditions
+  // ✅ UPDATED: Start polling with single session logic (removed temp session checks)
   useEffect(() => {
     const sessionToUse = currentSessionId;
     
@@ -227,12 +227,10 @@ const TranscriptionPage = () => {
     
     // Don't start polling if:
     // 1. No session ID
-    // 2. Already completed (and we have valid results) ✅ CRITICAL: This prevents infinite polling
-    // 3. It's a temporary session ID
-    // 4. Already polling
+    // 2. Already completed (and we have valid results)
+    // 3. Already polling
     if (!sessionToUse || 
         (processingStatus?.status === 'completed' && hasValidResults) ||
-        sessionToUse.startsWith('temp_') ||
         statusPollingRef.current) {
       
       if (processingStatus?.status === 'completed' && hasValidResults) {
@@ -245,7 +243,7 @@ const TranscriptionPage = () => {
     startStatusPolling(sessionToUse);
   }, [currentSessionId, processingStatus?.status, results]);
 
-  // ✅ CRITICAL FIX: Polling with comprehensive results validation
+  // ✅ UPDATED: Polling with single session logic
   const startStatusPolling = useCallback((sessionId) => {
     if (statusPollingRef.current) {
       clearInterval(statusPollingRef.current);
@@ -360,7 +358,7 @@ const TranscriptionPage = () => {
         consecutiveErrors++;
         console.error(`Status polling error (${consecutiveErrors}/${MAX_ERRORS}):`, error);
         
-        // ✅ FIXED: Better error handling - don't show user errors for temporary network issues
+        // ✅ UPDATED: Simplified error handling (removed temp session checks)
         if (error.response?.status === 404) {
           // Session not found - only stop polling after multiple failures to avoid false positives
           if (consecutiveErrors >= MAX_ERRORS) {
@@ -373,10 +371,8 @@ const TranscriptionPage = () => {
               progress: 0,
               sessionId: sessionId
             });
-            // Only show error if this is a real session (not temp)
-            if (!sessionId.startsWith('temp_')) {
-              toast.error('Session not found on server');
-            }
+            // ✅ SIMPLIFIED: Always show error for 404s
+            toast.error('Session not found on server');
           }
         } else if (consecutiveErrors >= MAX_ERRORS) {
           // Network error - stop polling after multiple failures
@@ -440,7 +436,6 @@ const TranscriptionPage = () => {
         </motion.div>
   
         <QueueStatusDisplay />
-
 
         {/* Component 2: Processing Status and Stats */}
         {/* <motion.div
