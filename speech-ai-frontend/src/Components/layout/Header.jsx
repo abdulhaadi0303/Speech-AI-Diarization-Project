@@ -244,7 +244,7 @@ const Header = () => {
                 <StatusIndicator 
                   isConnected={isLLMAvailable} 
                   label="LLM" 
-                  color={isLLMAvailable ? 'bg-psycon-yellow' : 'bg-gray-400'}
+                  color={isLLMAvailable ? 'bg-green-400' : 'bg-gray-400'}
                 />
               </div>
   
