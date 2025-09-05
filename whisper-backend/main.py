@@ -204,7 +204,7 @@ async def lifespan(app: FastAPI):
     global queue_manager
     if DATABASE_AVAILABLE and db_manager:
         try:
-            queue_manager = AudioQueueManager(db_manager, max_concurrent=1)
+            queue_manager = AudioQueueManager(db_manager, max_concurrent=5)
             await queue_manager.recover_stuck_sessions()  # Startup recovery
             print("✅ Queue manager initialized and recovered")
         except Exception as e:
@@ -215,7 +215,7 @@ async def lifespan(app: FastAPI):
     # Initialize Thread Pool
     global thread_pool
     try:
-        thread_pool = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+        thread_pool = concurrent.futures.ThreadPoolExecutor(max_workers=5)
         print("✅ Thread pool initialized with 1 worker")
     except Exception as e:
         print(f"❌ Thread pool initialization failed: {e}")
