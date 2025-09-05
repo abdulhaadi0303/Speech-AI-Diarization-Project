@@ -36,6 +36,11 @@ const useAppStore = create(
       
       currentSession: null,
       setCurrentSession: (session) => set({ currentSession: session }),
+
+      // NEW: Queue status management
+      currentQueueSession: null,
+      setCurrentQueueSession: (session) => set({ currentQueueSession: session }),
+      clearQueueSession: () => set({ currentQueueSession: null }),
       
       language: '',
       setLanguage: (language) => set({ language }),
@@ -189,6 +194,7 @@ const useAppStore = create(
           selectedFile: null, // ✅ Clear file
           isProcessing: false,
           currentSession: null,
+          currentQueueSession: null, 
           language: '',
           speakers: '',
           structures: defaultStructures, // ✅ Reset to working defaults

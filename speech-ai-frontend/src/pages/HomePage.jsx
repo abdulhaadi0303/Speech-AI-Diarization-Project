@@ -7,11 +7,11 @@ import useAppStore from '../stores/appStore';
 import toast from 'react-hot-toast';
 
 // Import all the extracted components
-
 import PageHeader from '../Components/home/PageHeader';
 import ProcessingBanner from '../Components/home/ProcessingBanner';
 import AudioUploader from '../Components/home/AudioUploader';
 import AudioVisualizationSection from '../Components/home/AudioVisualizationSection';
+import QueueStatusDisplay from '../Components/home/QueueStatusDisplay';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -48,7 +48,7 @@ const HomePage = () => {
     setSelectedFile(file);
   }, [setSelectedFile]);
 
-  // ✅ FIXED: Handle start processing with immediate redirect and progress setup
+  // Updated: Handle start processing with queue session management
   const handleStartProcessing = useCallback(async () => {
     if (!selectedFile || !isConnected) {
       toast.error('Please select a file and ensure backend is connected');
@@ -71,11 +71,21 @@ const HomePage = () => {
       setIsProcessing(true);
       toast.loading('Starting transcription...', { id: 'upload' });
 
-      // ✅ NEW: Set up processing status immediately with file info
-      const tempSessionId = `temp_${Date.now()}`; // Temporary ID until we get real one
+      // Set up processing status immediately with file info
+      const tempSessionId = `temp_${Date.now()}`;
       setCurrentSession(tempSessionId);
+
+      // NEW: Initialize queue session
+      const { setCurrentQueueSession } = useAppStore.getState();
+      setCurrentQueueSession({
+        sessionId: tempSessionId, // Will be updated with real sessionId
+        fileName: selectedFile.name,
+        status: 'uploading',
+        queuePosition: 0,
+        message: 'Uploading file...'
+      });
       
-      // ✅ FIXED: Initialize processing status immediately with file info
+      // Initialize processing status immediately with file info
       setProcessingStatus({ 
         status: 'processing', 
         progress: 5, 
@@ -87,10 +97,10 @@ const HomePage = () => {
         }
       });
 
-      // ✅ FIXED: Navigate immediately to results page
+      // Navigate immediately to results page
       navigate('/results', {
         state: {
-          sessionId: tempSessionId, // Use temp ID initially
+          sessionId: tempSessionId,
           structures: enabledStructures,
           parameters: enabledParameters,
           fromUpload: true,
@@ -102,18 +112,28 @@ const HomePage = () => {
         }
       });
 
-      // ✅ NEW: Start upload in background after navigation
+      // Start upload in background after navigation
       setTimeout(async () => {
         try {
           const response = await backendApi.uploadAudio(formData);
-          const sessionData = response.data;
-          const realSessionId = sessionData.session_id;
+          const uploadResult = response.data;
           
-          // ✅ Update to real session ID
-          setCurrentSession(realSessionId);
-          useAppStore.getState().setCurrentSessionId(realSessionId);
+          // Update to real session ID
+          setCurrentSession(uploadResult.session_id);
+          useAppStore.getState().setCurrentSessionId(uploadResult.session_id);
+
+          // NEW: Update queue session with real session ID and status
+          if (uploadResult.session_id) {
+            setCurrentQueueSession({
+              sessionId: uploadResult.session_id,
+              fileName: selectedFile.name,
+              status: uploadResult.status, // 'queued' or 'processing'
+              queuePosition: uploadResult.queue_position || 0,
+              message: uploadResult.message || 'Processing started'
+            });
+          }
           
-          addSession(realSessionId, {
+          addSession(uploadResult.session_id, {
             status: 'processing',
             progress: 10,
             structures: enabledStructures,
@@ -122,8 +142,7 @@ const HomePage = () => {
             startTime: new Date()
           });
 
-          registerNavigationCallback(realSessionId, (completedSessionId) => {
-            // Already on results page, no need to navigate
+          registerNavigationCallback(uploadResult.session_id, (completedSessionId) => {
             console.log('Processing completed for session:', completedSessionId);
           });
 
@@ -136,15 +155,24 @@ const HomePage = () => {
           console.error('Upload error:', error);
           toast.error(error.userMessage || 'Upload failed', { id: 'upload' });
           
-          // ✅ Update status to failed
+          // Update status to failed
           setProcessingStatus({
             status: 'failed',
+            message: error.userMessage || 'Upload failed'
+          });
+
+          // Update queue session to failed
+          setCurrentQueueSession({
+            sessionId: tempSessionId,
+            fileName: selectedFile.name,
+            status: 'failed',
+            queuePosition: 0,
             message: error.userMessage || 'Upload failed'
           });
         } finally {
           setIsProcessing(false);
         }
-      }, 100); // Small delay to ensure navigation completes first
+      }, 100);
       
     } catch (error) {
       console.error('Processing start error:', error);
@@ -172,7 +200,7 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-psycon-light-teal/20 via-white to-psycon-lavender/30 overflow-auto">
-      <div className="p-6 max-w-5xl mx-auto"> {/* Made wider: max-w-4xl -> max-w-5xl */}
+      <div className="p-6 max-w-5xl mx-auto">
         
         {/* Page Header with Title */}
         <PageHeader />
@@ -184,7 +212,10 @@ const HomePage = () => {
         />
   
         {/* Main Content */}
-        <div className="max-w-3xl mx-auto space-y-6"> {/* Made wider: max-w-2xl -> max-w-3xl */}
+        <div className="max-w-3xl mx-auto space-y-6">
+
+          {/* Queue Status Display */}
+          <QueueStatusDisplay />
           
           {/* Audio Uploader Section */}
           <motion.div 
@@ -232,7 +263,6 @@ const HomePage = () => {
       </div>
     </div>
   );
-  
 };
 
 export default HomePage;
