@@ -2,7 +2,7 @@
 
 import asyncio
 import json
-from datetime import datetime
+from datetime import datetime, timedelta 
 from typing import Optional, Dict, List
 from sqlalchemy.orm import Session
 from database.models import DatabaseManager, AudioQueue
@@ -91,8 +91,9 @@ class AudioQueueManager:
         finally:
             db.close()
     
+    
     async def start_processing(self, session_id: str) -> bool:
-        """Mark item as processing"""
+        """Mark item as processing AND start the actual background task"""
         db = self.get_db_session()
         try:
             queue_item = db.query(AudioQueue).filter(
@@ -109,11 +110,35 @@ class AudioQueueManager:
                 await self._recalculate_queue_positions()
                 
                 print(f"Started processing: {queue_item.filename}")
+                
+                # CRITICAL: Start the actual background processing
+                try:
+                    from pathlib import Path
+                    import asyncio
+                    # Import the processing function
+                    from main import process_audio_background
+                    
+                    # Start the actual processing task
+                    file_path = Path(queue_item.file_path)
+                    if file_path.exists():
+                        # Create background task
+                        asyncio.create_task(process_audio_background(session_id, file_path))
+                        print(f"Background processing started for: {session_id}")
+                    else:
+                        # File missing, mark as failed
+                        await self.fail_processing(session_id, "Audio file not found")
+                        return False
+                        
+                except Exception as e:
+                    print(f"Failed to start background processing: {e}")
+                    await self.fail_processing(session_id, f"Failed to start processing: {str(e)}")
+                    return False
+                
                 return True
             return False
         finally:
             db.close()
-    
+
     async def complete_processing(self, session_id: str):
         """Mark processing as completed and start next item"""
         db = self.get_db_session()
@@ -197,6 +222,7 @@ class AudioQueueManager:
             db.commit()
         finally:
             db.close()
+            
     
     async def get_queue_stats(self) -> Dict:
         """Get overall queue statistics"""
@@ -212,3 +238,61 @@ class AudioQueueManager:
             return stats
         finally:
             db.close()
+
+
+    async def recover_stuck_sessions(self):
+        db = self.get_db_session()
+        try:
+            stuck_sessions = db.query(AudioQueue).filter(
+                AudioQueue.status == "PROCESSING"
+            ).all()
+            
+            recovered_count = 0
+            for session in stuck_sessions:
+                # Reset any PROCESSING session on startup (they can't survive server restart)
+                session.status = "FAILED"
+                session.error_message = "Processing interrupted by server restart"
+                session.completed_at = datetime.utcnow()
+                recovered_count += 1
+                print(f"Recovered stuck session: {session.session_id}")
+            
+            if recovered_count > 0:
+                db.commit()
+                await self._recalculate_queue_positions()
+                print(f"Recovered {recovered_count} stuck sessions")
+            
+        finally:
+            db.close()
+
+
+    async def cleanup_expired_sessions(self):
+        """Clean up sessions that have been processing too long"""
+        db = self.get_db_session()
+        try:
+            current_time = datetime.utcnow()
+            
+            # Find sessions processing for more than 30 minutes
+            expired_sessions = db.query(AudioQueue).filter(
+                AudioQueue.status == "PROCESSING",
+                AudioQueue.started_processing_at < current_time - timedelta(minutes=30)
+            ).all()
+            
+            cleaned_count = 0
+            for session in expired_sessions:
+                session.status = "FAILED"
+                session.error_message = "Processing timeout - exceeded 30 minutes"
+                session.completed_at = current_time
+                cleaned_count += 1
+                print(f"Cleaned expired session: {session.session_id}")
+            
+            if cleaned_count > 0:
+                db.commit()
+                await self._recalculate_queue_positions()
+                # Try to start next queued item
+                await self.start_next_if_available()
+            
+            return cleaned_count
+            
+        finally:
+            db.close()
+    

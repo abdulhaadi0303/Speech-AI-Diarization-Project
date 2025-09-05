@@ -6,7 +6,8 @@ load_dotenv()
 from queue_manager import AudioQueueManager
 from auth.middleware import get_current_user
 from auth.models import User
-
+import asyncio
+from datetime import timedelta
 import os
 import shutil
 import uuid
@@ -30,10 +31,25 @@ from contextlib import asynccontextmanager
 from pydantic import BaseModel
 
 
+async def periodic_queue_cleanup():
+    """Run periodic cleanup of stuck sessions"""
+    while True:
+        try:
+            if queue_manager:
+                cleaned = await queue_manager.cleanup_expired_sessions()
+                if cleaned > 0:
+                    print(f"Periodic cleanup: resolved {cleaned} stuck sessions")
+        except Exception as e:
+            print(f"Error in periodic cleanup: {e}")
+        
+        # Run every 10 minutes
+        await asyncio.sleep(600)
+
+
 
 # Database imports - FIXED
 try:
-    from database.models import DatabaseManager, AnalysisPrompt, AnalysisResult
+    from database.models import DatabaseManager, AnalysisPrompt, AnalysisResult, AudioQueue
     DATABASE_AVAILABLE = True
     db_manager = DatabaseManager()
     print("Database modules loaded successfully")
@@ -188,8 +204,9 @@ async def lifespan(app: FastAPI):
     global queue_manager
     if DATABASE_AVAILABLE and db_manager:
         try:
-            queue_manager = AudioQueueManager(db_manager, max_concurrent=5)
-            print("✅ Queue manager initialized")
+            queue_manager = AudioQueueManager(db_manager, max_concurrent=1)
+            await queue_manager.recover_stuck_sessions()  # Startup recovery
+            print("✅ Queue manager initialized and recovered")
         except Exception as e:
             print(f"❌ Queue manager initialization failed: {e}")
     else:
@@ -198,10 +215,16 @@ async def lifespan(app: FastAPI):
     # Initialize Thread Pool
     global thread_pool
     try:
-        thread_pool = concurrent.futures.ThreadPoolExecutor(max_workers=5)
-        print("✅ Thread pool initialized with 5 workers")
+        thread_pool = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+        print("✅ Thread pool initialized with 1 worker")
     except Exception as e:
         print(f"❌ Thread pool initialization failed: {e}")
+
+    # Start background cleanup task
+    cleanup_task = None
+    if queue_manager:
+        cleanup_task = asyncio.create_task(periodic_queue_cleanup())
+        print("✅ Background cleanup task started")
 
     # Display connection info
     await display_startup_info()
@@ -209,8 +232,13 @@ async def lifespan(app: FastAPI):
     yield
     
     # Shutdown
+    if cleanup_task:
+        cleanup_task.cancel()
+        try:
+            await cleanup_task
+        except asyncio.CancelledError:
+            pass
     print("Shutting down...")
-
 
 # Create FastAPI app with lifespan
 app = FastAPI(
@@ -483,7 +511,7 @@ async def upload_audio(
     language: str = Form(""),
     apply_preprocessing: str = Form("true"),
     num_speakers: str = Form(""),
-    current_user: User = Depends(get_current_user)  # NEW: Require authentication
+    current_user: User = Depends(get_current_user)
 ):
     """Upload and process audio file with queue management"""
     if not pipeline:
@@ -526,22 +554,20 @@ async def upload_audio(
             processing_settings=processing_settings
         )
         
-        # Try to start processing if slot available
-        if await queue_manager.can_process_now():
-            next_item = await queue_manager.get_next_queued_item()
-            if next_item and next_item.session_id == session_id:
-                await queue_manager.start_processing(session_id)
-                # Start background processing
-                background_tasks.add_task(process_audio_background, session_id, upload_path)
-                
-                return {
-                    "session_id": session_id,
-                    "status": "processing",
-                    "queue_position": 0,
-                    "message": "Processing started immediately"
-                }
+        # FIXED: Always try to start next available item after adding to queue
+        await queue_manager.start_next_if_available()
         
-        # If not processing immediately, return queue position
+        # Check if this session started processing
+        updated_status = await queue_manager.get_queue_status(session_id)
+        if updated_status and updated_status["status"] == "PROCESSING":
+            return {
+                "session_id": session_id,
+                "status": "processing",
+                "queue_position": 0,
+                "message": "Processing started immediately"
+            }
+        
+        # If still queued, return queue position
         return {
             "session_id": session_id,
             "status": "queued",
@@ -554,8 +580,6 @@ async def upload_audio(
         if upload_path.exists():
             upload_path.unlink()
         raise HTTPException(status_code=500, detail=f"Failed to add to queue: {str(e)}")
-    
-
 
 async def process_audio_background(session_id: str, file_path: Path):
     """Background task for audio processing - now with queue management"""
@@ -1135,3 +1159,103 @@ if __name__ == "__main__":
         reload=False,
         log_level="info"
     )
+
+
+@app.get("/api/queue/health")
+async def queue_health_check():
+    """Check queue health and auto-fix issues"""
+    if not queue_manager:
+        raise HTTPException(status_code=503, detail="Queue system not available")
+    
+    try:
+        # Run cleanup
+        cleaned = await queue_manager.cleanup_expired_sessions()
+        
+        # Get current stats
+        stats = await queue_manager.get_queue_stats()
+        
+        return {
+            "status": "healthy",
+            "cleaned_sessions": cleaned,
+            "queue_stats": stats,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Health check failed: {str(e)}")
+    
+@app.post("/api/admin/reset-queue")
+async def reset_queue_state():
+    """Reset queue to consistent state (emergency fix)"""
+    if not queue_manager:
+        raise HTTPException(status_code=503, detail="Queue system not available")
+    
+    try:
+        # Force all stuck PROCESSING items to FAILED
+        db = queue_manager.get_db_session()
+        try:
+            stuck_items = db.query(AudioQueue).filter(
+                AudioQueue.status == "PROCESSING"
+            ).all()
+            
+            reset_count = 0
+            for item in stuck_items:
+                item.status = "FAILED"
+                item.error_message = "Reset by admin - queue consistency fix"
+                item.completed_at = datetime.utcnow()
+                reset_count += 1
+            
+            db.commit()
+            
+            # Recalculate positions and start next items
+            await queue_manager._recalculate_queue_positions()
+            started = await queue_manager.force_queue_consistency()
+            
+            return {
+                "message": f"Reset {reset_count} stuck sessions, started {started} new ones",
+                "reset_sessions": reset_count,
+                "started_sessions": started
+            }
+        finally:
+            db.close()
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Reset failed: {str(e)}")
+    
+@app.get("/api/admin/queue-debug")
+async def queue_debug():
+    """Debug queue state"""
+    if not queue_manager:
+        return {"error": "Queue manager not available"}
+    
+    db = queue_manager.get_db_session()
+    try:
+        all_sessions = db.query(AudioQueue).all()
+        
+        debug_info = {
+            "total_sessions": len(all_sessions),
+            "by_status": {},
+            "processing_sessions": [],
+            "queued_sessions": []
+        }
+        
+        for session in all_sessions:
+            status = session.status
+            debug_info["by_status"][status] = debug_info["by_status"].get(status, 0) + 1
+            
+            if status == "PROCESSING":
+                debug_info["processing_sessions"].append({
+                    "session_id": session.session_id,
+                    "filename": session.filename,
+                    "started_at": session.started_processing_at.isoformat() if session.started_processing_at else None
+                })
+            elif status == "QUEUED":
+                debug_info["queued_sessions"].append({
+                    "session_id": session.session_id,
+                    "filename": session.filename,
+                    "position": session.queue_position,
+                    "created_at": session.created_at.isoformat()
+                })
+        
+        return debug_info
+    finally:
+        db.close()
