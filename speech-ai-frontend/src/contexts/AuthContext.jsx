@@ -13,14 +13,12 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [permissions, setPermissions] = useState({});
 
-  // 🔧 FIXED: Configuration using environment variables instead of hardcoded localhost
   const authConfig = {
     authentikUrl: import.meta.env.VITE_AUTHENTIK_BASE_URL,
     appPath: '/application/o/speech-analysis',
     clientId: import.meta.env.VITE_AUTHENTIK_CLIENT_ID,
-    clientSecret: 'fhf8On3hqFhDGOAM9RsSqxRIFsalxD6O5TCIhBpmXMJoL0RcAErdYYnSyvnKW2Ozf2SALi62Ks7KSPyHCupSl5g78hynBIUBFSV0EiirglsGdf3Jaw0pk6rljzsmUaST',
+    clientSecret: 'PLACE YOUR SECRET KEY HERE', 
     redirectUri: import.meta.env.VITE_AUTHENTIK_REDIRECT_URI,
-    // 🔧 FIXED: URLs built from environment variables
     authorizeUrl: `${import.meta.env.VITE_AUTHENTIK_BASE_URL}/application/o/authorize/`,
     tokenUrl: `${import.meta.env.VITE_AUTHENTIK_BASE_URL}/application/o/token/`,
     userinfoUrl: `${import.meta.env.VITE_AUTHENTIK_BASE_URL}/application/o/userinfo/`
@@ -54,7 +52,7 @@ export const AuthProvider = ({ children }) => {
 
   // Update user permissions
   const updateUserPermissions = useCallback((userData) => {
-    // CRITICAL FIX: Use backend role directly, not groups
+ 
     const role = userData?.role || 'user';
     
     console.log('🔍 Auth Debug:', {
