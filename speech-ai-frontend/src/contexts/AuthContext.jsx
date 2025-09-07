@@ -1,4 +1,4 @@
-// src/contexts/AuthContext.jsx - Simple Working Version (Bypasses OIDC Client Issues)
+// src/contexts/AuthContext.jsx - Updated for Multi-Device Setup
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
@@ -13,18 +13,19 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [permissions, setPermissions] = useState({});
 
-  // Configuration - matches your working setup 
+  // 🔧 FIXED: Configuration using environment variables instead of hardcoded localhost
   const authConfig = {
-    authentikUrl: 'http://localhost:9000',
+    authentikUrl: import.meta.env.VITE_AUTHENTIK_BASE_URL,
     appPath: '/application/o/speech-analysis',
-    clientId: 'hmYQcraW22qApmnJUbm36UOpwgUzVLTV5spl704r',  // ✅ Your new client ID
-    clientSecret: 'fhf8On3hqFhDGOAM9RsSqxRIFsalxD6O5TCIhBpmXMJoL0RcAErdYYnSyvnKW2Ozf2SALi62Ks7KSPyHCupSl5g78hynBIUBFSV0EiirglsGdf3Jaw0pk6rljzsmUaST',  // ✅ Your new client secret
-    redirectUri: `${window.location.origin}/auth/callback`,
-    // Fixed URLs with port 9000
-    authorizeUrl: 'http://localhost:9000/application/o/authorize/',
-    tokenUrl: 'http://localhost:9000/application/o/token/',
-    userinfoUrl: 'http://localhost:9000/application/o/userinfo/'
+    clientId: import.meta.env.VITE_AUTHENTIK_CLIENT_ID,
+    clientSecret: 'fhf8On3hqFhDGOAM9RsSqxRIFsalxD6O5TCIhBpmXMJoL0RcAErdYYnSyvnKW2Ozf2SALi62Ks7KSPyHCupSl5g78hynBIUBFSV0EiirglsGdf3Jaw0pk6rljzsmUaST',
+    redirectUri: import.meta.env.VITE_AUTHENTIK_REDIRECT_URI,
+    // 🔧 FIXED: URLs built from environment variables
+    authorizeUrl: `${import.meta.env.VITE_AUTHENTIK_BASE_URL}/application/o/authorize/`,
+    tokenUrl: `${import.meta.env.VITE_AUTHENTIK_BASE_URL}/application/o/token/`,
+    userinfoUrl: `${import.meta.env.VITE_AUTHENTIK_BASE_URL}/application/o/userinfo/`
   };
+
   // Check for existing session on load
   useEffect(() => {
     const checkExistingSession = () => {
@@ -52,31 +53,30 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Update user permissions
-// Update user permissions
-const updateUserPermissions = useCallback((userData) => {
-  // CRITICAL FIX: Use backend role directly, not groups
-  const role = userData?.role || 'user';
-  
-  console.log('🔍 Auth Debug:', {
-    username: userData?.username,
-    backendRole: userData?.role,
-    usingRole: role
-  });
-  
-  const newPermissions = {
-    role,
-    isAdmin: ['admin', 'superadmin'].includes(role),
-    isSuperAdmin: role === 'superadmin',
-    groups: userData?.groups || [],
-    canUpload: true,
-    canAnalyze: true,
-    canManagePrompts: ['admin', 'superadmin'].includes(role),
-    canManageUsers: role === 'superadmin',
-  };
+  const updateUserPermissions = useCallback((userData) => {
+    // CRITICAL FIX: Use backend role directly, not groups
+    const role = userData?.role || 'user';
+    
+    console.log('🔍 Auth Debug:', {
+      username: userData?.username,
+      backendRole: userData?.role,
+      usingRole: role
+    });
+    
+    const newPermissions = {
+      role,
+      isAdmin: ['admin', 'superadmin'].includes(role),
+      isSuperAdmin: role === 'superadmin',
+      groups: userData?.groups || [],
+      canUpload: true,
+      canAnalyze: true,
+      canManagePrompts: ['admin', 'superadmin'].includes(role),
+      canManageUsers: role === 'superadmin',
+    };
 
-  console.log('✅ Permissions set:', { isAdmin: newPermissions.isAdmin, role });
-  setPermissions(newPermissions);
-}, []);
+    console.log('✅ Permissions set:', { isAdmin: newPermissions.isAdmin, role });
+    setPermissions(newPermissions);
+  }, []);
 
   // Determine user role from groups
   const determineUserRole = useCallback((groups) => {
@@ -97,6 +97,11 @@ const updateUserPermissions = useCallback((userData) => {
   const login = useCallback(async () => {
     try {
       console.log('🔄 Starting login process...');
+      console.log('🔧 Auth config:', {
+        authentikUrl: authConfig.authentikUrl,
+        authorizeUrl: authConfig.authorizeUrl,
+        redirectUri: authConfig.redirectUri
+      });
       setIsLoading(true);
       
       // Store current location for redirect after login
@@ -107,11 +112,11 @@ const updateUserPermissions = useCallback((userData) => {
       const state = Math.random().toString(36).substring(7);
       localStorage.setItem('auth_state', state);
       
-      // Build authorization URL
+      // Build authorization URL using environment variables
       const params = new URLSearchParams({
         client_id: authConfig.clientId,
         response_type: 'code',
-        scope: 'openid profile email groups',
+        scope: import.meta.env.VITE_AUTHENTIK_SCOPE || 'openid profile email groups',
         redirect_uri: authConfig.redirectUri,
         state: state
       });
@@ -130,245 +135,242 @@ const updateUserPermissions = useCallback((userData) => {
   }, []);
 
   // Handle callback from Authentik
-// Fix the handleLoginCallback function in AuthContext.jsx to handle state properly
-
-const handleLoginCallback = useCallback(async () => {
-  try {
-    console.log('🔄 Processing login callback...');
-    setIsLoading(true);
-    
-    // Extract parameters from URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
-    const state = urlParams.get('state');
-    const error = urlParams.get('error');
-    
-    console.log('📋 Callback params:', { 
-      hasCode: !!code, 
-      state, 
-      hasError: !!error 
-    });
-
-    // Check for errors
-    if (error) {
-      throw new Error(`OAuth Error: ${error}`);
-    }
-    
-    if (!code) {
-      throw new Error('No authorization code received');
-    }
-
-    // ✅ IMPROVED: Better state verification with fallback
-    const storedState = localStorage.getItem('auth_state');
-    console.log('🔍 State check:', { received: state, stored: storedState });
-    
-    if (state && storedState && state !== storedState) {
-      throw new Error('Invalid state parameter - possible CSRF attack');
-    }
-
-    // If no state in localStorage but state in URL, it might be a page refresh
-    // In production, you'd want stricter validation
-    if (!storedState && state) {
-      console.warn('⚠️ No stored state found, but state in URL. Possible page refresh.');
-    }
-
-    // Send code to YOUR backend instead of Authentik directly
-    console.log('🔄 Exchanging code via backend...');
-    
-    const loginResponse = await fetch(`${import.meta.env.VITE_BACKEND_URL}/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({
-        code: code,
-        redirect_uri: authConfig.redirectUri,
-        state: state
-      })
-    });
-
-    console.log('📡 Backend login response status:', loginResponse.status);
-
-    if (!loginResponse.ok) {
-      const errorData = await loginResponse.text();
-      let errorMessage;
+  const handleLoginCallback = useCallback(async () => {
+    try {
+      console.log('🔄 Processing login callback...');
+      setIsLoading(true);
       
-      try {
-        const parsedError = JSON.parse(errorData);
-        errorMessage = parsedError.detail || `HTTP ${loginResponse.status}`;
-      } catch {
-        errorMessage = `HTTP ${loginResponse.status}: ${errorData}`;
+      // Extract parameters from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('code');
+      const state = urlParams.get('state');
+      const error = urlParams.get('error');
+      
+      console.log('📋 Callback params:', { 
+        hasCode: !!code, 
+        state, 
+        hasError: !!error 
+      });
+
+      // Check for errors
+      if (error) {
+        throw new Error(`OAuth Error: ${error}`);
       }
       
-      throw new Error(`Backend login failed: ${errorMessage}`);
-    }
+      if (!code) {
+        throw new Error('No authorization code received');
+      }
 
-    const loginData = await loginResponse.json();
-    console.log('✅ Backend login successful');
+      // ✅ IMPROVED: Better state verification with fallback
+      const storedState = localStorage.getItem('auth_state');
+      console.log('🔍 State check:', { received: state, stored: storedState });
+      
+      if (state && storedState && state !== storedState) {
+        throw new Error('Invalid state parameter - possible CSRF attack');
+      }
 
-    // Use user data from YOUR backend response
-    const userData = {
-      id: loginData.user.id,
-      username: loginData.user.username,
-      email: loginData.user.email,
-      name: loginData.user.full_name,
-      first_name: loginData.user.first_name,
-      last_name: loginData.user.last_name,
-      groups: loginData.user.groups || [],
-      avatar_url: loginData.user.avatar_url,
-      is_verified: loginData.user.is_verified,
-      role: loginData.user.role
-    };
+      // If no state in localStorage but state in URL, it might be a page refresh
+      // In production, you'd want stricter validation
+      if (!storedState && state) {
+        console.warn('⚠️ No stored state found, but state in URL. Possible page refresh.');
+      }
 
-    // Store YOUR backend tokens, not Authentik tokens
-    localStorage.setItem('auth_user', JSON.stringify(userData));
-    localStorage.setItem('access_token', loginData.access_token);
-    if (loginData.refresh_token) {
-      localStorage.setItem('refresh_token', loginData.refresh_token);
-    }
+      // Send code to YOUR backend instead of Authentik directly
+      console.log('🔄 Exchanging code via backend...');
+      console.log('🔧 Backend URL:', import.meta.env.VITE_BACKEND_URL);
+      
+      const loginResponse = await fetch(`${import.meta.env.VITE_BACKEND_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          code: code,
+          redirect_uri: authConfig.redirectUri,
+          state: state
+        })
+      });
 
-    // Set state
-    setUser(userData);
-    setIsAuthenticated(true);
-    updateUserPermissions(userData);
+      console.log('📡 Backend login response status:', loginResponse.status);
 
-    // Clean up temporary storage
-    localStorage.removeItem('auth_state');
+      if (!loginResponse.ok) {
+        const errorData = await loginResponse.text();
+        let errorMessage;
+        
+        try {
+          const parsedError = JSON.parse(errorData);
+          errorMessage = parsedError.detail || `HTTP ${loginResponse.status}`;
+        } catch {
+          errorMessage = `HTTP ${loginResponse.status}: ${errorData}`;
+        }
+        
+        throw new Error(`Backend login failed: ${errorMessage}`);
+      }
 
-    toast.success(`Welcome back, ${userData.name || userData.username}!`);
+      const loginData = await loginResponse.json();
+      console.log('✅ Backend login successful');
 
-    // Get return URL
-    const returnUrl = localStorage.getItem('auth_return_url') || '/';
-    localStorage.removeItem('auth_return_url');
+      // Use user data from YOUR backend response
+      const userData = {
+        id: loginData.user.id,
+        username: loginData.user.username,
+        email: loginData.user.email,
+        name: loginData.user.full_name,
+        first_name: loginData.user.first_name,
+        last_name: loginData.user.last_name,
+        groups: loginData.user.groups || [],
+        avatar_url: loginData.user.avatar_url,
+        is_verified: loginData.user.is_verified,
+        role: loginData.user.role
+      };
 
-    return { user: userData, returnUrl };
+      // Store YOUR backend tokens, not Authentik tokens
+      localStorage.setItem('auth_user', JSON.stringify(userData));
+      localStorage.setItem('access_token', loginData.access_token);
+      if (loginData.refresh_token) {
+        localStorage.setItem('refresh_token', loginData.refresh_token);
+      }
 
-  } catch (error) {
-    console.error('❌ Login callback failed:', error);
-    
-    // Clean up on error - but don't clear if it's just a network error
-    const isNetworkError = error.message.includes('fetch') || error.message.includes('Failed to fetch');
-    
-    if (!isNetworkError) {
+      // Set state
+      setUser(userData);
+      setIsAuthenticated(true);
+      updateUserPermissions(userData);
+
+      // Clean up temporary storage
       localStorage.removeItem('auth_state');
+
+      toast.success(`Welcome back, ${userData.name || userData.username}!`);
+
+      // Get return URL
+      const returnUrl = localStorage.getItem('auth_return_url') || '/';
       localStorage.removeItem('auth_return_url');
+
+      return { user: userData, returnUrl };
+
+    } catch (error) {
+      console.error('❌ Login callback failed:', error);
+      
+      // Clean up on error - but don't clear if it's just a network error
+      const isNetworkError = error.message.includes('fetch') || error.message.includes('Failed to fetch');
+      
+      if (!isNetworkError) {
+        localStorage.removeItem('auth_state');
+        localStorage.removeItem('auth_return_url');
+        localStorage.removeItem('auth_user');
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        
+        setUser(null);
+        setIsAuthenticated(false);
+        setPermissions({});
+      }
+      
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [updateUserPermissions, authConfig.redirectUri]);
+
+  // Enhanced logout function
+  const logout = useCallback(async () => {
+    try {
+      console.log('🔄 Logging out from Speech App...');
+      
+      // 1. Get the current access token BEFORE clearing storage
+      const currentToken = localStorage.getItem('access_token');
+      
+      // 2. Call backend logout first (while we still have the token)
+      if (currentToken) {
+        try {
+          await fetch(`${import.meta.env.VITE_BACKEND_URL}/auth/logout`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${currentToken}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ all_sessions: false })
+          });
+          console.log('✅ Backend logout successful');
+        } catch (error) {
+          console.warn('Backend logout call failed:', error);
+          // Continue with logout even if backend call fails
+        }
+      }
+      
+      // 3. Clear all local authentication data
       localStorage.removeItem('auth_user');
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
+      localStorage.removeItem('auth_state');
+      localStorage.removeItem('auth_return_url');
       
+      // Also clear session storage
+      sessionStorage.removeItem('auth_user');
+      sessionStorage.removeItem('access_token');
+      sessionStorage.removeItem('refresh_token');
+      
+      // 4. Clear app state immediately
       setUser(null);
       setIsAuthenticated(false);
       setPermissions({});
-    }
-    
-    throw error;
-  } finally {
-    setIsLoading(false);
-  }
-}, [updateUserPermissions, authConfig.redirectUri]);
-
-  // Logout function
- // Enhanced logout function for AuthContext.jsx
-// Simple default logout function that always requires credentials next time
-// Fixed logout function that properly redirects to login page
-const logout = useCallback(async () => {
-  try {
-    console.log('🔄 Logging out from Speech App...');
-    
-    // 1. Get the current access token BEFORE clearing storage
-    const currentToken = localStorage.getItem('access_token');
-    
-    // 2. Call backend logout first (while we still have the token)
-    if (currentToken) {
-      try {
-        await fetch(`${import.meta.env.VITE_BACKEND_URL}/auth/logout`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${currentToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ all_sessions: false })
-        });
-        console.log('✅ Backend logout successful');
-      } catch (error) {
-        console.warn('Backend logout call failed:', error);
-        // Continue with logout even if backend call fails
+      
+      // 5. Clear axios authorization header
+      if (window.backendApi?.setAuthToken) {
+        window.backendApi.setAuthToken(null);
       }
+      
+      // 6. Simple approach: Just navigate to login page
+      // This will clear the app session but keep SSO session active
+      console.log('🔄 Redirecting to login page...');
+      window.location.replace('/login');
+      
+      // Alternative: If you want to force SSO logout (uncomment the lines below)
+      /*
+      const authentikLogoutUrl = `${authConfig.authentikUrl}/application/o/speech-analysis/end-session/`;
+      const returnUrl = `${window.location.origin}/login`;
+      const fullLogoutUrl = `${authentikLogoutUrl}?post_logout_redirect_uri=${encodeURIComponent(returnUrl)}`;
+      
+      console.log('🔒 Redirecting to full SSO logout...');
+      window.location.href = fullLogoutUrl;
+      */
+      
+    } catch (error) {
+      console.error('❌ Logout failed:', error);
+      
+      // Fallback: Force cleanup and go to login page
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // Clear state
+      setUser(null);
+      setIsAuthenticated(false);
+      setPermissions({});
+      
+      // Navigate to login page
+      window.location.replace('/login');
     }
-    
-    // 3. Clear all local authentication data
-    localStorage.removeItem('auth_user');
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('auth_state');
-    localStorage.removeItem('auth_return_url');
-    
-    // Also clear session storage
-    sessionStorage.removeItem('auth_user');
-    sessionStorage.removeItem('access_token');
-    sessionStorage.removeItem('refresh_token');
-    
-    // 4. Clear app state immediately
-    setUser(null);
-    setIsAuthenticated(false);
-    setPermissions({});
-    
-    // 5. Clear axios authorization header
-    if (window.backendApi?.setAuthToken) {
-      window.backendApi.setAuthToken(null);
-    }
-    
-    // 6. Simple approach: Just navigate to login page
-    // This will clear the app session but keep SSO session active
-    console.log('🔄 Redirecting to login page...');
-    window.location.replace('/login');
-    
-    // Alternative: If you want to force SSO logout (uncomment the lines below)
-    /*
-    const authentikLogoutUrl = `${authConfig.authentikUrl}/application/o/speech-analysis/end-session/`;
-    const returnUrl = `${window.location.origin}/login`;
-    const fullLogoutUrl = `${authentikLogoutUrl}?post_logout_redirect_uri=${encodeURIComponent(returnUrl)}`;
-    
-    console.log('🔒 Redirecting to full SSO logout...');
-    window.location.href = fullLogoutUrl;
-    */
-    
-  } catch (error) {
-    console.error('❌ Logout failed:', error);
-    
-    // Fallback: Force cleanup and go to login page
-    localStorage.clear();
-    sessionStorage.clear();
-    
-    // Clear state
-    setUser(null);
-    setIsAuthenticated(false);
-    setPermissions({});
-    
-    // Navigate to login page
-    window.location.replace('/login');
-  }
-}, [authConfig.authentikUrl]);
+  }, [authConfig.authentikUrl]);
 
-// Export the simple logout function
-const value = {
-  user,
-  isLoading,
-  isAuthenticated,
-  permissions,
-  authConfig,
-  login,
-  logout, // Simple, default logout that always requires credentials
-  handleLoginCallback,
-  // Additional convenience properties
-  isAdmin: permissions.isAdmin || false,
-  isSuperAdmin: permissions.isSuperAdmin || false,
-  userRole: permissions.role,
-  userGroups: permissions.groups || [],
-  userName: user?.name || user?.username,
-  userEmail: user?.email
-};
+  // Export the simple logout function
+  const value = {
+    user,
+    isLoading,
+    isAuthenticated,
+    permissions,
+    authConfig,
+    login,
+    logout, // Simple, default logout that always requires credentials
+    handleLoginCallback,
+    // Additional convenience properties
+    isAdmin: permissions.isAdmin || false,
+    isSuperAdmin: permissions.isSuperAdmin || false,
+    userRole: permissions.role,
+    userGroups: permissions.groups || [],
+    userName: user?.name || user?.username,
+    userEmail: user?.email
+  };
+
   return (
     <AuthContext.Provider value={value}>
       {children}
