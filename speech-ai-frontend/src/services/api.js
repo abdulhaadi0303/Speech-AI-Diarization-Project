@@ -7,7 +7,7 @@ const BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8888';
 // Create axios instance with default config
 const api = axios.create({
   baseURL: BASE_URL,
-  timeout: 30000,
+  timeout: 3000000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -105,7 +105,7 @@ const backendApi = {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-        timeout: 300000, // 5 minutes for audio upload
+        timeout: 3000000, // 5 minutes for audio upload
       };
       
       if (onProgress) {

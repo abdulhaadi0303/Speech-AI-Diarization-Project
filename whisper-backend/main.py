@@ -82,8 +82,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Constants - RESTORED FROM OLD CODE
-DEFAULT_MODEL = "llama3:latest"
-OLLAMA_BASE_URL = "http://localhost:11434"
+DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "qwen2.5:7b-instruct")
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 MAX_CHUNK_SIZE = 7000  # Restored original value
 UPLOAD_DIR = Path("uploads")
 OUTPUT_DIR = Path("outputs")
@@ -891,7 +891,7 @@ async def download_file(session_id: str, filename: str):
 # FIXED: LLM processing endpoint - now accepts JSON instead of Form data
 @app.post("/api/llm-process")
 async def process_with_llm(request: LLMProcessRequest):
-    """Process transcript with LLM using specified prompt"""
+    """Process transcript with LLM using specified prompt - with enhanced chunking support"""
     try:
         transcript = request.transcript
         prompt_key = request.prompt_key
@@ -903,19 +903,14 @@ async def process_with_llm(request: LLMProcessRequest):
         if not prompt_key or not prompt_key.strip():
             raise HTTPException(status_code=400, detail="Prompt key is required")
         
-        # Handle custom analysis
+        # Get the prompt template first
+        prompt_template = ""
+        prompt_title = ""
+        
         if prompt_key == "custom_analysis":
             if not custom_prompt or not custom_prompt.strip():
                 raise HTTPException(status_code=400, detail="Custom prompt is required for custom analysis")
-            
-            # Validate custom prompt contains transcript placeholder
-            if "{transcript}" not in custom_prompt:
-                # Auto-add transcript if not present
-                final_prompt = f"{custom_prompt}\n\nTranscript:\n{transcript}"
-            else:
-                # Replace placeholder with actual transcript
-                final_prompt = custom_prompt.replace("{transcript}", transcript)
-            
+            prompt_template = custom_prompt
             prompt_title = "Custom Analysis"
             
         else:
@@ -932,7 +927,7 @@ async def process_with_llm(request: LLMProcessRequest):
                         if not prompt:
                             raise HTTPException(status_code=404, detail=f"Prompt '{prompt_key}' not found or inactive")
                         
-                        final_prompt = prompt.prompt_template.replace("{transcript}", transcript)
+                        prompt_template = prompt.prompt_template
                         prompt_title = prompt.title
                         
                     finally:
@@ -945,7 +940,7 @@ async def process_with_llm(request: LLMProcessRequest):
                     if prompt_key not in prompts:
                         raise HTTPException(status_code=404, detail=f"Prompt '{prompt_key}' not found")
                     
-                    final_prompt = prompts[prompt_key]["prompt"].replace("{transcript}", transcript)
+                    prompt_template = prompts[prompt_key]["prompt"]
                     prompt_title = prompts[prompt_key]["name"]
             else:
                 # Use fallback prompts
@@ -953,7 +948,7 @@ async def process_with_llm(request: LLMProcessRequest):
                 if prompt_key not in prompts:
                     raise HTTPException(status_code=404, detail=f"Prompt '{prompt_key}' not found")
                 
-                final_prompt = prompts[prompt_key]["prompt"].replace("{transcript}", transcript)
+                prompt_template = prompts[prompt_key]["prompt"]
                 prompt_title = prompts[prompt_key]["name"]
         
         # Check Ollama status
@@ -964,43 +959,25 @@ async def process_with_llm(request: LLMProcessRequest):
         if not ollama_status["model_available"]:
             raise HTTPException(status_code=503, detail=f"Model {DEFAULT_MODEL} not available")
         
-        # Process with LLM
-        logger.info(f"Processing with LLM: {prompt_key} (length: {len(transcript)} chars)")
+        # Check if transcript needs chunking
+        MAX_TRANSCRIPT_SIZE = 6000  # Safe size for most LLMs
         
-        async with httpx.AsyncClient() as client:
-            ollama_payload = {
-                "model": DEFAULT_MODEL,
-                "prompt": final_prompt,
-                "stream": False,
-                "options": {
-                    "temperature": 0.7,
-                    "top_p": 0.9,
-                    "num_predict": 4000
-                }
-            }
+        if len(transcript) <= MAX_TRANSCRIPT_SIZE:
+            # Process normally (existing logic)
+            logger.info(f"Processing with LLM: {prompt_key} (length: {len(transcript)} chars)")
             
-            response = await client.post(
-                f"{OLLAMA_BASE_URL}/api/generate",
-                json=ollama_payload,
-                timeout=300.0
-            )
+            final_prompt = prompt_template.replace("{transcript}", transcript)
+            if "{former_chunk}" in final_prompt:
+                final_prompt = final_prompt.replace("{former_chunk}", "")
             
-            if response.status_code != 200:
-                logger.error(f"Ollama error: {response.status_code} - {response.text}")
-                raise HTTPException(status_code=503, detail="LLM processing failed")
+            llm_response = await _process_single_chunk(final_prompt, DEFAULT_MODEL)
             
-            result = response.json()
-            
-            if "response" not in result:
-                logger.error(f"Invalid Ollama response: {result}")
-                raise HTTPException(status_code=503, detail="Invalid LLM response")
-            
-            llm_response = result["response"].strip()
-            
-            if not llm_response:
-                raise HTTPException(status_code=503, detail="LLM returned empty response")
+        else:
+            # Process with enhanced chunking and final synthesis
+            logger.info(f"Processing with enhanced chunking: {prompt_key} (length: {len(transcript)} chars)")
+            llm_response = await _process_with_enhanced_chunking(transcript, prompt_template, DEFAULT_MODEL, prompt_title)
         
-        # Store result in database if available
+        # Store result in database (existing logic)
         if DATABASE_AVAILABLE and db_manager and prompt_key != "custom_analysis":
             try:
                 db = db_manager.get_session()
@@ -1011,9 +988,9 @@ async def process_with_llm(request: LLMProcessRequest):
                         prompt_title=prompt_title,
                         response_text=llm_response,
                         model_used=DEFAULT_MODEL,
-                        processing_time=result.get("total_duration", 0) / 1e9 if "total_duration" in result else 0,
+                        processing_time=0,
                         transcript_length=len(transcript),
-                        tokens_used=result.get("eval_count", 0)
+                        tokens_used=0
                     )
                     
                     db.add(analysis_result)
@@ -1034,9 +1011,10 @@ async def process_with_llm(request: LLMProcessRequest):
             "model": DEFAULT_MODEL,
             "prompt_key": prompt_key,
             "prompt_title": prompt_title,
-            "processing_time": result.get("total_duration", 0) / 1e9 if "total_duration" in result else 0,
-            "tokens_used": result.get("eval_count", 0),
-            "success": True
+            "processing_time": 0,
+            "tokens_used": 0,
+            "success": True,
+            "chunked": len(transcript) > MAX_TRANSCRIPT_SIZE
         }
         
     except HTTPException:
@@ -1045,21 +1023,188 @@ async def process_with_llm(request: LLMProcessRequest):
         logger.error(f"LLM processing error: {e}")
         raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}")
 
-@app.delete("/api/session/{session_id}")
-async def cleanup_session(session_id: str):
-    """Clean up session data"""
-    if session_id in processing_sessions:
-        session = processing_sessions[session_id]
+
+# ENHANCED HELPER FUNCTIONS
+
+async def _process_single_chunk(prompt: str, model: str) -> str:
+    """Process a single chunk with Ollama"""
+    async with httpx.AsyncClient() as client:
+        ollama_payload = {
+            "model": model,
+            "prompt": prompt,
+            "stream": False,
+            "options": {
+                "temperature": 0.7,
+                "top_p": 0.9,
+                "num_predict": 4000
+            }
+        }
         
-        output_dir = session.get("output_dir")
-        if output_dir and Path(output_dir).exists():
-            shutil.rmtree(output_dir)
+        response = await client.post(
+            f"{OLLAMA_BASE_URL}/api/generate",
+            json=ollama_payload,
+            timeout=300.0
+        )
         
-        del processing_sessions[session_id]
+        if response.status_code != 200:
+            logger.error(f"Ollama error: {response.status_code} - {response.text}")
+            raise HTTPException(status_code=503, detail="LLM processing failed")
         
-        return {"message": "Session cleaned up successfully"}
+        result = response.json()
+        
+        if "response" not in result:
+            logger.error(f"Invalid Ollama response: {result}")
+            raise HTTPException(status_code=503, detail="Invalid LLM response")
+        
+        llm_response = result["response"].strip()
+        
+        if not llm_response:
+            raise HTTPException(status_code=503, detail="LLM returned empty response")
+        
+        return llm_response
+
+
+async def _process_with_enhanced_chunking(transcript: str, prompt_template: str, model: str, prompt_title: str) -> str:
+    """Process large transcript with enhanced chunking and final synthesis"""
     
-    raise HTTPException(status_code=404, detail="Session not found")
+    # Split transcript into chunks
+    chunks = _split_transcript_into_chunks(transcript)
+    logger.info(f"Split transcript into {len(chunks)} chunks")
+    
+    chunk_responses = []
+    previous_context = ""
+    
+    # Process each chunk with enhanced context awareness
+    for i, chunk in enumerate(chunks):
+        logger.info(f"Processing chunk {i+1}/{len(chunks)}")
+        
+        # Build chunk-aware prompt
+        chunk_prompt = _build_enhanced_chunk_prompt(
+            chunk, prompt_template, previous_context, i+1, len(chunks)
+        )
+        
+        # Process chunk
+        chunk_response = await _process_single_chunk(chunk_prompt, model)
+        chunk_responses.append(chunk_response)
+        
+        # Update context for next chunk (keep last 2000 chars)
+        previous_context = chunk_response[-2000:] if len(chunk_response) > 2000 else chunk_response
+    
+    # NEW: Final synthesis step - combine all chunk responses
+    logger.info(f"Synthesizing final response from {len(chunk_responses)} chunks")
+    final_response = await _synthesize_final_response(chunk_responses, prompt_template, prompt_title, model)
+    
+    return final_response
+
+
+def _split_transcript_into_chunks(transcript: str, max_size: int = 4000) -> list:
+    """Split transcript into chunks with sentence boundaries"""
+    
+    if len(transcript) <= max_size:
+        return [transcript]
+    
+    chunks = []
+    current_chunk = ""
+    
+    # Split by sentences to maintain context
+    sentences = transcript.split('. ')
+    
+    for sentence in sentences:
+        # Check if adding this sentence would exceed max_size
+        if len(current_chunk) + len(sentence) + 2 > max_size and current_chunk:
+            # Save current chunk and start new one
+            chunks.append(current_chunk.strip())
+            current_chunk = sentence + '. '
+        else:
+            current_chunk += sentence + '. '
+    
+    # Add final chunk
+    if current_chunk.strip():
+        chunks.append(current_chunk.strip())
+    
+    return chunks
+
+
+def _build_enhanced_chunk_prompt(chunk: str, prompt_template: str, previous_context: str, chunk_num: int, total_chunks: int) -> str:
+    """Build enhanced prompt for a chunk with clear chunking instructions"""
+    
+    # Start with chunking context instruction
+    chunking_instruction = f"""
+IMPORTANT: You are analyzing CHUNK {chunk_num} of {total_chunks} from a larger transcript. This is part of a sequential analysis.
+
+INSTRUCTIONS:
+- This is NOT the complete transcript, only part {chunk_num} of {total_chunks}
+- Focus on analyzing this specific chunk while being aware it's part of a larger document
+- Build upon insights from previous chunks when relevant
+- Keep your analysis focused and avoid premature conclusions about the overall document
+- Note patterns or themes that may connect to other parts
+
+"""
+    
+    # Add previous context if available
+    if previous_context and chunk_num > 1:
+        context_section = f"""
+PREVIOUS ANALYSIS CONTEXT (from chunk {chunk_num-1}):
+{previous_context}
+
+"""
+        chunking_instruction += context_section
+    
+    # Handle different template formats
+    if "{transcript}" in prompt_template:
+        base_prompt = prompt_template.replace("{transcript}", chunk)
+    else:
+        base_prompt = f"{prompt_template}\n\nTranscript:\n{chunk}"
+    
+    # Remove former_chunk placeholder if present
+    base_prompt = base_prompt.replace("{former_chunk}", "")
+    
+    # Combine instruction with prompt
+    final_prompt = chunking_instruction + "\nANALYSIS REQUEST:\n" + base_prompt
+    
+    return final_prompt
+
+
+async def _synthesize_final_response(chunk_responses: list, prompt_template: str, prompt_title: str, model: str) -> str:
+    """Synthesize all chunk responses into a single enhanced final output"""
+    
+    if len(chunk_responses) == 1:
+        return chunk_responses[0]
+    
+    # Create synthesis prompt
+    synthesis_prompt = f"""
+SYNTHESIS TASK: Create a comprehensive, unified analysis from the following chunk analyses.
+
+ORIGINAL ANALYSIS TYPE: {prompt_title}
+
+You have {len(chunk_responses)} chunk analyses from a large transcript. Your task is to:
+1. Synthesize these into ONE cohesive, comprehensive analysis
+2. Remove redundancy and contradictions
+3. Create a unified narrative that flows logically
+4. Ensure all important insights are preserved
+5. Organize the content in a clear, structured way
+6. Respond in the same language as the original transcript content
+
+CHUNK ANALYSES TO SYNTHESIZE:
+
+"""
+    
+    # Add all chunk responses
+    for i, response in enumerate(chunk_responses, 1):
+        synthesis_prompt += f"\n--- CHUNK {i} ANALYSIS ---\n{response}\n"
+    
+    synthesis_prompt += f"""
+
+--- END OF CHUNK ANALYSES ---
+
+Now create a single, unified, comprehensive analysis that synthesizes all the above insights into one cohesive response. Focus on creating a flowing narrative rather than listing separate parts.
+"""
+    
+    # Process synthesis
+    logger.info("Generating synthesized final response")
+    final_response = await _process_single_chunk(synthesis_prompt, model)
+    
+    return final_response
 
 @app.post("/api/chat")
 async def chat_with_llm(data: dict):

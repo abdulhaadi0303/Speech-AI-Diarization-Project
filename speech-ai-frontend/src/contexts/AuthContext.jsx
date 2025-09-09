@@ -17,8 +17,8 @@ export const AuthProvider = ({ children }) => {
     authentikUrl: import.meta.env.VITE_AUTHENTIK_BASE_URL,
     appPath: '/application/o/speech-analysis',
     clientId: import.meta.env.VITE_AUTHENTIK_CLIENT_ID,
-    clientSecret: 'PLACE YOUR SECRET KEY HERE', 
-    redirectUri: import.meta.env.VITE_AUTHENTIK_REDIRECT_URI,
+    clientSecret: 'fhf8On3hqFhDGOAM9RsSqxRIFsalxD6O5TCIhBpmXMJoL0RcAErdYYnSyvnKW2Ozf2SALi62Ks7KSPyHCupSl5g78hynBIUBFSV0EiirglsGdf3Jaw0pk6rljzsmUaST', 
+    redirectUri: 'http://localhost:3000/auth/callback',
     authorizeUrl: `${import.meta.env.VITE_AUTHENTIK_BASE_URL}/application/o/authorize/`,
     tokenUrl: `${import.meta.env.VITE_AUTHENTIK_BASE_URL}/application/o/token/`,
     userinfoUrl: `${import.meta.env.VITE_AUTHENTIK_BASE_URL}/application/o/userinfo/`
