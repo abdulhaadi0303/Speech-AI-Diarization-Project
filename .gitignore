@@ -82,7 +82,8 @@ __pycache__/
 *$py.class
 
 # Environment variables
-.env
+**/.env
+**/.env.*
 
 # But KEEP migration files - they should be committed
 # (Don't add alembic/versions/ to gitignore)
