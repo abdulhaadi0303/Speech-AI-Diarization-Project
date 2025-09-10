@@ -2,6 +2,10 @@
 from dotenv import load_dotenv
 load_dotenv()
 
+# Add this import with your other imports
+from email_service import email_service
+from pdf_generator import PDFGenerator
+
 # Add these imports after the existing ones
 from queue_manager import AudioQueueManager
 from auth.middleware import get_current_user
@@ -580,6 +584,68 @@ async def upload_audio(
         if upload_path.exists():
             upload_path.unlink()
         raise HTTPException(status_code=500, detail=f"Failed to add to queue: {str(e)}")
+    
+async def send_completion_notification(session_id: str, session: Dict, results: Dict):
+    """Send email notification with PDF attachment"""
+    try:
+        # Get user email from session or queue
+        user_email = None
+        
+        # Try to get email from queue manager first
+        if queue_manager:
+            try:
+                queue_status = await queue_manager.get_queue_status(session_id)
+                if queue_status:
+                    user_email = queue_status.get("user_email")  #can Hardcode emeil to test
+            except Exception as e:
+                logger.error(f"Error getting email from queue: {e}")
+        
+        if not user_email:
+            logger.warning(f"No email found for session {session_id}, skipping notification")
+            return
+        
+        filename = session.get("filename", "audio_file")
+        
+        # Generate PDF
+        pdf_gen = PDFGenerator()
+        output_dir = Path(session.get("output_dir", f"outputs/{session_id}"))
+        pdf_path = output_dir / f"{session_id}_transcript.pdf"
+        
+        # Create PDF from results
+        segments = results.get("segments", [])
+        metadata = results.get("metadata", {})
+        
+        pdf_success = pdf_gen.generate_transcript_pdf(
+            segments=segments,
+            metadata=metadata,
+            output_path=pdf_path,
+            filename=filename
+        )
+        
+        # Send email with or without PDF
+        if pdf_success and pdf_path.exists():
+            email_success = await email_service.send_completion_email(
+                to_email=user_email,
+                session_id=session_id,
+                filename=filename,
+                pdf_path=pdf_path
+            )
+        else:
+            logger.warning(f"PDF generation failed for {session_id}, sending text-only email")
+            email_success = await email_service.send_text_only_email(
+                to_email=user_email,
+                session_id=session_id,
+                filename=filename
+            )
+        
+        if email_success:
+            logger.info(f"Completion notification sent for session {session_id}")
+        else:
+            logger.error(f"Failed to send notification for session {session_id}")
+            
+    except Exception as e:
+        logger.error(f"Error in send_completion_notification: {e}")
+
 
 async def process_audio_background(session_id: str, file_path: Path):
     """Background task for audio processing - now with queue management"""
@@ -615,7 +681,7 @@ async def process_audio_background(session_id: str, file_path: Path):
         session["progress"] = 20
         session["message"] = "Processing with GDPR pipeline..."
 
-    # Run CPU-intensive processing in thread pool (NON-BLOCKING)
+        # Run CPU-intensive processing in thread pool (NON-BLOCKING)
         loop = asyncio.get_event_loop()
         results = await loop.run_in_executor(
             thread_pool,
@@ -629,7 +695,6 @@ async def process_audio_background(session_id: str, file_path: Path):
                 apply_preprocessing=settings.get("preprocessing", True)
             )
         )
-
 
         output_dir = OUTPUT_DIR / session_id
         output_dir.mkdir(exist_ok=True)
@@ -650,6 +715,15 @@ async def process_audio_background(session_id: str, file_path: Path):
         # Notify queue manager of completion
         if queue_manager:
             await queue_manager.complete_processing(session_id)
+        
+        # Send completion email notification
+        try:
+            await send_completion_notification(session_id, session, results)
+            print(f"Completion email sent for session {session_id}")
+        except Exception as e:
+            logger.error(f"Failed to send completion email for session {session_id}: {e}")
+            print(f"Email notification failed for session {session_id}: {e}")
+            # Don't fail the entire process if email fails
         
         # Clean up uploaded file
         if file_path.exists():
@@ -680,7 +754,7 @@ async def process_audio_background(session_id: str, file_path: Path):
             pass
 
 
-
+        
 async def start_queued_processing(session_id: str, file_path: str):
     """Start processing for a queued item"""
     background_tasks = BackgroundTasks()
