@@ -222,6 +222,18 @@ const Header = () => {
                   }}
                 />
               </Link>
+
+            {/* <Link to="/" className="flex items-center ml-2">
+              <span className="text-2xl p-1 font-bold text-psycon-purple-400">
+                Company 
+              </span>
+              <span className="text-2xl font-bold text-psycon-yellow-400">
+                Name
+              </span>
+
+            </Link> */}
+
+
             </div>
   
             {/* Center - Page Title */}

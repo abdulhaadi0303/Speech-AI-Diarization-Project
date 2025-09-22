@@ -1,12 +1,48 @@
 # database/models.py - Database Models for Analysis Prompts (FIXED ENCODING)
 
-from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, Float, create_engine
+from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, Float, create_engine, ForeignKey, UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, relationship
 from datetime import datetime
 import os
 
 Base = declarative_base()
+
+
+class UserFavoritePrompt(Base):
+    """Model for tracking user favorite analysis prompts"""
+    __tablename__ = "user_favorite_prompts"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    prompt_id = Column(Integer, ForeignKey("analysis_prompts.id", ondelete="CASCADE"), nullable=False, index=True)
+    
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    user = relationship("User", backref="favorite_prompts")
+    prompt = relationship("AnalysisPrompt", backref="favorited_by")
+    
+    # Ensure a user can only favorite a prompt once
+    __table_args__ = (
+        UniqueConstraint('user_id', 'prompt_id', name='unique_user_prompt_favorite'),
+    )
+    
+    def __repr__(self):
+        return f"<UserFavoritePrompt(user_id={self.user_id}, prompt_id={self.prompt_id})>"
+    
+    def to_dict(self):
+        """Convert to dictionary for API responses"""
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "prompt_id": self.prompt_id,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None
+        }
+
 
 class AnalysisPrompt(Base):
     """Model for storing analysis prompts"""
@@ -31,9 +67,22 @@ class AnalysisPrompt(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     created_by = Column(String(100), default="system")  # Who created this prompt
     
-    def to_dict(self):
+    def get_favorite_count(self, db_session):
+        """Get count of users who have favorited this prompt"""
+        return db_session.query(UserFavoritePrompt).filter(
+            UserFavoritePrompt.prompt_id == self.id
+        ).count()
+    
+    def get_users_who_favorited(self, db_session):
+        """Get list of users who have favorited this prompt"""
+        favorites = db_session.query(UserFavoritePrompt).filter(
+            UserFavoritePrompt.prompt_id == self.id
+        ).all()
+        return [fav.user for fav in favorites]
+    
+    def to_dict(self, include_favorite_count=False, user_id=None, db_session=None):
         """Convert to dictionary for API responses"""
-        return {
+        result = {
             "id": self.id,
             "key": self.key,
             "title": self.title,
@@ -53,6 +102,21 @@ class AnalysisPrompt(Base):
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
             "created_by": self.created_by
         }
+        
+        # Add favorite count if requested
+        if include_favorite_count and db_session:
+            result["favorite_count"] = self.get_favorite_count(db_session)
+        
+        # Add user-specific favorite status if user_id provided
+        if user_id and db_session:
+            is_favorited = db_session.query(UserFavoritePrompt).filter(
+                UserFavoritePrompt.user_id == user_id,
+                UserFavoritePrompt.prompt_id == self.id
+            ).first() is not None
+            result["is_favorited"] = is_favorited
+            
+        return result
+
 
 class AnalysisResult(Base):
     """Model for storing analysis results"""
@@ -137,6 +201,10 @@ class DatabaseManager:
     def create_tables(self):
         """Create all tables"""
         try:
+            # Import all models to ensure they're registered with Base
+            # UserFavoritePrompt is already imported above
+            # This ensures the favorites table is created along with others
+            
             Base.metadata.create_all(bind=self.engine)
             print("Database tables created successfully")
         except Exception as e:

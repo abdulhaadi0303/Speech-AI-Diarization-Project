@@ -8,6 +8,10 @@ from pydantic import BaseModel, validator
 from datetime import datetime
 import logging
 
+from database.models import UserFavoritePrompt
+from auth.middleware import get_current_user, require_auth
+from auth.models import User
+
 # Import database components
 try:
     from database.models import AnalysisPrompt, AnalysisResult, db_manager
@@ -574,3 +578,218 @@ async def get_usage_analytics(db: Session = Depends(get_db)):
     except Exception as e:
         logger.error(f"Failed to get analytics: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get analytics: {str(e)}")
+    
+# 1. ADD FAVORITE
+@router.post("/{prompt_id}/favorite")
+async def add_favorite(
+    prompt_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_auth)
+):
+    """Add a prompt to user's favorites"""
+    try:
+        # Check if prompt exists
+        prompt = db.query(AnalysisPrompt).filter(AnalysisPrompt.id == prompt_id).first()
+        if not prompt:
+            raise HTTPException(status_code=404, detail="Prompt not found")
+        
+        # Check if already favorited
+        existing = db.query(UserFavoritePrompt).filter(
+            UserFavoritePrompt.user_id == current_user.id,
+            UserFavoritePrompt.prompt_id == prompt_id
+        ).first()
+        
+        if existing:
+            return {"message": "Prompt already in favorites", "status": "exists"}
+        
+        # Add to favorites
+        favorite = UserFavoritePrompt(
+            user_id=current_user.id,
+            prompt_id=prompt_id
+        )
+        db.add(favorite)
+        db.commit()
+        
+        logger.info(f"User {current_user.id} added prompt {prompt_id} to favorites")
+        
+        return {
+            "message": "Prompt added to favorites",
+            "status": "added",
+            "favorite": favorite.to_dict()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to add favorite: {e}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to add favorite: {str(e)}")
+
+
+# 2. REMOVE FAVORITE
+@router.delete("/{prompt_id}/favorite")
+async def remove_favorite(
+    prompt_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_auth)
+):
+    """Remove a prompt from user's favorites"""
+    try:
+        # Find the favorite
+        favorite = db.query(UserFavoritePrompt).filter(
+            UserFavoritePrompt.user_id == current_user.id,
+            UserFavoritePrompt.prompt_id == prompt_id
+        ).first()
+        
+        if not favorite:
+            raise HTTPException(status_code=404, detail="Favorite not found")
+        
+        # Remove from favorites
+        db.delete(favorite)
+        db.commit()
+        
+        logger.info(f"User {current_user.id} removed prompt {prompt_id} from favorites")
+        
+        return {
+            "message": "Prompt removed from favorites",
+            "status": "removed"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to remove favorite: {e}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to remove favorite: {str(e)}")
+
+
+# 3. GET USER FAVORITES
+@router.get("/favorites")
+async def get_user_favorites(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_auth)
+):
+    """Get all favorite prompts for the current user"""
+    try:
+        # Get all favorite prompt IDs for the user
+        favorites = db.query(UserFavoritePrompt).filter(
+            UserFavoritePrompt.user_id == current_user.id
+        ).all()
+        
+        favorite_prompt_ids = [f.prompt_id for f in favorites]
+        
+        # Get the actual prompts
+        prompts = db.query(AnalysisPrompt).filter(
+            AnalysisPrompt.id.in_(favorite_prompt_ids),
+            AnalysisPrompt.is_active == True  # Only return active prompts
+        ).all()
+        
+        # Convert to dict with favorite info
+        prompts_data = [
+            {
+                **prompt.to_dict(user_id=current_user.id, db_session=db),
+                "is_favorited": True  # All these are favorites
+            }
+            for prompt in prompts
+        ]
+        
+        return {
+            "prompts": prompts_data,
+            "count": len(prompts_data)
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get favorites: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get favorites: {str(e)}")
+
+
+# ============================================
+# SECTION 3: MODIFY YOUR EXISTING get_all_prompts ENDPOINT
+# ============================================
+
+# REPLACE your existing get_all_prompts function with this updated version:
+@router.get("/")
+async def get_all_prompts(
+    active_only: bool = Query(False, description="Return only active prompts"),
+    category: Optional[str] = Query(None, description="Filter by category"),
+    limit: Optional[int] = Query(None, description="Limit number of results"),
+    offset: int = Query(0, description="Offset for pagination"),
+    favorites_only: bool = Query(False, description="Return only favorite prompts"),
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user)  # Optional - works for both auth and unauth
+):
+    """Get all analysis prompts with favorite status"""
+    try:
+        query = db.query(AnalysisPrompt)
+        
+        # If favorites_only and user is authenticated, filter by favorites
+        if favorites_only and current_user:
+            favorite_prompt_ids = db.query(UserFavoritePrompt.prompt_id).filter(
+                UserFavoritePrompt.user_id == current_user.id
+            ).subquery()
+            query = query.filter(AnalysisPrompt.id.in_(favorite_prompt_ids))
+        
+        # Apply existing filters
+        if active_only:
+            query = query.filter(AnalysisPrompt.is_active == True)
+        if category:
+            query = query.filter(AnalysisPrompt.category == category)
+        
+        # Apply pagination
+        if limit:
+            query = query.limit(limit)
+        query = query.offset(offset)
+        
+        # Execute query
+        prompts = query.all()
+        
+        # Convert to dict with favorite status if user is authenticated
+        if current_user:
+            prompts_data = [
+                prompt.to_dict(user_id=current_user.id, db_session=db)
+                for prompt in prompts
+            ]
+        else:
+            prompts_data = [prompt.to_dict() for prompt in prompts]
+        
+        return {
+            "prompts": prompts_data,
+            "count": len(prompts_data),
+            "total": db.query(AnalysisPrompt).count() if not favorites_only else None
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get prompts: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get prompts: {str(e)}")
+
+
+# ============================================
+# SECTION 4: ALSO UPDATE get_prompt_by_key IF YOU HAVE IT
+# ============================================
+
+# If you have a get_prompt_by_key endpoint, update it to:
+@router.get("/{key}")
+async def get_prompt_by_key(
+    key: str,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user)
+):
+    """Get a specific prompt by key with favorite status"""
+    try:
+        prompt = db.query(AnalysisPrompt).filter(AnalysisPrompt.key == key).first()
+        if not prompt:
+            raise HTTPException(status_code=404, detail="Prompt not found")
+        
+        # Include favorite status if user is authenticated
+        if current_user:
+            prompt_data = prompt.to_dict(user_id=current_user.id, db_session=db)
+        else:
+            prompt_data = prompt.to_dict()
+            
+        return prompt_data
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get prompt: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get prompt: {str(e)}")
