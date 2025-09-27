@@ -556,9 +556,12 @@ const AdminDashboard = () => {
         category: selectedCategory !== 'all' ? selectedCategory : undefined,
         active_only: false
       });
-      setPrompts(response.data);
+      // Fix: Extract the prompts array from the response object
+      setPrompts(response.data.prompts || response.data || []);
     } catch (error) {
       console.error('Failed to load prompts:', error);
+      // Set empty array on error to prevent filter issues
+      setPrompts([]);
       throw error;
     }
   };
