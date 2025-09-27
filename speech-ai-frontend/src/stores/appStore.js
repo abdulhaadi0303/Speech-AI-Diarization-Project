@@ -1,4 +1,4 @@
-// src/stores/appStore.js - Enhanced Store with Editor State Management
+// src/stores/appStore.js - Enhanced Store with Editor State Management and Favorites
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -162,6 +162,84 @@ const useAppStore = create(
       showHistoryModal: false, // ✅ Persisted
       setShowHistoryModal: (show) => set({ showHistoryModal: show }),
 
+      // ========== FAVORITES STATE (NEW) ==========
+      userFavorites: [], // Array of favorite prompt IDs
+      showFavoritesOnly: false, // Filter toggle for showing only favorites
+      
+      setUserFavorites: (favorites) => set({ userFavorites: favorites }),
+      setShowFavoritesOnly: (show) => set({ showFavoritesOnly: show }),
+      
+      // Toggle a single favorite
+      toggleFavorite: async (promptId) => {
+        const currentFavorites = get().userFavorites;
+        const isFavorited = currentFavorites.includes(promptId);
+        const token = localStorage.getItem('access_token');
+        
+        if (!token) {
+          console.error('No auth token found');
+          return false;
+        }
+        
+        try {
+          if (isFavorited) {
+            // Remove from favorites
+            const response = await fetch(`http://localhost:8888/api/prompts/${promptId}/favorite`, {
+              method: 'DELETE',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+              },
+            });
+            
+            if (response.ok) {
+              set({ 
+                userFavorites: currentFavorites.filter(id => id !== promptId) 
+              });
+              return true;
+            }
+          } else {
+            // Add to favorites
+            const response = await fetch(`http://localhost:8888/api/prompts/${promptId}/favorite`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+              },
+            });
+            
+            if (response.ok) {
+              set({ 
+                userFavorites: [...currentFavorites, promptId] 
+              });
+              return true;
+            }
+          }
+        } catch (error) {
+          console.error('Failed to toggle favorite:', error);
+        }
+        return false;
+      },
+      
+      // Load favorites from backend
+      loadUserFavorites: async () => {
+        const token = localStorage.getItem('access_token');
+        if (!token) return;
+        
+        try {
+          const response = await fetch('http://localhost:8888/api/prompts/favorites', {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            const favoriteIds = data.prompts.map(p => p.id);
+            set({ userFavorites: favoriteIds });
+          }
+        } catch (error) {
+          console.error('Failed to load favorites:', error);
+        }
+      },
+
       // ChatPage state
       selectedChatSession: '',
       setSelectedChatSession: (sessionId) => set({ selectedChatSession: sessionId }),
@@ -214,6 +292,9 @@ const useAppStore = create(
           loadingPrompts: [],
           backgroundPolling: [],
           showHistoryModal: false,
+          // Clear favorites
+          userFavorites: [],  // ✅ Reset favorites
+          showFavoritesOnly: false,  // ✅ Reset favorites filter
           // Clear chat
           selectedChatSession: '',
           contextType: 'general',
